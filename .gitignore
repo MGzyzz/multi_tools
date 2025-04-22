@@ -52,3 +52,5 @@ coverage/
 *.tar
 *.tgz
 *.rar
+*.venv
+*.__pycache__
