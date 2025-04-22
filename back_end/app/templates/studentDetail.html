@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Back Button -->
+<div class="row mt-3 mb-4">
+    <div class="col-12">
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Students
+        </a>
+    </div>
+</div>
+
+<!-- Student Profile Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-dark text-white rounded-5 shadow-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-2 text-center">
+                        <!-- Placeholder for student photo -->
+                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto" style="width: 150px; height: 150px;">
+                            {% if student.telegram_username|lower == 'ruby' %}
+                            <span class='display-4'>FR</span>
+                            {% else %}
+                            <span class="display-4">{{ student.first_name|slice:":1" }}{{ student.last_name|slice:":1" }}</span>
+                            {% endif%}
+                        </div>
+                    </div>
+                    <div class="col-md-10">
+                        <h1 class="fw-bold mb-2">{{ student.first_name }} {{ student.last_name }} </h1>
+                        <p class="text-secondary mb-2">@alexsmith123</p>
+                        <div class="d-flex flex-wrap gap-3 mt-3">
+                            <span class="badge bg-info text-dark">
+                                <i class="bi bi-telegram"></i> Connected
+                            </span>
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-person-badge"></i> ID: {{ student.id }}
+                            </span>
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-envelope"></i> {{ student.email }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Student Details -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-dark text-white rounded-5 shadow-sm">
+            <div class="card-body">
+                <ul class="nav nav-tabs mb-4" id="studentTabs" role="tablist">
+                    <li class="nav-item mb-3" role="presentation">
+                        <button class="nav-link active btn btn-info" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">Personal Info</button>
+                    </li>
+                    <li class="nav-item mx-3" role="presentation">
+                        <button class="nav-link btn btn-info mb-3" id="academic-tab" data-bs-toggle="tab" data-bs-target="#academic" type="button" role="tab" aria-controls="academic" aria-selected="false">Academic</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link btn btn-info mb-3" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">Contact</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="studentTabsContent">
+                    <!-- Personal Info Tab -->
+                    <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card bg-dark border border-secondary rounded-4 mb-4">
+                                    <div class="card-header border-bottom border-secondary">
+                                        <h5 class="mb-0">Personal Information</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-group list-group-flush bg-transparent">
+                                            <li class="list-group-item bg-dark text-white border-secondary d-flex justify-content-between">
+                                                <span>Full Name:</span>
+                                                <span class="text-secondary">{{ student.first_name }} {{ student.last_name }}</span>
+                                            </li>
+                                            <li class="list-group-item bg-dark text-white border-secondary d-flex justify-content-between">
+                                                <span>Age:</span>
+                                                <span class="text-secondary">{{ student.age }}</span>
+                                            </li>
+                                            <li class="list-group-item bg-dark text-white border-secondary d-flex justify-content-between">
+                                                <span>Telegram:</span>
+                                                <span class="text-secondary">{{ student.telegram_username }}</span>
+                                            </li>
+                                            <li class="list-group-item bg-dark text-white border-secondary d-flex justify-content-between">
+                                                <span>Telegram ID:</span>
+                                                <span class="text-secondary">{{ student.telegram_id }}</span>
+                                            </li>
+                                            <li class="list-group-item bg-dark text-white border-secondary d-flex justify-content-between">
+                                                <span>GPA:</span>
+                                                <span class="text-secondary">3.8</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card bg-dark border border-secondary rounded-4 mb-4">
+                                    <div class="card-header border-bottom border-secondary">
+                                        <h5 class="mb-0">Contact Information</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-group list-group-flush bg-transparent">
+                                            <li class="list-group-item bg-dark text-white border-secondary d-flex justify-content-between">
+                                                <span>Email:</span>
+                                                <span class="text-secondary">{{ student.email }}</span>
+                                            </li>
+                                            <li class="list-group-item bg-dark text-white border-secondary d-flex justify-content-between">
+                                                <span>Phone:</span>
+                                                <span class="text-secondary">{{ student.phone}}</span>
+                                            </li>
+                                            <li class="list-group-item bg-dark text-white border-secondary d-flex justify-content-between">
+                                                <span>Address:</span>
+                                                <span class="text-secondary">{{ student.address }}</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Example of more detailed information -->
+                        <div class="card bg-dark border border-secondary rounded-4">
+                            <div class="card-header border-bottom border-secondary">
+                                <h5 class="mb-0">Additional Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-secondary">
+                                    Личное комментарии администратора:
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Academic Tab -->
+                    <div class="tab-pane fade" id="academic" role="tabpanel" aria-labelledby="academic-tab">
+                        <div class="card bg-dark border border-secondary rounded-4 mb-4">
+                            <div class="card-header border-bottom border-secondary">
+                                <h5 class="mb-0">Academic Summary</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label d-flex justify-content-between">
+                                        <span>GPA</span>
+                                        <span>3.8/4.0</span>
+                                    </label>
+                                    <div class="progress" style="height: 10px">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 95%" aria-valuenow="95" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <h6 class="mb-3">Course Performance</h6>
+                                    <table class="table table-dark table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Subject</th>
+                                                <th>Grade</th>
+                                                <th>Professor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Advanced Mathematics</td>
+                                                <td>A</td>
+                                                <td>Dr. Johnson</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Computer Science</td>
+                                                <td>A-</td>
+                                                <td>Prof. Williams</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Physics</td>
+                                                <td>B+</td>
+                                                <td>Dr. Martinez</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Tab -->
+                    <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+                        <div class="card bg-dark border border-secondary rounded-4">
+                            <div class="card-header border-bottom border-secondary">
+                                <h5 class="mb-0">Send Message</h5>
+                            </div>
+                            <div class="card-body">
+                                <form>
+                                    <div class="mb-3">
+                                        <label for="messageSubject" class="form-label">Subject</label>
+                                        <input type="text" class="form-control bg-dark text-white border-secondary" id="messageSubject" placeholder="Message subject">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="messageContent" class="form-label">Message</label>
+                                        <textarea class="form-control bg-dark text-white border-secondary" id="messageContent" rows="4" placeholder="Your message to Alex"></textarea>
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="urgentMessage">
+                                        <label class="form-check-label" for="urgentMessage">Mark as urgent</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-secondary">Send via Telegram</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

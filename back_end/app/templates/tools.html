@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- tools.html -->
+<div class="col-12 mt-5">
+    <div class="card shadow-sm bg-dark text-white rounded-5">
+        <div class="card-body">
+            <h3 class="card-title fw-bold text-center mb-4">Send Message to Telegram</h3>
+
+            <form id="telegramForm" method="post" action="{% url 'send_telegram_message' %}"
+                data-bot-status-url="{% url 'check_bot_status' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="recipient" class="form-label text-secondary">Recipient Group</label>
+                    <div class="d-flex flex-wrap gap-2" id="recipient-list">
+                        {% if groups %}
+                            {% for group in groups %}
+                            <div class="group-card bg-secondary text-white p-2 rounded-3" style="cursor: pointer;"
+                                data-group-id="{{ group.id }}"
+                                onclick="selectGroup(this, {{ group.id }})">
+                                {{ group.name }}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="alert alert-danger bg-dark text-danger border-danger">
+                                No groups available. Please create a group first.
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <input type="hidden" id="selected-group-id" name="group_id">
+                    <input type="hidden" id="recipient" name="recipient" required>
+
+                    <div class="mb-3" id="students-container" style="display: none;">
+                        <label class="form-label text-secondary mt-3">Students in Group</label>
+                        <div class="d-flex flex-wrap gap-2" id="student-list">
+                            <!-- Students will be loaded here -->
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div id="selected-recipients" class="d-flex flex-wrap gap-2 my-2"></div>
+                        <button id="clear-all-btn" class="btn btn-sm btn-outline-danger mt-2" type="button" disabled
+                            onclick="clearAllRecipients()">
+                            <i class="bi bi-trash"></i> Удалить все
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="subject" class="form-label text-secondary">Subject</label>
+                    <input type="text" class="form-control bg-dark text-white border-secondary" id="subject"
+                        name="subject" placeholder="Message subject">
+                </div>
+
+                <div class="mb-3">
+                    <label for="message" class="form-label text-secondary">Message</label>
+                    <textarea class="form-control bg-dark text-white border-secondary" id="message" name="message"
+                        rows="4" required placeholder="Type your message here..."></textarea>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="urgent" name="urgent">
+                    <label class="form-check-label text-secondary" for="urgent">Mark as urgent</label>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-secondary px-4 py-2">
+                        <i class="bi bi-send-fill me-2"></i>Send Message
+                    </button>
+                </div>
+            </form>
+
+            {% if messages %}
+            <div class="mt-4">
+                {% for message in messages %}
+                <div
+                    class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} bg-dark text-{% if message.tags == 'success' %}success{% else %}danger{% endif %} border-{% if message.tags == 'success' %}success{% else %}danger{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

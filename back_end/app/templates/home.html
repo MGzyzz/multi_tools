@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="row mt-3">
+    <!-- Hero Section -->
+    <div class="col-12 text-center mb-5">
+        <h1 class="display-4 fw-bold text-white">Information Tables</h1>
+        <p class="lead text-secondary">Effortlessly organize your tasks and memories with a modern touch.</p>
+        <button class="btn btn-dark btn-lg">Get Started</button>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Feature Block 1 -->
+    <div class="col-12">
+        <div class="card shadow-sm h-100 bg-dark text-white rounded-5">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <h5 class="card-title fw-bold">Текущее расписание</h5>
+                    <p class="card-text text-secondary">Store and cherish your memories with a sleek and secure design.</p>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Group Name</th>
+                                <th scope="col">Subject</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if schedule %}
+                            {% for schedule in schedules|dictsort:"time" %}
+                            <tr>
+                                <th scope="row">{{ forloop.counter }}</th>
+                                <td>{{ schedule.group.name }}</td>
+                                <td>{{ schedule.subject }}</td>
+                                <td>{{ schedule.date|date:"y.m.d" }}</td>
+                                <td>{{ schedule.time }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No schedule available</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Block 2 -->
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100 bg-dark text-white rounded-5">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <h5 class="card-title fw-bold">Students</h5>
+                    <p class="card-text text-secondary">Получить общие сведения о студентов</p>
+                </div>
+                <div class='d-flex flex-column align-items-start'>
+                    {% for std in students %}
+                <a href='{% url 'student_detail' std.id %}' class='mb-3 a_block'> {{ std.first_name }} </a>
+            {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>    
+    <!-- Feature Block 3 -->
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100 bg-dark text-white rounded-5">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <h5 class="card-title fw-bold">Группы</h5>
+                    <p class="card-text text-secondary">Share tasks and memories with friends and family effortlessly.</p>
+                </div>
+                <div class='d-flex flex-column align-items-start'>
+                    {% for group in groups %}
+                <a href='#' class='mb-3 a_block'> {{ group.name }} </a>
+            {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Feature Block 3 -->
+
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100 bg-dark text-white rounded-5">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <h5 class="card-title fw-bold">Отметить студентов</h5>
+                    <p class="card-text text-secondary">Быстро отметим студентов без надобности записывать и спрашивать!</p>
+                </div>
+                <a href="#" class='btn btn-info text-white'>Перейти -></a>
+            </div>
+        </div>
+    </div>
+
+    {% include "tools.html" %}
+</div>
+
+{% endblock %}

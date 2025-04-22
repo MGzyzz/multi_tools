@@ -1,0 +1,56 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  border: 0 solid transparent;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  line-height: 1;
+  text-rendering: optimizeSpeed;
+  background-color: #121212 !important;
+}
+
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block;
+  max-width: 100%;
+}
+
+
+a {
+  text-decoration: none;
+  color: inherit;
+  font-weight: 500;
+}
+
+
+.a_block {
+  background-color: #121212;
+  color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  width: 100%;
+  text-align: start;
+  border-bottom: 1px solid #fff;
+}
+
+.a_block:hover {
+  background-color: #1a1a1a;
+  animation: 0.3s;
+  transition: background-color 0.3s;
+}
