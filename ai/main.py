@@ -7,6 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from detection.yolo_detector import YoloDetector
 from recognition.facenet_model import FaceEmbedder
 from utils.compare_faces import find_best_match
+from backend_integration import send_recognition_result_to_backend
 
 # Загрузка модели
 yolo = YoloDetector()
@@ -41,3 +42,6 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
+
+# внутри цикла обработки лиц:
+send_recognition_result_to_backend(label)
