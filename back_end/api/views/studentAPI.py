@@ -17,10 +17,12 @@ class GetStudentPhoto(APIView):
     """
     API view to retrieve a student's photo.
     """
-    def get(self, request, student_id, *args, **kwargs):
+    def get(self, request, first_name, *args, **kwargs):
+        student = Student.objects.filter(first_name__iexact=first_name).first()
+        if not student:
+            return Response({"error": "Student not found"}, status=404)
         try:
-            student = Student.objects.get(id=student_id)
-            photo_url = student.photo.url if student.photo else None
+            photo_url = student.face_image.url if student.face_image else None
             return Response({"photo_url": photo_url})
         except Student.DoesNotExist:
             return Response({"error": "Student not found"}, status=404)

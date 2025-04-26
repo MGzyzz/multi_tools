@@ -1,0 +1,156 @@
+[
+{
+    "model": "app.student",
+    "pk": 1,
+    "fields": {
+        "first_name": "Ivan",
+        "last_name": "Ivanov",
+        "telegram_username": "ivan_123",
+        "telegram_id": "1234567890",
+        "email": "ivan.ivanov@example.com",
+        "age": 21,
+        "phone": "+79991234567",
+        "address": "Moscow, Lenina Street, 10",
+        "gpa": 0.0,
+        "face_image": ""
+    }
+},
+{
+    "model": "app.student",
+    "pk": 2,
+    "fields": {
+        "first_name": "Anna",
+        "last_name": "Petrova",
+        "telegram_username": "anna_p",
+        "telegram_id": "9876543210",
+        "email": "anna.petrova@example.com",
+        "age": 23,
+        "phone": "+79997654321",
+        "address": "Saint Petersburg, Nevsky Prospect, 25",
+        "gpa": 0.0,
+        "face_image": ""
+    }
+},
+{
+    "model": "app.student",
+    "pk": 3,
+    "fields": {
+        "first_name": "Sergey",
+        "last_name": "Kuznetsov",
+        "telegram_username": "serg_kuz",
+        "telegram_id": "1928374650",
+        "email": "sergey.k@example.com",
+        "age": 19,
+        "phone": "+79005551234",
+        "address": "Kazan, Bauman Street, 5",
+        "gpa": 0.0,
+        "face_image": ""
+    }
+},
+{
+    "model": "app.student",
+    "pk": 4,
+    "fields": {
+        "first_name": "test",
+        "last_name": "test1",
+        "telegram_username": "test_telegram",
+        "telegram_id": "1234567891",
+        "email": "test@mail.ru",
+        "age": 20,
+        "phone": "+71234567890",
+        "address": "test user",
+        "gpa": 0.0,
+        "face_image": ""
+    }
+},
+{
+    "model": "app.student",
+    "pk": 5,
+    "fields": {
+        "first_name": "test",
+        "last_name": "test1",
+        "telegram_username": "test_telegram_2",
+        "telegram_id": "1234567892",
+        "email": "test@mail.ru",
+        "age": 20,
+        "phone": "+71234567892",
+        "address": "test user",
+        "gpa": 0.0,
+        "face_image": ""
+    }
+},
+{
+    "model": "app.student",
+    "pk": 6,
+    "fields": {
+        "first_name": "Kuanish",
+        "last_name": "Zhabikbaev",
+        "telegram_username": "Ruby",
+        "telegram_id": "1044093384",
+        "email": "None@mail.ru",
+        "age": 21,
+        "phone": "+77005919903",
+        "address": "None",
+        "gpa": 3.33,
+        "face_image": ""
+    }
+},
+{
+    "model": "app.student",
+    "pk": 7,
+    "fields": {
+        "first_name": "Dmitriy",
+        "last_name": "Kuibeda",
+        "telegram_username": "Harwond",
+        "telegram_id": "533695881",
+        "email": "harwond.gg@gmail.com",
+        "age": 22,
+        "phone": "+71234567895",
+        "address": "test",
+        "gpa": 4.0,
+        "face_image": "students/images.jpeg"
+    }
+},
+{
+    "model": "app.student",
+    "pk": 8,
+    "fields": {
+        "first_name": "Admin",
+        "last_name": "Admin",
+        "telegram_username": "MGzyzz",
+        "telegram_id": "962353832",
+        "email": "admin@mail.ru",
+        "age": 20,
+        "phone": "+71234567899",
+        "address": "test",
+        "gpa": 4.0,
+        "face_image": ""
+    }
+},
+{
+    "model": "app.group",
+    "pk": 1,
+    "fields": {
+        "name": "IT1CCO23123-TEST",
+        "course": "1",
+        "students": [
+            1,
+            2,
+            3,
+            4,
+            5
+        ]
+    }
+},
+{
+    "model": "app.group",
+    "pk": 2,
+    "fields": {
+        "name": "IT1CCO23125-TEST",
+        "course": "3",
+        "students": [
+            8
+        ]
+    }
+}
+]
