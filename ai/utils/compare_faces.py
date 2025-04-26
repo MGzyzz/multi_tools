@@ -11,4 +11,4 @@ def find_best_match(embedding, embeddings_db, threshold=0.5):
             best_score = score
             best_name = name
 
-    return best_name
+    return best_name, best_score
