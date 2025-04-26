@@ -12,6 +12,7 @@ class Student(models.Model):
     phone = models.CharField(max_length=15)
     address = models.TextField()
     gpa = models.FloatField(default=0.0)
+    face_image = models.ImageField(upload_to='students/', blank=True, null=True)
 
     # def calculate_gpa(self):
     #     sum_grades = Subject_study.objects.filter(student=self).aggregate(Sum('grade'))['grade__sum']

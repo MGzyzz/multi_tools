@@ -19,7 +19,9 @@
                     <div class="col-md-2 text-center">
                         <!-- Placeholder for student photo -->
                         <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto" style="width: 150px; height: 150px;">
-                            {% if student.telegram_username|lower == 'ruby' %}
+                            {%if student.face_image %}
+                            <img src="{{ student.face_image.url }}" alt="Student Photo" class="rounded-circle" style="width: 100%; height: 100%;">
+                            {%elif student.telegram_username|lower == 'ruby' %}
                             <span class='display-4'>FR</span>
                             {% else %}
                             <span class="display-4">{{ student.first_name|slice:":1" }}{{ student.last_name|slice:":1" }}</span>
