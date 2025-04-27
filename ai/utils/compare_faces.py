@@ -1,14 +1,25 @@
+import torch
 import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
 
-def find_best_match(embedding, embeddings_db, threshold=0.5):
-    best_score = -1
-    best_name = None
+def find_best_match(embedding, embeddings_db, threshold=0.7):
 
-    for name, db_embedding in embeddings_db.items():
-        score = cosine_similarity([embedding], [db_embedding])[0][0]
-        if score > best_score and score > threshold:
-            best_score = score
-            best_name = name
+    if isinstance(embedding, np.ndarray):
+        embedding = torch.from_numpy(embedding).float()
 
-    return best_name, best_score
+    best_user = None
+    best_similarity = -1
+
+    for user_id, db_embedding in embeddings_db.items():
+        if isinstance(db_embedding, np.ndarray):
+            db_embedding = torch.from_numpy(db_embedding).float()
+
+        similarity = torch.nn.functional.cosine_similarity(embedding, db_embedding, dim=0).item()
+
+        if similarity > best_similarity:
+            best_similarity = similarity
+            best_user = user_id
+
+    if best_similarity >= threshold:
+        return best_user, best_similarity
+    else:
+        return "Unknown", best_similarity
