@@ -26,3 +26,22 @@ class GetStudentPhoto(APIView):
             return Response({"photo_url": photo_url})
         except Student.DoesNotExist:
             return Response({"error": "Student not found"}, status=404)
+        
+    
+class CreateStudentAPI(APIView):
+    
+    """
+    API view to create a new student.
+    """
+    
+    def get(self, request, *args, **kwargs):
+        return Response({"message": "Use POST method sosunok :d!"})
+    
+    def post(self, request, *args, **kwargs):
+        serializer = StudentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+    
+    

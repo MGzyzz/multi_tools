@@ -62,9 +62,14 @@
                     <p class="card-text text-secondary">Получить общие сведения о студентов</p>
                 </div>
                 <div class='d-flex flex-column align-items-start'>
+                    {% if students %}
+
                     {% for std in students %}
-                <a href='{% url 'student_detail' std.id %}' class='mb-3 a_block'> {{ std.first_name }} </a>
-            {% endfor %}
+                        <a href='{% url 'student_detail' std.id %}' class='mb-3 a_block'> {{ std.first_name }} </a>
+                    {% endfor %}
+                    {% else %}
+                    <p class="">Student Not Found</p>
+                    {%endif%}
                 </div>
             </div>
         </div>

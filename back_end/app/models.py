@@ -20,16 +20,28 @@ class Student(models.Model):
     def __str__(self):
         return self.first_name + " " + self.last_name
 
+    def __str__(self):
+        return self.name
+    
+
+
 
 class Teacher(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    subject = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=15)
 
     def __str__(self):
         return self.first_name + " " + self.last_name
+
+
+class Subject_study(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+    
+
 
 class Group(models.Model):
     name = models.CharField(max_length=100)
@@ -40,9 +52,15 @@ class Group(models.Model):
         return self.name
 
 
+"""
+
+Schedule класс - отвечает за модель расписания и подробности о ней
+
+"""
+
 class Schedule(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
-    subject = models.CharField(max_length=100)
+    subject = models.ForeignKey(Subject_study, on_delete=models.CASCADE)
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     time = models.TimeField()
     date = models.DateField()
@@ -50,12 +68,6 @@ class Schedule(models.Model):
     def __str__(self):
         return f"{self.group} - {self.subject} - {self.teacher}"
 
-
-class Subject_study(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField()
-    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
-    
 
     def __str__(self):
         return self.name
@@ -71,6 +83,18 @@ class Grade(models.Model):
     def get_final_grade(self):
         self.final_grade = (self.bd_one * 0.3 + self.bd_two * 0.3 + self.exam * 0.4)
         self.save()
+        
+        
+
+class Mark(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subject_study, on_delete=models.CASCADE)
+    presense = models.BooleanField(default=False)
+    time = models.TimeField()
+    
+    
+    def __str__(self):
+        return f"{self.student} - {self.subject} - {self.presense} - {self.time}"
 """
 Оценка предмета
 GPA - 4.0
