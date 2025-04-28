@@ -54,4 +54,4 @@ coverage/
 *.rar
 venv/
 *__pycache__
-*db.sqlite3
+back_end/db.sqlite3
