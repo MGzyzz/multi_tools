@@ -6,10 +6,6 @@ from recognition.facenet_model import FaceEmbedder
 FACES_DB_PATH = "ai/data/faces_db"
 OUTPUT_PATH = "ai/data/embeddings.npy"
 
-embedder = FaceEmbedder()
-embeddings_dict = {}
-
-
 def load_images_from_folder(folder):
     images = []
     for filename in os.listdir(folder):
@@ -19,19 +15,31 @@ def load_images_from_folder(folder):
             images.append(img)
     return images
 
+def generate_embeddings():
+    embedder = FaceEmbedder()
+    embeddings_dict = {}
 
-for user_id in os.listdir(FACES_DB_PATH):
-    user_path = os.path.join(FACES_DB_PATH, user_id)
-    if not os.path.isdir(user_path):
-        continue
+    if not os.path.exists(FACES_DB_PATH):
+        print(f"[WARNING] Папка {FACES_DB_PATH} не найдена. Пропуск генерации.")
+        return
 
-    imgs = load_images_from_folder(user_path)
-    if not imgs:
-        continue
+    for user_id in os.listdir(FACES_DB_PATH):
+        user_path = os.path.join(FACES_DB_PATH, user_id)
+        if not os.path.isdir(user_path):
+            continue
 
-    embeddings = [embedder.get_embedding(img) for img in imgs]
-    mean_embedding = np.mean(embeddings, axis=0)
-    embeddings_dict[user_id] = mean_embedding
+        imgs = load_images_from_folder(user_path)
+        if not imgs:
+            continue
 
-np.save(OUTPUT_PATH, embeddings_dict)
-print(f"Сохранено {len(embeddings_dict)} эмбеддингов в {OUTPUT_PATH}")
+        embeddings = [embedder.get_embedding(img) for img in imgs]
+        mean_embedding = np.mean(embeddings, axis=0)
+        embeddings_dict[user_id] = mean_embedding
+
+    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+    np.save(OUTPUT_PATH, embeddings_dict)
+    print(f"[INFO] Сохранено {len(embeddings_dict)} эмбеддингов в {OUTPUT_PATH}")
+
+# 💡 Если файл запускается напрямую — запускаем генерацию
+if __name__ == "__main__":
+    generate_embeddings()

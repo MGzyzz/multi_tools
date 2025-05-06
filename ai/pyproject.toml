@@ -3,14 +3,21 @@ name = "ai"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "HaRwonDus",email = "harvond@mail.ru"}
+    { name = "HaRwonDus", email = "harvond@mail.ru" }
 ]
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-    "requests (>=2.32.3,<3.0.0)"
-]
 
+dependencies = [
+    "numpy>=1.26.0,<2.0.0",
+    "opencv-python==4.8.1.78",
+    "facenet-pytorch==2.6.0",
+    "ultralytics>=8.3.127,<9.0.0",
+    "scikit-learn>=1.6.1,<2.0.0",
+    "matplotlib>=3.10.1,<4.0.0",
+    "umap-learn>=0.5.7,<0.6.0",
+    "requests>=2.32.3,<3.0.0"
+]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
