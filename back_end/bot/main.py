@@ -7,6 +7,10 @@ import uvicorn
 from aiogram import Bot, Dispatcher, types, Router
 from aiogram.filters import Command
 from contextlib import asynccontextmanager
+from fastapi.middleware.cors import CORSMiddleware
+
+
+
 
 # Загрузка переменных окружения
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -62,6 +66,15 @@ async def lifespan(app: FastAPI):
 
 # Создание FastAPI приложения с использованием lifespan
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Разрешаем запросы с Vite (или React)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 bot = Bot(token=TOKEN)
 
 @app.post('/send_message')
@@ -94,10 +107,10 @@ async def send_message(request: Request):
 async def check_bot_status():
     try:
         await bot.get_me()
-        return {"status": "active"}
+        return {"status": "online"}
     except Exception as e:
         print(f"[check_bot_status] Ошибка подключения к боту: {e}")
-        return {"status": "inactive"}
+        return {"status": "offline"}
 
 @app.post('/send_message_thread_bot')
 async def send_message_thread_bot(request: Request):

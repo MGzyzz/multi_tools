@@ -11,4 +11,5 @@ urlpatterns = [
     path('get_excel_attendance_file', create_excel_attendance_file, name='excel_attendance_file'),
     path('edit_attendance/<int:pk>', AttendanceAPI.as_view(), name='edit_attendance'),
     path('schedule_and_attendance/<int:pk>', GetScheduleWithAttendens.as_view(), name='test'),
+    path('get_schedule_group_id/<int:pk>', GetScheduleGroupId.as_view(), name='schedule_group_id'),
 ]

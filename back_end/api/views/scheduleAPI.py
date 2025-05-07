@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from api.serializer import ScheduleSerializer, StudentSerializer
+from api.serializer import ScheduleSerializer, GroupSerializer
 from app.models import Schedule, Student, Attendance
 from rest_framework.response import Response
 from rest_framework import status
@@ -51,4 +51,17 @@ class GetScheduleWithAttendens(APIView):
             })
 
         return Response({"students": data}, status=status.HTTP_200_OK)
+    
+
+class GetScheduleGroupId(APIView):
+    def get(self, request, pk, *args, **kwargs):
+
+        try:
+            schedule = Schedule.objects.get(id=pk)
+            group = schedule.group
+        except Schedule.DoesNotExist:
+            return Response({"error": "Schedule not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = GroupSerializer(group)
+        return Response(serializer.data)
 
