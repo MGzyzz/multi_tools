@@ -16,6 +16,15 @@ from utils.compare_faces import find_best_match
 from backend_integration import send_recognition_result_to_backend
 from utils.log_similarity import log_similarity
 
+
+# TO-DO реализовать через FastAPI запуск ИИ так чтобы первый url должен был быть 
+# /status для получение информации о состоянии
+# /get_ai_start для запуска ИИ. Данный запрос должен открыть камеру и отсканировать лицо
+# после сканирования отправить на front_end результат {"username": "Dmitry"}
+# Окно должно рабоать ровно 30 секунд
+# Все данные должны быть отправлены на сервер ввиде json формата
+# прописать if __name__ == "__main__": и запускать только в этом случае
+
 # Пути
 EMBEDDINGS_PATH = "ai/data/embeddings.npy"
 
@@ -63,7 +72,8 @@ def sender_loop():
 threading.Thread(target=sender_loop, daemon=True).start()
 
 # Запуск камеры
-cap = cv2.VideoCapture(0)
+# Не работает камера? Поменяй на 1
+cap = cv2.VideoCapture(0) 
 if not cap.isOpened():
     raise RuntimeError("[ERROR] Не удалось открыть камеру")
 
