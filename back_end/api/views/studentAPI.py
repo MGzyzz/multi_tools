@@ -47,3 +47,16 @@ class CreateStudentAPI(APIView):
 
 def create_excel_mark_file(APIView):
     pass
+
+
+class getStudentInformation(APIView):
+    
+    
+    def get(self, request, *args, **kwargs):
+        first_name = kwargs.get('first_name')
+        student = Student.objects.filter(first_name__iexact=first_name).first()
+        
+        if student:
+            serializer = StudentSerializer(student)
+            return Response({'data': serializer.data})
+        return Response({'error': 'student not found'})
