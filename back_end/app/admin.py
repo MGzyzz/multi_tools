@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Student, Group, Schedule, Mark, Teacher
+from .models import Student, Group, Schedule, Attendance, Teacher, Subject_study
 # Register your models here.
 
 
@@ -25,9 +25,9 @@ class ScheduleAdmin(admin.ModelAdmin):
     list_filter = ('date',)
     ordering = ('date',)
 
-class MarksAdmin(admin.ModelAdmin):
-    list_display = ('student', 'subject', 'presense', 'time')
-    search_fields = ('student__first_name', 'subject')
+class AttendanceAdmin(admin.ModelAdmin):
+    list_display = ('id','student', 'presense')
+    search_fields = ('student__first_name', 'presense')
     list_filter = ('presense',)
     ordering = ('student',)
     
@@ -37,9 +37,18 @@ class TeacherAdmin(admin.ModelAdmin):
     search_fields = ('first_name', 'last_name')
     ordering = ('first_name',)
     
+    
+
+class SubjectStudyAdmin(admin.ModelAdmin):
+    list_display = ('name', "description", 'teacher')
+    search_fields = ('name', 'teacher')
+    list_filter = ('name',)
+    ordering = ('name',)
+    
 
 admin.site.register(Student, StudentAdmin)
 admin.site.register(Group, GroupAdmin)
 admin.site.register(Schedule, ScheduleAdmin)
-admin.site.register(Mark, MarksAdmin)
+admin.site.register(Attendance, AttendanceAdmin)
 admin.site.register(Teacher, TeacherAdmin)
+admin.site.register(Subject_study, SubjectStudyAdmin)

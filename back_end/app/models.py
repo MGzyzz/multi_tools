@@ -20,10 +20,6 @@ class Student(models.Model):
     def __str__(self):
         return self.first_name + " " + self.last_name
 
-    def __str__(self):
-        return self.name
-    
-
 
 
 class Teacher(models.Model):
@@ -41,6 +37,9 @@ class Subject_study(models.Model):
     description = models.TextField()
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     
+    
+    def __str__(self):
+        return self.name + " " + self.teacher.first_name
 
 
 class Group(models.Model):
@@ -70,7 +69,7 @@ class Schedule(models.Model):
 
 
     def __str__(self):
-        return self.name
+        return self.group.name + " " + self.subject.name + " " + self.teacher.first_name + " " + str(self.time) + " " + str(self.date)
 
 class Grade(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
@@ -86,12 +85,12 @@ class Grade(models.Model):
         
         
 
-class Mark(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    subject = models.ForeignKey(Subject_study, on_delete=models.CASCADE)
+class Attendance(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='attendance')
+    schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, null=False, related_name="attendances")
     presense = models.BooleanField(default=False)
-    time = models.TimeField()
-    
+    marked_at = models.DateTimeField(null=True, blank=True)
+
     
     def __str__(self):
         return f"{self.student} - {self.subject} - {self.presense} - {self.time}"
