@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom'; // Хук для извлечения параметров из URL
 import { getAttendanceGroup } from '../../api/getAttendanceGroup';
 import { editAttendance } from '../../api/editAttendance'; // Этот импорт может быть использован для обновления посещаемости
+import { getScheduleGroupId } from '../../api/getScheduleGroupId';
 
 const Attendance = () => {
     const { scheduleId } = useParams();  // Извлекаем scheduleId из URL
@@ -22,24 +23,28 @@ const Attendance = () => {
 
                 // Сохраняем список студентов
                 setStudents(studentsData);
+
+                // Получаем дополнительные данные о группе и предмете
+                const scheduleData = await getScheduleGroupId(scheduleId);
+                setGroup(scheduleData.name);
+                // setSubject(scheduleData.course);
             } catch (err) {
                 setError(err);
             } finally {
                 setLoading(false);
             }
         };
-        if (scheduleId) fetchData(); // Запрашиваем только если есть scheduleId
-    }, [scheduleId]); // Обновляем данные, если изменился scheduleId
+        if (scheduleId) fetchData();
+    }, [scheduleId]);
 
     const toggleAttendance = async (studentId) => {
         try {
-            // Находим студента по ID и меняем его статус присутствия
             const updatedStudents = students.map((student) =>
                 student.id === studentId
-                    ? { ...student, presense: !student.presense } // Меняем статус
+                    ? { ...student, presense: !student.presense }
                     : student
             );
-            setStudents(updatedStudents); // Обновляем состояние студентов с новым статусом
+            setStudents(updatedStudents);
 
             // Отправляем обновленный статус на сервер
             await editAttendance(scheduleId, studentId, updatedStudents.find(student => student.id === studentId).presense);
@@ -52,8 +57,8 @@ const Attendance = () => {
     if (error) return <div className="text-center mt-5"><h2 className="text-danger">Error: {error.message}</h2></div>;
 
     return (
-        <div className="container mt-3">
-            <div className="row mt-3">
+        <>
+            <div className="row mt-3 mb-5">
                 <div className="col-12 text-center mb-5">
                     <h1 className="display-4 fw-bold text-white">Mark Attendance</h1>
                     <p className="lead text-secondary">Quickly mark attendance for students with ease.</p>
@@ -68,7 +73,7 @@ const Attendance = () => {
                             <h5 className="card-title fw-bold">Class Information</h5>
                             <p className="card-text text-secondary">Details about the current group and subject.</p>
                             <h3 className="text-white">Group: {group}</h3>
-                            <h4 className="text-secondary">Subject: {subject}</h4>
+                            <h4 className="text-secondary">Subject: test</h4>
                         </div>
                     </div>
 
@@ -113,19 +118,20 @@ const Attendance = () => {
                                                     >
                                                         {student.presense ? 'Present' : 'Absent'}
                                                     </button>
-
-
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
+                                <div className="d-flex justify-content-end">
+                                    <a href="#" className='btn btn-info text-white'>Отмететь с помощью ИИ</a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

@@ -1,11 +1,13 @@
-import './Tools.css'
+import './Tools.css';
 import { useState, useEffect } from 'react';
 import { getStudentsList } from '../../api/getStudentList';
+import { getStatusBotTelegram } from '../../api/statusBotTelegram';
 
 const Home = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [botStatus, setBotStatus] = useState(null);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -19,22 +21,22 @@ const Home = () => {
       }
     };
 
+    const fetchBotStatus = async () => {
+      try {
+        const status = await getStatusBotTelegram();
+        setBotStatus(status);
+      } catch (error) {
+        setBotStatus({ status: 'offline' });
+      }
+    };
+
     fetchStudents();
+    fetchBotStatus();
   }, []);
 
   const schedules = [
-    {
-      group: { name: 'Group A' },
-      subject: 'Math',
-      date: '2025-04-23',
-      time: '10:00',
-    },
-    {
-      group: { name: 'Group B' },
-      subject: 'Physics',
-      date: '2025-04-24',
-      time: '12:00',
-    },
+    { group: { name: 'Group A' }, subject: 'Math', date: '2025-04-23', time: '10:00' },
+    { group: { name: 'Group B' }, subject: 'Physics', date: '2025-04-24', time: '12:00' },
   ];
 
   const groups = [
@@ -47,13 +49,30 @@ const Home = () => {
 
   return (
     <div className="container mt-3">
-      {/* Existing content (header, schedule, students, groups, etc.) */}
-
       {/* Telegram Tools Block */}
       <div className="col-12 mt-5">
         <div className="card shadow-sm bg-dark text-white rounded-5">
           <div className="card-body">
             <h3 className="card-title fw-bold text-center mb-4">Send Message to Telegram</h3>
+
+            {/* Статус бота */}
+            {botStatus && (
+              <div className="text-center mb-4">
+                <div
+                  className={`status-indicator d-inline-flex align-items-center justify-content-center rounded-pill px-4 py-2 ${
+                    botStatus.status === 'online' ? 'bg-success' : 'bg-danger'
+                  }`}
+                  style={{ color: 'white', fontWeight: 'bold', fontSize: '1.1rem' }}
+                >
+                  <i
+                    className={`me-2 bi ${
+                      botStatus.status === 'online' ? 'bi-check-circle-fill' : 'bi-x-circle-fill'
+                    }`}
+                  ></i>
+                  Bot is {botStatus.status === 'online' ? 'Online' : 'Offline'}
+                </div>
+              </div>
+            )}
 
             <form>
               <div className="mb-3">

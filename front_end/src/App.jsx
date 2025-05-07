@@ -9,12 +9,14 @@ function App() {
   return (
     <>
       <div className='container'>
+        {window.location.pathname !== '/' && (
+          <a href='/' className='btn btn-secondary mt-5'>Back Home</a>
+        )}
         <Routes>
           <Route path='/' element={<Home />} />
-          <Route path='lessons/:scheduleId' element={<Attendance/>} />
+          <Route path='lessons/:scheduleId' element={<Attendance />} />
         </Routes>
       </div>
-
     </>
   )
 }
