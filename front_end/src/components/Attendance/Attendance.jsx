@@ -21,6 +21,7 @@ const Attendance = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [aiStatus, setAiStatus] = useState('offline'); // Статус ИИ
+    const [recognitionInProgress, setRecognitionInProgress] = useState(false); // Флаг процесса распознавания
 
     useEffect(() => {
         const fetchData = async () => {
@@ -102,10 +103,10 @@ const Attendance = () => {
                         )
                     );
                     
-                    // Закрываем модальное окно автоматически
-                    setModalVisible(false);
+                    // Меняем статус на успешный
+                    setScanStatus('success');
                     
-                    // Показываем только toast-уведомление об успешной отметке
+                    // Показываем toast-уведомление об успешной отметке
                     toast.success(`${student.first_name} ${student.last_name} успешно отмечен(а)`, {
                         position: "top-right",
                         autoClose: 5000,
@@ -115,11 +116,19 @@ const Attendance = () => {
                         draggable: true,
                     });
                     
+                    // Закрываем модальное окно ТОЛЬКО после успешного отображения уведомления
+                    setTimeout(() => {
+                        setModalVisible(false);
+                        setRecognitionInProgress(false);
+                    }, 1500); // Небольшая задержка для лучшего UX
+                    
                     return true; // Распознавание успешно
                 } else {
-                    // В случае ошибки оставляем модальное окно открытым
+                    // В случае ошибки оставляем модальное окно открытым с кнопкой закрытия
                     setScanStatus('error');
                     toast.error(`Студент с ID ${aiResult.user_id} не найден в списке`);
+                    // НЕ закрываем модальное окно автоматически
+                    setRecognitionInProgress(false);
                     return true; // Завершаем процесс, хотя с ошибкой
                 }
             }
@@ -128,6 +137,7 @@ const Attendance = () => {
             console.error("Ошибка при получении результата:", err);
             setScanStatus('error');
             toast.error(err.message || "Ошибка при распознавании");
+            setRecognitionInProgress(false);
             return true; // Завершаем процесс с ошибкой
         }
     };
@@ -135,37 +145,43 @@ const Attendance = () => {
     const handleAIRecognition = async () => {
         if (aiStatus === 'online') {
             try {
-                // Сбрасываем состояние модального окна
+                // Сбрасываем состояние модального окна и устанавливаем флаг процесса
                 setScanStatus('scanning');
                 setModalVisible(true);
+                setRecognitionInProgress(true);
                 
                 // Запускаем распознавание лиц
                 await check_attendance_use_ai();
+                
+                let recognitionCompleted = false;
                 
                 // Запускаем проверку результата каждую секунду
                 const intervalId = setInterval(async () => {
                     const completed = await checkRecognitionResult();
                     if (completed) {
                         clearInterval(intervalId);
+                        recognitionCompleted = true; // Отмечаем, что распознавание завершено
                     }
                 }, 1000);
                 
-                // Максимальное время ожидания - 10 секунд, после чего прекращаем проверку
-                setTimeout(() => {
+                // Максимальное время ожидания - 15 секунд (увеличено с 10 до 15 для соответствия бэкенду)
+                const timeoutId = setTimeout(() => {
                     clearInterval(intervalId);
-                    // Если сканирование все еще в процессе, показываем ошибку
-                    if (scanStatus === 'scanning') {
+                    // Показываем ошибку ТОЛЬКО если распознавание еще не завершено успешно
+                    if (!recognitionCompleted) {
                         setScanStatus('error');
                         toast.error("Время ожидания истекло. Лицо не распознано.");
-                        setModalVisible(false);
+                        setRecognitionInProgress(false);
+                        // НЕ закрываем модальное окно автоматически при ошибке
                     }
-                }, 10000);
+                }, 15000);
                 
             } catch (err) {
                 console.error("Ошибка:", err);
                 setScanStatus('error');
                 toast.error(err.message || "Произошла неизвестная ошибка");
-                setModalVisible(false);
+                setRecognitionInProgress(false);
+                // НЕ закрываем модальное окно автоматически при ошибке
             }
         }
     };
@@ -276,8 +292,9 @@ const Attendance = () => {
                                             href="#"
                                             className={`btn ${aiStatus === 'online' ? 'btn-info' : 'btn-secondary disabled'} text-white`}
                                             onClick={handleAIRecognition}
+                                            disabled={recognitionInProgress} // Блокируем кнопку во время распознавания
                                         >
-                                            Отметить с помощью ИИ
+                                            {recognitionInProgress ? 'Распознавание...' : 'Отметить с помощью ИИ'}
                                         </a>
 
                                         {aiStatus !== 'online' && (
@@ -291,27 +308,47 @@ const Attendance = () => {
                 </div>
             </div>
             
-            {/* Модальное окно только со сканированием */}
+            {/* Модальное окно с разными состояниями */}
             {modalVisible && (
                 <div
                     className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
                     style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)', zIndex: 1050 }}
                 >
-                    <div className="bg-dark text-white p-5 rounded shadow-lg text-center">
-                        <h4>Пожалуйста, подождите...</h4>
-                        <p>Ваше лицо сканируется системой ИИ</p>
-                        <div className="spinner-border text-light mt-3" role="status">
-                            <span className="visually-hidden">Загрузка...</span>
-                        </div>
+                    <div className="bg-dark text-white p-5 rounded shadow-lg text-center" style={{ minWidth: '350px' }}>
+                        {scanStatus === 'scanning' && (
+                            <>
+                                <h4>Пожалуйста, подождите...</h4>
+                                <p>Ваше лицо сканируется системой ИИ</p>
+                                <div className="spinner-border text-light mt-3" role="status">
+                                    <span className="visually-hidden">Загрузка...</span>
+                                </div>
+                            </>
+                        )}
+                        
+                        {scanStatus === 'success' && (
+                            <>
+                                <h4>Успешно!</h4>
+                                <p>Ваше лицо распознано, посещение отмечено</p>
+                                <div className="text-success fs-1 mt-3">
+                                    <i className="bi bi-check-circle-fill"></i>
+                                </div>
+                            </>
+                        )}
+                        
                         {scanStatus === 'error' && (
-                            <div className="mt-3">
+                            <>
+                                <h4>Ошибка</h4>
+                                <p>Не удалось распознать лицо или отметить посещение</p>
+                                <div className="text-danger fs-1 mt-3 mb-3">
+                                    <i className="bi bi-x-circle-fill"></i>
+                                </div>
                                 <button 
-                                    className="btn btn-danger" 
+                                    className="btn btn-danger mt-2" 
                                     onClick={closeModal}
                                 >
                                     Закрыть
                                 </button>
-                            </div>
+                            </>
                         )}
                     </div>
                 </div>
