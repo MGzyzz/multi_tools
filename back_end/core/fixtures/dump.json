@@ -128,6 +128,127 @@
     }
 },
 {
+    "model": "app.teacher",
+    "pk": 1,
+    "fields": {
+        "first_name": "test",
+        "last_name": "test",
+        "email": "test@mail.ru",
+        "phone": "+71234567890"
+    }
+},
+{
+    "model": "app.teacher",
+    "pk": 2,
+    "fields": {
+        "first_name": "Иван",
+        "last_name": "Иванов",
+        "email": "иван@mail.com",
+        "phone": "123456789"
+    }
+},
+{
+    "model": "app.teacher",
+    "pk": 3,
+    "fields": {
+        "first_name": "Ольга",
+        "last_name": "Петрова",
+        "email": "ольга@mail.com",
+        "phone": "123456789"
+    }
+},
+{
+    "model": "app.teacher",
+    "pk": 4,
+    "fields": {
+        "first_name": "Сергей",
+        "last_name": "Сидоров",
+        "email": "сергей@mail.com",
+        "phone": "123456789"
+    }
+},
+{
+    "model": "app.subject_study",
+    "pk": 1,
+    "fields": {
+        "name": "test",
+        "description": "test",
+        "teacher": 1
+    }
+},
+{
+    "model": "app.subject_study",
+    "pk": 2,
+    "fields": {
+        "name": "Математика",
+        "description": "Описание Математика",
+        "teacher": 2
+    }
+},
+{
+    "model": "app.subject_study",
+    "pk": 3,
+    "fields": {
+        "name": "Физика",
+        "description": "Описание Физика",
+        "teacher": 2
+    }
+},
+{
+    "model": "app.subject_study",
+    "pk": 4,
+    "fields": {
+        "name": "Информатика",
+        "description": "Описание Информатика",
+        "teacher": 4
+    }
+},
+{
+    "model": "app.subject_study",
+    "pk": 5,
+    "fields": {
+        "name": "История",
+        "description": "Описание История",
+        "teacher": 4
+    }
+},
+{
+    "model": "app.subject_study",
+    "pk": 6,
+    "fields": {
+        "name": "Английский",
+        "description": "Описание Английский",
+        "teacher": 2
+    }
+},
+{
+    "model": "app.subject_study",
+    "pk": 7,
+    "fields": {
+        "name": "Биология",
+        "description": "Описание Биология",
+        "teacher": 4
+    }
+},
+{
+    "model": "app.subject_study",
+    "pk": 8,
+    "fields": {
+        "name": "Литература",
+        "description": "Описание Литература",
+        "teacher": 2
+    }
+},
+{
+    "model": "app.subject_study",
+    "pk": 9,
+    "fields": {
+        "name": "География",
+        "description": "Описание География",
+        "teacher": 2
+    }
+},
+{
     "model": "app.group",
     "pk": 1,
     "fields": {
@@ -151,6 +272,3455 @@
         "students": [
             8
         ]
+    }
+},
+{
+    "model": "app.group",
+    "pk": 3,
+    "fields": {
+        "name": "Группа А",
+        "course": "10 класс",
+        "students": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+        ]
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 1,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-01-20"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 2,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-01-20"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 3,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-01-20"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 4,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-01-21"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 5,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-01-21"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 6,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-01-21"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 7,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-01-22"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 8,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-01-22"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 9,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-01-22"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 10,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-01-23"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 11,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-01-23"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 12,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-01-23"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 13,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-01-24"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 14,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-01-24"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 15,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-01-24"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 16,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-01-27"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 17,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-01-27"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 18,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-01-27"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 19,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-01-28"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 20,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-01-28"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 21,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-01-28"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 22,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-01-29"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 23,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-01-29"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 24,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-01-29"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 25,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-01-30"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 26,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-01-30"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 27,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-01-30"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 28,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-01-31"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 29,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-01-31"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 30,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-01-31"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 31,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-02-03"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 32,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-02-03"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 33,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-02-03"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 34,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-02-04"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 35,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-02-04"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 36,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-02-04"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 37,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-02-05"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 38,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-02-05"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 39,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-02-05"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 40,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-02-06"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 41,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-02-06"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 42,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-02-06"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 43,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-02-07"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 44,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-02-07"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 45,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-02-07"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 46,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-02-10"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 47,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-02-10"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 48,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-02-10"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 49,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-02-11"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 50,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-02-11"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 51,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-02-11"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 52,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-02-12"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 53,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-02-12"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 54,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-02-12"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 55,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-02-13"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 56,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-02-13"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 57,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-02-13"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 58,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-02-14"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 59,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-02-14"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 60,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-02-14"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 61,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-02-17"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 62,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-02-17"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 63,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-02-17"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 64,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-02-18"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 65,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-02-18"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 66,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-02-18"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 67,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-02-19"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 68,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-02-19"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 69,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-02-19"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 70,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-02-20"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 71,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-02-20"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 72,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-02-20"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 73,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-02-21"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 74,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-02-21"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 75,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-02-21"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 76,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-02-24"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 77,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-02-24"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 78,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-02-24"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 79,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-02-25"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 80,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-02-25"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 81,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-02-25"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 82,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-02-26"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 83,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-02-26"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 84,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-02-26"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 85,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-02-27"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 86,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-02-27"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 87,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-02-27"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 88,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-02-28"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 89,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-02-28"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 90,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-02-28"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 91,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-03-03"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 92,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-03-03"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 93,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-03-03"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 94,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-03-04"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 95,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-03-04"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 96,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-03-04"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 97,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-03-05"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 98,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-03-05"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 99,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-03-05"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 100,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-03-06"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 101,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-03-06"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 102,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-03-06"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 103,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-03-07"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 104,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-03-07"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 105,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-03-07"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 106,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-03-10"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 107,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-03-10"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 108,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-03-10"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 109,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-03-11"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 110,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-03-11"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 111,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-03-11"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 112,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-03-12"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 113,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-03-12"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 114,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-03-12"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 115,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-03-13"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 116,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-03-13"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 117,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-03-13"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 118,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-03-14"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 119,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-03-14"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 120,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-03-14"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 121,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-03-17"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 122,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-03-17"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 123,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-03-17"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 124,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-03-18"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 125,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-03-18"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 126,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-03-18"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 127,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-03-19"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 128,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-03-19"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 129,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-03-19"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 130,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-03-20"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 131,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-03-20"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 132,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-03-20"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 133,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-03-21"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 134,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-03-21"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 135,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-03-21"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 136,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-03-24"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 137,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-03-24"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 138,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-03-24"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 139,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-03-25"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 140,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-03-25"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 141,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-03-25"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 142,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-03-26"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 143,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-03-26"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 144,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-03-26"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 145,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-03-27"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 146,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-03-27"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 147,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-03-27"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 148,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-03-28"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 149,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-03-28"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 150,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-03-28"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 151,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-03-31"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 152,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-03-31"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 153,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-03-31"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 154,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-04-01"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 155,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-04-01"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 156,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-04-01"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 157,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-04-02"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 158,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-02"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 159,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-04-02"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 160,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-04-03"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 161,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-03"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 162,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-04-03"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 163,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-04-04"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 164,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-04-04"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 165,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-04-04"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 166,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-04-07"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 167,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-07"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 168,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-04-07"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 169,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-04-08"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 170,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-08"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 171,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-04-08"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 172,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-04-09"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 173,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-09"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 174,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-04-09"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 175,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-04-10"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 176,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-10"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 177,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-04-10"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 178,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-04-11"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 179,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-04-11"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 180,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-04-11"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 181,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-04-14"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 182,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-14"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 183,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-04-14"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 184,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-04-15"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 185,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-15"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 186,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-04-15"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 187,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-04-16"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 188,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-16"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 189,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-04-16"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 190,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-04-17"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 191,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-17"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 192,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-04-17"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 193,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-04-18"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 194,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-18"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 195,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-04-18"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 196,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-04-21"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 197,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-21"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 198,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-04-21"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 199,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-04-22"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 200,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-04-22"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 201,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-04-22"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 202,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-04-23"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 203,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-23"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 204,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-04-23"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 205,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-04-24"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 206,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-24"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 207,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-04-24"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 208,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-04-25"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 209,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-25"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 210,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-04-25"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 211,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-04-28"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 212,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-04-28"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 213,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-04-28"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 214,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-04-29"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 215,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-04-29"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 216,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-04-29"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 217,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-04-30"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 218,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-04-30"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 219,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-04-30"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 220,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-05-01"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 221,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-05-01"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 222,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-05-01"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 223,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-05-02"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 224,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-05-02"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 225,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-05-02"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 226,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-05-05"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 227,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-05-05"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 228,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-05-05"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 229,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-05-06"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 230,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-05-06"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 231,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-05-06"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 232,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-05-07"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 233,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-05-07"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 234,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-05-07"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 235,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-05-08"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 236,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-05-08"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 237,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-05-08"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 238,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-05-09"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 239,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-05-09"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 240,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-05-09"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 241,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-05-12"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 242,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-05-12"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 243,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-05-12"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 244,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-05-13"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 245,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-05-13"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 246,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-05-13"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 247,
+    "fields": {
+        "group": 3,
+        "subject": 3,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-05-14"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 248,
+    "fields": {
+        "group": 3,
+        "subject": 2,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-05-14"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 249,
+    "fields": {
+        "group": 3,
+        "subject": 7,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-05-14"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 250,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-05-15"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 251,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-05-15"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 252,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-05-15"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 253,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "09:00:00",
+        "date": "2025-05-16"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 254,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-05-16"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 255,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-05-16"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 256,
+    "fields": {
+        "group": 3,
+        "subject": 9,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-05-19"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 257,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "11:00:00",
+        "date": "2025-05-19"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 258,
+    "fields": {
+        "group": 3,
+        "subject": 5,
+        "teacher": 4,
+        "time": "13:00:00",
+        "date": "2025-05-19"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 259,
+    "fields": {
+        "group": 3,
+        "subject": 8,
+        "teacher": 2,
+        "time": "09:00:00",
+        "date": "2025-05-20"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 260,
+    "fields": {
+        "group": 3,
+        "subject": 4,
+        "teacher": 4,
+        "time": "11:00:00",
+        "date": "2025-05-20"
+    }
+},
+{
+    "model": "app.schedule",
+    "pk": 261,
+    "fields": {
+        "group": 3,
+        "subject": 6,
+        "teacher": 2,
+        "time": "13:00:00",
+        "date": "2025-05-20"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 1,
+    "fields": {
+        "student": 1,
+        "schedule": 232,
+        "presense": true,
+        "marked_at": "2025-05-09T22:58:19.409Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 2,
+    "fields": {
+        "student": 2,
+        "schedule": 232,
+        "presense": false,
+        "marked_at": "2025-05-09T22:56:20.163Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 3,
+    "fields": {
+        "student": 3,
+        "schedule": 232,
+        "presense": false,
+        "marked_at": "2025-05-07T18:36:12.539Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 4,
+    "fields": {
+        "student": 4,
+        "schedule": 232,
+        "presense": true,
+        "marked_at": "2025-05-07T18:36:10.171Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 5,
+    "fields": {
+        "student": 5,
+        "schedule": 232,
+        "presense": false,
+        "marked_at": "2025-05-09T22:57:16.962Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 6,
+    "fields": {
+        "student": 6,
+        "schedule": 232,
+        "presense": false,
+        "marked_at": "2025-05-07T18:36:14.955Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 7,
+    "fields": {
+        "student": 7,
+        "schedule": 232,
+        "presense": true,
+        "marked_at": "2025-05-10T21:13:06.063Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 8,
+    "fields": {
+        "student": 8,
+        "schedule": 232,
+        "presense": true,
+        "marked_at": "2025-05-10T21:08:55.203Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 9,
+    "fields": {
+        "student": 1,
+        "schedule": 234,
+        "presense": true,
+        "marked_at": "2025-05-06T22:42:32.779Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 10,
+    "fields": {
+        "student": 2,
+        "schedule": 234,
+        "presense": true,
+        "marked_at": "2025-05-06T22:42:32.346Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 11,
+    "fields": {
+        "student": 3,
+        "schedule": 234,
+        "presense": false,
+        "marked_at": "2025-05-07T11:31:27.850Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 12,
+    "fields": {
+        "student": 4,
+        "schedule": 234,
+        "presense": false,
+        "marked_at": "2025-05-07T11:31:27.451Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 13,
+    "fields": {
+        "student": 5,
+        "schedule": 234,
+        "presense": true,
+        "marked_at": "2025-05-07T11:31:27.020Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 14,
+    "fields": {
+        "student": 6,
+        "schedule": 234,
+        "presense": true,
+        "marked_at": "2025-05-07T11:31:25.849Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 15,
+    "fields": {
+        "student": 7,
+        "schedule": 234,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 16,
+    "fields": {
+        "student": 8,
+        "schedule": 234,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 17,
+    "fields": {
+        "student": 1,
+        "schedule": 233,
+        "presense": true,
+        "marked_at": "2025-05-07T11:35:09.265Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 18,
+    "fields": {
+        "student": 2,
+        "schedule": 233,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 19,
+    "fields": {
+        "student": 3,
+        "schedule": 233,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 20,
+    "fields": {
+        "student": 4,
+        "schedule": 233,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 21,
+    "fields": {
+        "student": 5,
+        "schedule": 233,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 22,
+    "fields": {
+        "student": 6,
+        "schedule": 233,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 23,
+    "fields": {
+        "student": 7,
+        "schedule": 233,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 24,
+    "fields": {
+        "student": 8,
+        "schedule": 233,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 25,
+    "fields": {
+        "student": 1,
+        "schedule": 210,
+        "presense": true,
+        "marked_at": "2025-05-07T11:35:17.062Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 26,
+    "fields": {
+        "student": 2,
+        "schedule": 210,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 27,
+    "fields": {
+        "student": 3,
+        "schedule": 210,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 28,
+    "fields": {
+        "student": 4,
+        "schedule": 210,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 29,
+    "fields": {
+        "student": 5,
+        "schedule": 210,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 30,
+    "fields": {
+        "student": 6,
+        "schedule": 210,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 31,
+    "fields": {
+        "student": 7,
+        "schedule": 210,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 32,
+    "fields": {
+        "student": 8,
+        "schedule": 210,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 33,
+    "fields": {
+        "student": 1,
+        "schedule": 211,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 34,
+    "fields": {
+        "student": 2,
+        "schedule": 211,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 35,
+    "fields": {
+        "student": 3,
+        "schedule": 211,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 36,
+    "fields": {
+        "student": 4,
+        "schedule": 211,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 37,
+    "fields": {
+        "student": 5,
+        "schedule": 211,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 38,
+    "fields": {
+        "student": 6,
+        "schedule": 211,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 39,
+    "fields": {
+        "student": 7,
+        "schedule": 211,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 40,
+    "fields": {
+        "student": 8,
+        "schedule": 211,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 41,
+    "fields": {
+        "student": 1,
+        "schedule": 150,
+        "presense": false,
+        "marked_at": "2025-05-10T21:22:57.067Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 42,
+    "fields": {
+        "student": 2,
+        "schedule": 150,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 43,
+    "fields": {
+        "student": 3,
+        "schedule": 150,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 44,
+    "fields": {
+        "student": 4,
+        "schedule": 150,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 45,
+    "fields": {
+        "student": 5,
+        "schedule": 150,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 46,
+    "fields": {
+        "student": 6,
+        "schedule": 150,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 47,
+    "fields": {
+        "student": 7,
+        "schedule": 150,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 48,
+    "fields": {
+        "student": 8,
+        "schedule": 150,
+        "presense": true,
+        "marked_at": "2025-05-10T21:41:14.316Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 49,
+    "fields": {
+        "student": 1,
+        "schedule": 180,
+        "presense": false,
+        "marked_at": "2025-05-11T09:17:45.616Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 50,
+    "fields": {
+        "student": 2,
+        "schedule": 180,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 51,
+    "fields": {
+        "student": 3,
+        "schedule": 180,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 52,
+    "fields": {
+        "student": 4,
+        "schedule": 180,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 53,
+    "fields": {
+        "student": 5,
+        "schedule": 180,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 54,
+    "fields": {
+        "student": 6,
+        "schedule": 180,
+        "presense": false,
+        "marked_at": null
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 55,
+    "fields": {
+        "student": 7,
+        "schedule": 180,
+        "presense": true,
+        "marked_at": "2025-05-11T10:19:34.465Z"
+    }
+},
+{
+    "model": "app.attendance",
+    "pk": 56,
+    "fields": {
+        "student": 8,
+        "schedule": 180,
+        "presense": true,
+        "marked_at": "2025-05-11T10:19:06.758Z"
     }
 }
 ]
