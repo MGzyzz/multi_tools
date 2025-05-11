@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from api.serializer import StudentSerializer
 from app.models import Student
 from rest_framework.response import Response
+import requests
 
 class StudentListAPI(APIView):
     """
