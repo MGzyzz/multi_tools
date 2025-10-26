@@ -33,7 +33,7 @@
 
 4. **Загрузка данных из фикстур**  
      ```bash
-     python manage.py loaddata core/fixtures/dumps.json
+     python manage.py loaddata core/fixtures/dump.json
      ```
 
 5. **Запуск сервера разработки**  
