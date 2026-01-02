@@ -10,10 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
-from pathlib import Path
-import os
 from dotenv import load_dotenv
 from pathlib import Path
+from datetime import timedelta
+import os
+
+
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -52,9 +54,19 @@ INSTALLED_APPS = [
     'drf_yasg',
     'corsheaders',
     'rest_framework',
+    'rest_framework_simplejwt',
+    'django_celery_beat',
+    'django_celery_results',
     'api',
     'app',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ]
+}
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -66,6 +78,29 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+SIMPLE_JWT = {
+    # Время жизни access-токена
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=14),
+    
+    # Время жизни refresh-токена
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+
+    # Можно ли обновлять refresh-токен
+    "ROTATE_REFRESH_TOKENS": True,
+
+    # Деактивировать старый refresh при обновлении
+    "BLACKLIST_AFTER_ROTATION": True,
+
+    # Тип алгоритма
+    "ALGORITHM": "HS256",
+
+    # Ключ для подписи
+    "SIGNING_KEY": SECRET_KEY,
+
+    # Формат типа токена (по умолчанию Bearer)
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
 
 ROOT_URLCONF = 'core.urls'
 
@@ -100,6 +135,27 @@ DATABASES = {
         "HOST": 'localhost',
         "PORT": 5432,
     }
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
 }
 
 # Password validation
