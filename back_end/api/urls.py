@@ -1,8 +1,14 @@
 from .views import *
 from django.urls import path
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
 urlpatterns = [
+    # API AUTH
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # path('register/', AccountsProfileCreateViewAPI.as_view() ,name='register'), # В будущем сделаем регистрацию через API
+    
     path('get_students_list', StudentListAPI.as_view(), name='student_list'),
     path('get_student_photo/<str:first_name>', GetStudentPhoto.as_view(), name='student_photo'),
     path('get_student_information/<str:first_name>', getStudentInformation.as_view(), name='student_information'),
