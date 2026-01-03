@@ -7,7 +7,7 @@ from .models import Student, Group, Schedule, Attendance, Teacher, Subject_study
 
 class StudentAdmin(admin.ModelAdmin):
 
-    list_display = ('first_name', 'last_name', 'telegram_username', 'telegram_id', 'age', 'email', 'phone', 'address', 'gpa', 'face_image')
+    list_display = ('first_name', 'last_name', 'telegram_username', 'telegram_id', 'age', 'email', "platonus_id", 'phone', 'face_image')
     search_fields = ('first_name', 'last_name', 'telegram_username')
     list_filter = ('age',)
     ordering = ('first_name',)

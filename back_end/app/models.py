@@ -8,10 +8,9 @@ class Student(models.Model):
     telegram_username = models.CharField("Telegram username", max_length=100, unique=True)
     telegram_id = models.CharField("Telegram ID", max_length=10, unique=True)
     email = models.EmailField("Email")
+    platonus_id = models.PositiveBigIntegerField("ID platonus", blank=True, null=True)
     age = models.IntegerField("Возраст")
     phone = models.CharField("Телефон", max_length=15)
-    address = models.TextField("Адрес")
-    gpa = models.FloatField("GPA", default=0.0)
     face_image = models.ImageField("Фото", upload_to='students/', blank=True, null=True)
 
     # def calculate_gpa(self):

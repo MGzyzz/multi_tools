@@ -28,6 +28,8 @@ class GetStudentPhoto(APIView):
         except Student.DoesNotExist:
             return Response({"error": "Student not found"}, status=404)
         
+    # TODO: Убрать это пока или просто закоментировать
+        
     
 class CreateStudentAPI(APIView):
     
@@ -50,6 +52,9 @@ def create_excel_mark_file(APIView):
     pass
 
 
+    # TODO: Сделать выгрузку данных
+
+
 class getStudentInformation(APIView):
     
     
@@ -61,3 +66,5 @@ class getStudentInformation(APIView):
             serializer = StudentSerializer(student)
             return Response({'data': serializer.data})
         return Response({'error': 'student not found'})
+    
+    # TODO: Переписать на id. Либо так же закоментировать
