@@ -63,7 +63,7 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
                   AI Attendance
                 </h1>
                 <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  v1.0.0
+                  v1.0.0 alpha
                 </p>
               </div>
             </div>
