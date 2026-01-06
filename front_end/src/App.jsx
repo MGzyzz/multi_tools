@@ -3,8 +3,10 @@ import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-
 import Layout from './components/Layout/Layout'
 import Home from './components/Home/Home'
 import Attendance from './components/Attendance/Attendance'
+import AttendanceScanning from './components/Attendance/Attendance'
 import Tools from './components/Tools/Tools'
 import Auth from './components/Auth/Auth'
+import GroupManagement from './components/GroupManagement/GroupManagement'
 import { isAuthenticated, authLogout } from './api/authAPI'
 import './index.css'
 
@@ -84,6 +86,22 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/test"
+          element={
+            <ProtectedRoute>
+              <Layout 
+                currentPage={getCurrentPage()} 
+                onLogout={handleLogout}
+                theme={theme}
+                setTheme={setTheme}
+                onNavigate={(path) => navigate(path)}
+              >
+                <GroupManagement isDark={theme === 'dark'}/>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/attendance"
@@ -96,7 +114,7 @@ function App() {
                 setTheme={setTheme}
                 onNavigate={(path) => navigate(path)}
               >
-                <Attendance />
+                <Attendance isDark={theme === 'dark'}/>
               </Layout>
             </ProtectedRoute>
           }
@@ -182,4 +200,4 @@ function App() {
   )
 }
 
-export default App;
+export default App
