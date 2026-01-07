@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Users, 
   Plus, 
@@ -18,8 +18,13 @@ import {
   BookOpen,
   TrendingUp,
   UserCheck,
-  UserX
+  UserX,
+  Loader2
 } from 'lucide-react';
+import { getGroupList } from '../../api/getGroupList';
+import { getStudentsListGroup } from '../../api/getGroupStudentList';
+import {getAllStudentsListGroup} from "../../api/getAllStudentGroup";
+import AddGroupModal from "../AddGroupModal/AddGroupModal";
 
 const GroupManagement = ({ isDark = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,42 +32,111 @@ const GroupManagement = ({ isDark = false }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [students, setStudents] = useState([]);
+  const [studentsCount, setStudentsCount] = useState(0);
+  const [isLoadingGroups, setIsLoadingGroups] = useState(true);
+  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [showAddGroupModal, setShowAddGroupModal] = useState(false);
 
-  // Mock data
-  const groups = [
-    { id: 'all', name: 'Все группы', count: 245 },
-    { id: 'cs-301', name: 'CS-301', count: 32, course: 3, specialty: 'Computer Science' },
-    { id: 'cs-302', name: 'CS-302', count: 28, course: 3, specialty: 'Computer Science' },
-    { id: 'it-201', name: 'IT-201', count: 35, course: 2, specialty: 'Information Technology' },
-    { id: 'it-202', name: 'IT-202', count: 30, course: 2, specialty: 'Information Technology' },
-    { id: 'se-401', name: 'SE-401', count: 25, course: 4, specialty: 'Software Engineering' },
-    { id: 'se-402', name: 'SE-402', count: 27, course: 4, specialty: 'Software Engineering' },
-    { id: 'ds-101', name: 'DS-101', count: 38, course: 1, specialty: 'Data Science' },
-    { id: 'ds-102', name: 'DS-102', count: 30, course: 1, specialty: 'Data Science' }
-  ];
 
-  const students = [
-    { id: 1, name: 'Айдар Бекзатов', email: 'aidar.b@edu.kz', phone: '+7 701 234 5678', group: 'CS-301', avatar: '👨‍🎓', attendance: 95, status: 'active' },
-    { id: 2, name: 'Динара Сагынбаева', email: 'dinara.s@edu.kz', phone: '+7 702 345 6789', group: 'CS-301', avatar: '👩‍🎓', attendance: 92, status: 'active' },
-    { id: 3, name: 'Ерлан Нұрланов', email: 'erlan.n@edu.kz', phone: '+7 703 456 7890', group: 'IT-201', avatar: '👨‍🎓', attendance: 88, status: 'active' },
-    { id: 4, name: 'Жанар Қасымова', email: 'zhanar.k@edu.kz', phone: '+7 704 567 8901', group: 'IT-201', avatar: '👩‍🎓', attendance: 97, status: 'active' },
-    { id: 5, name: 'Мұрат Әлімов', email: 'murat.a@edu.kz', phone: '+7 705 678 9012', group: 'SE-401', avatar: '👨‍🎓', attendance: 85, status: 'warning' },
-    { id: 6, name: 'Айгерім Тоқтарова', email: 'aigerim.t@edu.kz', phone: '+7 706 789 0123', group: 'SE-401', avatar: '👩‍🎓', attendance: 98, status: 'active' },
-    { id: 7, name: 'Дәулет Мұхамедов', email: 'daulet.m@edu.kz', phone: '+7 707 890 1234', group: 'DS-101', avatar: '👨‍🎓', attendance: 72, status: 'danger' },
-    { id: 8, name: 'Сауле Жұмабаева', email: 'saule.zh@edu.kz', phone: '+7 708 901 2345', group: 'DS-101', avatar: '👩‍🎓', attendance: 94, status: 'active' },
-    { id: 9, name: 'Бауыржан Сейдахметов', email: 'bauyrzhan.s@edu.kz', phone: '+7 709 012 3456', group: 'CS-302', avatar: '👨‍🎓', attendance: 90, status: 'active' },
-    { id: 10, name: 'Назерке Абдуллина', email: 'nazerke.a@edu.kz', phone: '+7 700 123 4567', group: 'CS-302', avatar: '👩‍🎓', attendance: 96, status: 'active' }
-  ];
+  const [groups, setGroups] = useState([{ id: 'all', name: 'Все группы', count: 0 }]);
+
+
+  useEffect(() => {
+  let mounted = true;
+
+  (async () => {
+    setIsLoadingGroups(true);
+    try {
+      const data = await getGroupList();
+
+      const list = Array.isArray(data) ? data : (data?.groups ?? data?.data ?? []);
+      const totalFromApi = Number(data?.total_students ?? 0);
+
+      const normalized = list.map((g) => ({
+        id: String(g.id),
+        name: g.name,
+        count: Number(g.students_count ?? g.count ?? 0), // <-- ВАЖНО
+        course: g.course,
+        specialty: undefined,
+      }));
+
+      // если total_students не пришел — посчитаем из групп
+      const total = totalFromApi || normalized.reduce((sum, g) => sum + (g.count || 0), 0);
+
+      if (!mounted) return;
+      setTotalStudents(total);
+      setGroups([{ id: 'all', name: 'Все группы', count: total }, ...normalized]);
+    } catch (e) {
+      if (!mounted) return;
+      setTotalStudents(0);
+      setGroups([{ id: 'all', name: 'Все группы', count: 0 }]);
+    } finally {
+      if (mounted) setIsLoadingGroups(false);
+    }
+  })();
+
+  return () => { mounted = false; };
+}, []);
+
+
+  useEffect(() => {
+  let mounted = true;
+
+  (async () => {
+    setIsLoadingStudents(true);
+    try {
+      const data =
+        selectedGroup === "all"
+          ? await getAllStudentsListGroup()
+          : await getStudentsListGroup(selectedGroup);
+
+      const list = Array.isArray(data?.results)
+        ? data.results
+        : Array.isArray(data)
+        ? data
+        : [];
+
+      const normalizedStudents = list.map((s) => ({
+        id: s.id,
+        name: `${s.first_name ?? ""} ${s.last_name ?? ""}`.trim() || "Без имени",
+        email: s.email ?? "",
+        phone: s.phone ?? "",
+        group: s.group?.name ?? s.group_name ?? s.group ?? (selectedGroup === "all" ? "" : selectedGroup),
+        avatar: "👨‍🎓",
+        attendance: 0,
+        status: "active",
+      }));
+
+      if (!mounted) return;
+      setStudents(normalizedStudents);
+      setStudentsCount(Number(data?.count) || normalizedStudents.length);
+    } catch (e) {
+      if (!mounted) return;
+      setStudents([]);
+      setStudentsCount(0);
+    } finally {
+      if (mounted) setIsLoadingStudents(false);
+    }
+  })();
+
+  return () => {
+    mounted = false;
+  };
+}, [selectedGroup]);
+
+
 
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
       const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          student.group.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesGroup = selectedGroup === 'all' || student.group === selectedGroup;
+                          String(student.group).toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesGroup = selectedGroup === 'all' || String(student.group) === String(selectedGroup);
       return matchesSearch && matchesGroup;
     });
-  }, [searchTerm, selectedGroup]);
+  }, [searchTerm, selectedGroup, students]);
 
   const selectedGroupData = groups.find(g => g.id === selectedGroup);
 
@@ -120,7 +194,7 @@ const GroupManagement = ({ isDark = false }) => {
             </div>
           </div>
           <p className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Всего студентов</p>
-          <p className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>245</p>
+          <p className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{isLoadingGroups ? '...' : totalStudents}</p>
         </div>
 
         <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-4 sm:p-6 border ${isDark ? 'border-gray-700' : 'border-gray-200'} shadow-lg`}>
@@ -130,7 +204,7 @@ const GroupManagement = ({ isDark = false }) => {
             </div>
           </div>
           <p className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Активных групп</p>
-          <p className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>8</p>
+          <p className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-yellow-300' : 'text-gray-900'}`}>В разработке</p>
         </div>
 
         <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-4 sm:p-6 border ${isDark ? 'border-gray-700' : 'border-gray-200'} shadow-lg`}>
@@ -150,64 +224,86 @@ const GroupManagement = ({ isDark = false }) => {
             </div>
           </div>
           <p className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Требуют внимания</p>
-          <p className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>12</p>
+          <p className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-yellow-300' : 'text-gray-900'}`}>В разработке</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Groups Sidebar */}
-        <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white/80'} backdrop-blur-sm rounded-2xl p-5 border ${isDark ? 'border-gray-700' : 'border-white/50'} shadow-lg`}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Группы</h3>
-            <button className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} transition-colors cursor-pointer`}>
-              <Plus className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-            </button>
-          </div>
+        {/* Groups Sidebar */}
+<div className={`${isDark ? 'bg-gray-800/50' : 'bg-white/80'} backdrop-blur-sm rounded-2xl p-5 border ${isDark ? 'border-gray-700' : 'border-white/50'} shadow-lg lg:sticky lg:top-24 lg:self-start`}>
+  <div className="flex items-center justify-between mb-4">
+    <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Группы</h3>
+    <button 
+  onClick={() => setShowAddGroupModal(true)}
+  className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} transition-colors cursor-pointer`}
+>
+  <Plus className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+</button>
+  </div>
 
-          <div className="space-y-2">
-            {groups.map((group) => (
-              <button
-                key={group.id}
-                onClick={() => setSelectedGroup(group.id)}
-                className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
-                  selectedGroup === group.id
-                    ? isDark 
-                      ? 'bg-blue-500/20 border-blue-500/50 border' 
-                      : 'bg-blue-100 border-blue-300 border'
-                    : isDark 
-                      ? 'hover:bg-gray-700/50 border border-transparent' 
-                      : 'hover:bg-gray-50 border border-transparent'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`font-medium text-sm ${
-                    selectedGroup === group.id
-                      ? isDark ? 'text-blue-400' : 'text-blue-700'
-                      : isDark ? 'text-white' : 'text-gray-900'
-                  }`}>
-                    {group.name}
-                  </span>
-                  <span className={`text-xs px-2 py-1 rounded-lg ${
-                    isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
-                  }`}>
-                    {group.count}
-                  </span>
-                </div>
-                {group.specialty && (
-                  <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {group.course} курс • {group.specialty}
-                  </p>
-                )}
-              </button>
-            ))}
+  <div className="space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent pr-2">
+    {isLoadingGroups ? (
+      <div className="space-y-2">
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className={`w-full px-4 py-3 rounded-xl ${
+              isDark ? 'bg-gray-700/30' : 'bg-gray-100'
+            } animate-pulse`}
+          >
+            <div className="flex items-center justify-between">
+              <div className={`h-4 w-24 rounded ${isDark ? 'bg-gray-600' : 'bg-gray-300'}`}></div>
+              <div className={`h-5 w-8 rounded-lg ${isDark ? 'bg-gray-600' : 'bg-gray-300'}`}></div>
+            </div>
           </div>
-        </div>
+        ))}
+      </div>
+    ) : (
+      groups.map((group) => (
+        <button
+          key={group.id}
+          onClick={() => setSelectedGroup(group.id)}
+          className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
+            selectedGroup === group.id
+              ? isDark 
+                ? 'bg-blue-500/20 border-blue-500/50 border' 
+                : 'bg-blue-100 border-blue-300 border'
+              : isDark 
+                ? 'hover:bg-gray-700/50 border border-transparent' 
+                : 'hover:bg-gray-50 border border-transparent'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className={`font-medium text-sm ${
+              selectedGroup === group.id
+                ? isDark ? 'text-blue-400' : 'text-blue-700'
+                : isDark ? 'text-white' : 'text-gray-900'
+            }`}>
+              {group.name}
+            </span>
+            <span className={`text-xs px-2 py-1 rounded-lg ${
+              isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
+            }`}>
+              {group.count}
+            </span>
+          </div>
+          {group.specialty && (
+            <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              {group.course} курс • {group.specialty}
+            </p>
+          )}
+        </button>
+      ))
+    )}
+  </div>
+</div>
 
         {/* Students List */}
         <div className="lg:col-span-3">
           <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white/80'} backdrop-blur-sm rounded-2xl border ${isDark ? 'border-gray-700' : 'border-white/50'} shadow-lg`}>
             {/* Search and Filters */}
-            <div className="p-5 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}">
+            <div className={`p-5 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1 relative">
                   <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
@@ -241,97 +337,113 @@ const GroupManagement = ({ isDark = false }) => {
             </div>
 
             {/* Students Grid */}
-            <div className="p-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredStudents.map((student) => (
-                  <div
-                    key={student.id}
-                    className={`${isDark ? 'bg-gray-700/30' : 'bg-white'} rounded-xl p-4 border ${
-                      isDark ? 'border-gray-600' : 'border-gray-200'
-                    } hover:shadow-xl transition-all duration-300 cursor-pointer ${
-                      isDark ? 'hover:bg-gray-700/50' : 'hover:bg-blue-50 hover:border-blue-200'
-                    }`}
-                    onClick={() => setSelectedStudent(student)}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-2xl shadow-lg">
-                          {student.avatar}
-                        </div>
-                        <div>
-                          <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            {student.name}
-                          </h4>
-                          <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                            {student.group}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="relative">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveDropdown(activeDropdown === student.id ? null : student.id);
-                          }}
-                          className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-600' : 'hover:bg-gray-200'} transition-colors cursor-pointer`}
-                        >
-                          <MoreVertical className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-                        </button>
-                        
-                        {activeDropdown === student.id && (
-                          <div className={`absolute right-0 mt-2 w-48 ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-xl border ${
-                            isDark ? 'border-gray-700' : 'border-gray-200'
-                          } shadow-xl z-10`}>
-                            <button className={`w-full text-left px-4 py-2.5 ${isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-50 text-gray-700'} rounded-t-xl transition-colors flex items-center space-x-2 cursor-pointer`}>
-                              <Edit2 className="w-4 h-4" />
-                              <span className="text-sm">Редактировать</span>
-                            </button>
-                            <button className={`w-full text-left px-4 py-2.5 ${isDark ? 'hover:bg-gray-700 text-red-400' : 'hover:bg-gray-50 text-red-600'} rounded-b-xl transition-colors flex items-center space-x-2 cursor-pointer`}>
-                              <Trash2 className="w-4 h-4" />
-                              <span className="text-sm">Удалить</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Mail className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                        <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                          {student.email}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Phone className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                        <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                          {student.phone}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className={`mt-3 pt-3 border-t ${isDark ? 'border-gray-600' : 'border-gray-200'} flex items-center justify-between`}>
-                      <div className="flex items-center space-x-2">
-                        <TrendingUp className={`w-4 h-4 ${getAttendanceColor(student.attendance)}`} />
-                        <span className={`text-sm font-medium ${getAttendanceColor(student.attendance)}`}>
-                          {student.attendance}% посещаемость
-                        </span>
-                      </div>
-                      {getStatusBadge(student.status)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {filteredStudents.length === 0 && (
-                <div className={`text-center py-12 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  <Users className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p className="text-base font-medium mb-1">Студенты не найдены</p>
-                  <p className="text-sm">Попробуйте изменить критерии поиска</p>
+            <div className="p-5 relative">
+              {isLoadingStudents ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Loader2 className={`w-12 h-12 ${isDark ? 'text-blue-400' : 'text-blue-600'} animate-spin mb-4`} />
+                  <p className={`text-base font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Загрузка студентов...
+                  </p>
                 </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredStudents.map((student) => (
+                      <div
+                        key={student.id}
+                        className={`${isDark ? 'bg-gray-700/30' : 'bg-white'} rounded-xl p-4 border ${
+                          isDark ? 'border-gray-600' : 'border-gray-200'
+                        } hover:shadow-xl transition-all duration-300 cursor-pointer ${
+                          isDark ? 'hover:bg-gray-700/50' : 'hover:bg-blue-50 hover:border-blue-200'
+                        }`}
+                        onClick={() => setSelectedStudent(student)}
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-2xl shadow-lg">
+                              {student.avatar}
+                            </div>
+                            <div>
+                              <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                {student.name}
+                              </h4>
+                              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {student.group}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="relative">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveDropdown(activeDropdown === student.id ? null : student.id);
+                              }}
+                              className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-600' : 'hover:bg-gray-200'} transition-colors cursor-pointer`}
+                            >
+                              <MoreVertical className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                            </button>
+                            
+                            {activeDropdown === student.id && (
+                              <div className={`absolute right-0 mt-2 w-48 ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-xl border ${
+                                isDark ? 'border-gray-700' : 'border-gray-200'
+                              } shadow-xl z-10`}>
+                                <button className={`w-full text-left px-4 py-2.5 ${isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-50 text-gray-700'} rounded-t-xl transition-colors flex items-center space-x-2 cursor-pointer`}>
+                                  <Edit2 className="w-4 h-4" />
+                                  <span className="text-sm">Редактировать</span>
+                                </button>
+                                <button className={`w-full text-left px-4 py-2.5 ${isDark ? 'hover:bg-gray-700 text-red-400' : 'hover:bg-gray-50 text-red-600'} rounded-b-xl transition-colors flex items-center space-x-2 cursor-pointer`}>
+                                  <Trash2 className="w-4 h-4" />
+                                  <span className="text-sm">Удалить</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Mail className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                            <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                              {student.email}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Phone className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                            <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                              {student.phone}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className={`mt-3 pt-3 border-t ${isDark ? 'border-gray-600' : 'border-gray-200'} flex items-center justify-between`}>
+                          <div className="flex items-center space-x-2">
+                            <TrendingUp className={`w-4 h-4 ${getAttendanceColor(student.attendance)}`} />
+                            <span className={`text-sm font-medium ${getAttendanceColor(student.attendance)}`}>
+                              {student.attendance}% посещаемость
+                            </span>
+                          </div>
+                          {getStatusBadge(student.status)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {filteredStudents.length === 0 && !isLoadingStudents && (
+                    <div className={`text-center py-12 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      <Users className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                      <p className="text-base font-medium mb-1">Студенты не найдены</p>
+                      <p className="text-sm">Попробуйте изменить критерии поиска</p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
+          <AddGroupModal 
+      isOpen={showAddGroupModal} 
+      onClose={() => setShowAddGroupModal(false)}
+      isDark={isDark}
+    />
         </div>
       </div>
     </div>

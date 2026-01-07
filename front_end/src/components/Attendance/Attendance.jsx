@@ -222,57 +222,57 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
       });
 
       fm.onResults((results) => {
-  // ✅ синхронизируем размеры canvas (нам нужно w/h для перевода координат)
-  const { w, h } = syncCanvasToElement();
+        // ✅ синхронизируем размеры canvas (нам нужно w/h для перевода координат)
+        const { w, h } = syncCanvasToElement();
 
-  // ✅ очистим canvas (чтобы точно ничего не рисовалось)
-  const ctx = canvas.getContext('2d');
-  if (ctx) ctx.clearRect(0, 0, w, h);
+        // ✅ очистим canvas (чтобы точно ничего не рисовалось)
+        const ctx = canvas.getContext('2d');
+        if (ctx) ctx.clearRect(0, 0, w, h);
 
-  const face = results.multiFaceLandmarks?.[0];
+        const face = results.multiFaceLandmarks?.[0];
 
-  if (!face || w <= 1 || h <= 1) {
-    frameTargetRef.current.hasFace = false;
-    return;
-  }
+        if (!face || w <= 1 || h <= 1) {
+          frameTargetRef.current.hasFace = false;
+          return;
+        }
 
-  // ✅ Bounding box лица по landmarks (normalized 0..1)
-  let minX = 1, minY = 1, maxX = 0, maxY = 0;
-  for (const p of face) {
-    if (p.x < minX) minX = p.x;
-    if (p.y < minY) minY = p.y;
-    if (p.x > maxX) maxX = p.x;
-    if (p.y > maxY) maxY = p.y;
-  }
+        // ✅ Bounding box лица по landmarks (normalized 0..1)
+        let minX = 1, minY = 1, maxX = 0, maxY = 0;
+        for (const p of face) {
+          if (p.x < minX) minX = p.x;
+          if (p.y < minY) minY = p.y;
+          if (p.x > maxX) maxX = p.x;
+          if (p.y > maxY) maxY = p.y;
+        }
 
-  // Переводим в пиксели (в НЕ-зеркальном пространстве)
-  const faceW = (maxX - minX) * w;
-  const faceH = (maxY - minY) * h;
-  const cx = ((minX + maxX) / 2) * w;
-  const cy = ((minY + maxY) / 2) * h;
+        // Переводим в пиксели (в НЕ-зеркальном пространстве)
+        const faceW = (maxX - minX) * w;
+        const faceH = (maxY - minY) * h;
+        const cx = ((minX + maxX) / 2) * w;
+        const cy = ((minY + maxY) / 2) * h;
 
-  // ✅ размер рамки чуть больше лица
-  let size = Math.max(faceW, faceH) * 1.55;
-  size = clamp(size, 200, Math.min(w, h) * 0.9);
+        // ✅ размер рамки чуть больше лица
+        let size = Math.max(faceW, faceH) * 1.55;
+        size = clamp(size, 200, Math.min(w, h) * 0.9);
 
-  // ✅ видео зеркальное → рамку зеркалим по X
-  const cxMirrored = w - cx;
+        // ✅ видео зеркальное → рамку зеркалим по X
+        const cxMirrored = w - cx;
 
-  // ✅ clamp внутри границ
-  const half = size / 2;
-  const safeCx = clamp(cxMirrored, half, w - half);
-  const safeCy = clamp(cy, half, h - half);
+        // ✅ clamp внутри границ
+        const half = size / 2;
+        const safeCx = clamp(cxMirrored, half, w - half);
+        const safeCy = clamp(cy, half, h - half);
 
-  frameTargetRef.current = {
-    cx: safeCx,
-    cy: safeCy,
-    size,
-    hasFace: true
-  };
+        frameTargetRef.current = {
+          cx: safeCx,
+          cy: safeCy,
+          size,
+          hasFace: true
+        };
 
-  // ✅ запускаем сглаживание (если ещё не запущено)
-  startFrameAnimationLoop();
-});
+        // ✅ запускаем сглаживание (если ещё не запущено)
+        startFrameAnimationLoop();
+      });
 
 
 
@@ -540,7 +540,7 @@ if (!ok) {
             <span className="hidden sm:inline">Сбросить</span>
           </button>
         </div>
-
+а
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
           {/* present */}

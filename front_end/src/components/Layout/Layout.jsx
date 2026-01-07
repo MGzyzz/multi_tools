@@ -5,7 +5,10 @@ import {
 } from 'lucide-react';
 
 const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onNavigate }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem('sidebarOpen');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
@@ -13,6 +16,10 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
 
   // Получаем данные пользователя из localStorage
   const user = JSON.parse(localStorage.getItem('user') || '{"name":"Иванов Иван","role":"Преподаватель","department":"Кафедра ИС"}');
+
+  useEffect(() => {
+    localStorage.setItem('sidebarOpen', JSON.stringify(isSidebarOpen));
+  }, [isSidebarOpen]);
 
   const menuItems = [
     { id: 'home', icon: Home, label: 'Главная', path: '/' },
@@ -211,7 +218,8 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
                   className={`flex items-center space-x-3 px-3 py-2 rounded-xl cursor-pointer transition-all duration-300 ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
                 >
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
-                    {getInitials(user.name)}
+                    {/* {getInitials(user.name)} */}
+                    test
                   </div>
                   <div className="hidden sm:block text-left">
                     <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
