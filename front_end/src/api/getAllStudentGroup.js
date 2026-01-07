@@ -1,8 +1,10 @@
 import api from "./api";
 
-export const getScheduleGroupId = async (id) => {
+
+
+export const getAllStudentsListGroup = async () => {
     try {
-        const response = await api.get(`api/get_schedule_group_id/${id}`);
+        const response = await api.get('api/get_all_students');
         console.log(response.data)
         return response.data
     } catch (error) {
