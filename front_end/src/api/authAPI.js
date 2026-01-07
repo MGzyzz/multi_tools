@@ -17,7 +17,7 @@ export const authLogin = async (username, password) => {
     // Получаем данные пользователя после успешного логина
     const userData = await getUserProfile();
     localStorage.setItem('user', JSON.stringify(userData));
-    
+    console.log('access', access);
     return { access, refresh, user: userData };
   } catch (error) {
     console.error('Error during login:', error);
