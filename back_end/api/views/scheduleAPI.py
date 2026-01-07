@@ -11,7 +11,8 @@ class ScheduleListAPI(APIView):
         """
         API view to retrieve a list of schedules.
         """
-        schedules = Schedule.objects.all().filter(date=date.today())
+        schedules = Schedule.objects.all().filter(date=date.today()) 
+        # Не забудь добавить фильтрацию по дате, когда фронт будет готов к этому
         serializer = ScheduleSerializer(schedules, many=True)
         return Response(serializer.data)
     
