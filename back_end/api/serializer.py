@@ -1,5 +1,8 @@
+from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
+from accounts.models import TeacherProfile
 from app.models import *
+from rest_framework.fields import IntegerField
 
 
 class StudentSerializer(ModelSerializer):
@@ -11,29 +14,42 @@ class StudentSerializer(ModelSerializer):
         fields = '__all__'
 
 class GroupSerializer(ModelSerializer):
-    students = StudentSerializer(many=True, read_only=True)
+    # students = StudentSerializer(many=True, read_only=True)
+    students_count = IntegerField(read_only=True)
 
     class Meta:
         model = Group
-        fields = '__all__'
+        fields = ['id', 'name', 'course', 'teacher', 'students_count']
         
 
 class SubjectSerializer(ModelSerializer):
     """
     Serializer for the Subject model.
     """
+    # teacher = serializers.PrimaryKeyRelatedField(
+    #     queryset=TeacherProfile.objects.all()
+    # )
+    
     class Meta:
         model = Subject_study
         fields = '__all__'
         
     
 class ScheduleSerializer(ModelSerializer):
-    group = GroupSerializer(read_only=True)
-    subject = SubjectSerializer(read_only=True)
-    
+    group_id = serializers.PrimaryKeyRelatedField(
+        queryset=Group.objects.all(),
+        source="group",
+        write_only=True
+    )
+    subject_id = serializers.PrimaryKeyRelatedField(
+        queryset=Subject_study.objects.all(),
+        source="subject",
+        write_only=True
+    )
+
     class Meta:
         model = Schedule
-        fields = '__all__'
+        fields = "__all__"
         
 
 class AttendanceSerializer(ModelSerializer):
