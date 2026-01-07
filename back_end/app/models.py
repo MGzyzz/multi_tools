@@ -1,5 +1,7 @@
 from django.db import models
 from django.core.validators import MaxValueValidator
+from accounts.models import TeacherProfile
+from django.core.exceptions import ObjectDoesNotExist
 
 # Create your models here.
 class Student(models.Model):
@@ -24,28 +26,21 @@ class Student(models.Model):
         verbose_name_plural = "Студенты"
 
 
-class Teacher(models.Model):
-    first_name = models.CharField("Имя", max_length=100)
-    last_name = models.CharField("Фамилия", max_length=100)
-    email = models.EmailField("Email")
-    phone = models.CharField("Телефон", max_length=15)
-
-    def __str__(self):
-        return self.first_name + " " + self.last_name
-
-    class Meta:
-        verbose_name = "Преподаватель"
-        verbose_name_plural = "Преподаватели"
-
-
 class Subject_study(models.Model):
     name = models.CharField("Название предмета", max_length=100)
     description = models.TextField("Описание")
-    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, verbose_name="Преподаватель")
+    teacher = models.ForeignKey(TeacherProfile, on_delete=models.CASCADE, verbose_name="Преподаватель")
     
     
     def __str__(self):
-        return self.name + " " + self.teacher.first_name
+        teacher_name = ""
+        try:
+            tp = self.teacher  # может кинуть DoesNotExist если teacher_id битый
+            if tp and tp.user:
+                teacher_name = tp.user.get_full_name() or tp.user.username
+        except ObjectDoesNotExist:
+            teacher_name = "(teacher missing)"
+        return f"{self.name} {teacher_name}".strip()
 
     class Meta:
         verbose_name = "Предмет"
@@ -56,6 +51,7 @@ class Group(models.Model):
     name = models.CharField("Название группы", max_length=100)
     students = models.ManyToManyField(Student, related_name="groups", verbose_name="Студенты")
     course = models.CharField("Курс", max_length=50)
+    teacher = models.ForeignKey(TeacherProfile, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Преподаватель")
 
     def __str__(self):
         return self.name
@@ -74,16 +70,14 @@ Schedule класс - отвечает за модель расписания и
 class Schedule(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name="Группа")
     subject = models.ForeignKey(Subject_study, on_delete=models.CASCADE, verbose_name="Предмет")
-    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, verbose_name="Преподаватель")
+    teacher = models.ForeignKey(TeacherProfile, on_delete=models.CASCADE, blank=True, null=True, verbose_name="Преподаватель")
     time = models.TimeField("Время")
     date = models.DateField("Дата")
+    
+    # Думаю при детальной страницы для учителя от сюда получать данные
 
     def __str__(self):
-        return f"{self.group} - {self.subject} - {self.teacher}"
-
-
-    def __str__(self):
-        return self.group.name + " " + self.subject.name + " " + self.teacher.first_name + " " + str(self.time) + " " + str(self.date)
+        return f"{self.group.name} {self.subject.name} {self.time} {self.date}"
 
     class Meta:
         verbose_name = "Расписание"
@@ -114,7 +108,7 @@ class Attendance(models.Model):
 
     
     def __str__(self):
-        return f"{self.student} - {self.subject} - {self.presense} - {self.time}"
+        return f"{self.student} - {self.schedule.subject} - {self.presense} - {self.schedule.time}"
     
     class Meta:
         verbose_name = "Посещаемость"
