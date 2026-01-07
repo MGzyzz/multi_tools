@@ -35,10 +35,21 @@ CORS_ALLOW_ALL_METHODS = True
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+STANDART_URL = 'https://'
+
+NGROK_DOMAIN = '86504c977bc0'
+
+NGROK_URL = f'{STANDART_URL}{NGROK_DOMAIN}.ngrok-free.app'
+
+CORS_ALLOWED_ORIGINS = [
+    NGROK_URL,
+]
+
 CORS_ALLOW_HEADERS = ['*']
 
 ALLOWED_HOSTS = ["*"]
 
+AUTH_USER_MODEL = 'accounts.User'
 
 
 
@@ -59,6 +70,7 @@ INSTALLED_APPS = [
     'django_celery_results',
     'api',
     'app',
+    'accounts',
 ]
 
 REST_FRAMEWORK = {
@@ -137,26 +149,54 @@ DATABASES = {
     }
 }
 
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+
     'formatters': {
+        'colored': {
+            '()': 'colorlog.ColoredFormatter',
+            'format': '{log_color}{levelname}:{name}:{message}',
+            'style': '{',
+            'log_colors': {
+                'DEBUG': 'cyan',
+                'INFO': 'green',
+                'WARNING': 'yellow',
+                'ERROR': 'red',
+                'CRITICAL': 'bold_red',
+            },
+        },
         'verbose': {
-            'format': '[{asctime}] {levelname} {name}: {message}',
+            'format': '{levelname} {asctime} {name} {message}',
             'style': '{',
         },
     },
+
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'colored',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'django.log'),
             'formatter': 'verbose',
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
+
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
