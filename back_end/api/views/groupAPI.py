@@ -22,7 +22,6 @@ class GroupListAPI(APIView):
         
     def get(self, request, *args, **kwargs):
         teacher = request.user.teacher_profile
-        print(teacher)
         qs = Group.objects.filter(teacher=teacher).annotate(
             students_count=Count('students', distinct=True)
         )
@@ -81,11 +80,12 @@ class GetAllStudents(APIView):
         cahce_key = f"students_by_teacher:{teacher.id}"
         cached_data = cache.get(cahce_key)
         
+        
         if cached_data is not None:
-            logger.info("Returning data from cache for teacher %s", teacher.id)
+            print("Returning data from cache for teacher %s", teacher.id)
             return Response(cached_data, status=status.HTTP_200_OK)
         
-        logger.info("Fetching data from DB for teacher %s", teacher.id)
+        print("Fetching data from DB for teacher %s", teacher.id)
         
         for group in groups:
             student = group.students.all()
@@ -110,3 +110,21 @@ class GroupDetailAPI(APIView):
         
         serializer = GroupSerializer(group)
         return Response(serializer.data)
+    
+
+
+
+class GroupCreateAPI(APIView):
+    
+    """
+    API view to create a group
+    
+    """
+    
+    def post(self, request, *args, **kwargs):
+        teacher = request.user.teacher_profile
+        serializer = GroupSerializer(data=request.data, context={'teacher': teacher})
+        if serializer.is_valid(raise_exception=True):
+            serializer.save(teacher=teacher)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

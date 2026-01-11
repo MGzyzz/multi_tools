@@ -3,7 +3,13 @@ from api.serializer import ScheduleSerializer, GroupSerializer
 from app.models import Schedule, Student, Attendance
 from rest_framework.response import Response
 from rest_framework import status
+from django.core.cache import cache
 from datetime import date
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 
 class ScheduleListAPI(APIView):
     
@@ -11,9 +17,20 @@ class ScheduleListAPI(APIView):
         """
         API view to retrieve a list of schedules.
         """
-        schedules = Schedule.objects.all().filter(date=date.today()) 
+        teacher = request.user.teacher_profile
+        
+        cache_key = f'schedules_teacher_{teacher.id}_date_{date.today()}'
+        cached_data = cache.get(cache_key)
+        
+        if cached_data is not None:
+            print("Returning cached schedule data")
+            return Response(cached_data, status=status.HTTP_200_OK)
+        print("Fetching schedule data from database")
+        
+        schedules = Schedule.objects.all().filter(teacher=teacher, date=date.today())
         # Не забудь добавить фильтрацию по дате, когда фронт будет готов к этому
         serializer = ScheduleSerializer(schedules, many=True)
+        cache.set(cache_key, serializer.data, timeout=300)  # Кэшируем на 5 минут
         return Response(serializer.data)
     
     

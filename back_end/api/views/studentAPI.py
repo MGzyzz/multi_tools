@@ -2,6 +2,8 @@ from rest_framework.views import APIView
 from api.serializer import StudentSerializer
 from app.models import Student
 from rest_framework.response import Response
+from rest_framework import status
+from django.core.cache import cache
 import requests
 
 class StudentListAPI(APIView):
@@ -41,11 +43,21 @@ class CreateStudentAPI(APIView):
         return Response({"message": "Use POST method sosunok :d!"})
     
     def post(self, request, *args, **kwargs):
-        serializer = StudentSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
+        serializer = StudentSerializer(
+            data=request.data,
+            context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        student = serializer.save()
+
+        teacher = request.user.teacher_profile
+        cache.delete(f"students_by_teacher:{teacher.id}")
+
+        return Response(
+            StudentSerializer(student).data,
+            status=status.HTTP_201_CREATED
+        )
+
     
 
 def create_excel_mark_file(APIView):

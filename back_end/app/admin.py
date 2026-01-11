@@ -13,7 +13,7 @@ class StudentAdmin(admin.ModelAdmin):
     ordering = ('first_name',)
 
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ('name', 'course')
+    list_display = ('id', 'name', 'course')
     search_fields = ('name',)
     list_filter = ('course',)
     ordering = ('name',)
