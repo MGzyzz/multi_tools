@@ -56,7 +56,7 @@ const Home = ({ isDark = true }) => {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
     const today = `${year}-${month}-${day}`;
-    
+
     const nowSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
     console.log('📅 Текущая дата (локальная):', today);
@@ -104,15 +104,15 @@ const Home = ({ isDark = true }) => {
         };
       })
       .sort((a, b) => a.timeSeconds - b.timeSeconds);
-    
+
     console.log('📋 Финальный список занятий:', result);
     return result;
   }, [schedule]);
 
   // Ограничиваем количество отображаемых занятий
   const MAX_VISIBLE_SESSIONS = 5;
-  const displayedSessions = showAll 
-    ? recentSessions 
+  const displayedSessions = showAll
+    ? recentSessions
     : recentSessions.slice(0, MAX_VISIBLE_SESSIONS);
   const hasMore = recentSessions.length > MAX_VISIBLE_SESSIONS;
 
@@ -132,20 +132,18 @@ const Home = ({ isDark = true }) => {
         {stats.map((stat, index) => (
           <div
             key={index}
-            className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-4 sm:p-6 border ${
-              isDark ? 'border-gray-700' : 'border-gray-200'
-            } hover:scale-105 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-2xl`}
+            className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-4 sm:p-6 border ${isDark ? 'border-gray-700' : 'border-gray-200'
+              } hover:scale-105 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-2xl`}
           >
             <div className="flex items-start justify-between mb-3 sm:mb-4">
               <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg`}>
                 <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <span
-                className={`text-xs sm:text-sm font-semibold px-2 py-1 rounded-lg ${
-                  stat.trend.startsWith('+')
+                className={`text-xs sm:text-sm font-semibold px-2 py-1 rounded-lg ${stat.trend.startsWith('+')
                     ? isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
                     : isDark ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-700'
-                }`}
+                  }`}
               >
                 {stat.trend}
               </span>
@@ -160,9 +158,8 @@ const Home = ({ isDark = true }) => {
         {/* Quick Tools */}
         <div className="lg:col-span-2">
           <div
-            className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-5 sm:p-6 border ${
-              isDark ? 'border-gray-700' : 'border-gray-200'
-            } shadow-lg`}
+            className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-5 sm:p-6 border ${isDark ? 'border-gray-700' : 'border-gray-200'
+              } shadow-lg`}
           >
             <h3 className={`text-lg sm:text-xl font-bold mb-4 sm:mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Быстрые инструменты
@@ -172,9 +169,8 @@ const Home = ({ isDark = true }) => {
               {quickTools.map((tool, index) => (
                 <button
                   key={index}
-                  className={`${isDark ? 'bg-gray-700/50 hover:bg-gray-700' : 'bg-gray-50 hover:bg-gray-100'} rounded-xl p-4 sm:p-5 border ${
-                    isDark ? 'border-gray-600' : 'border-gray-200'
-                  } cursor-pointer transition-all duration-300 hover:scale-105 shadow-md hover:shadow-xl group`}
+                  className={`${isDark ? 'bg-gray-700/50 hover:bg-gray-700' : 'bg-gray-50 hover:bg-gray-100'} rounded-xl p-4 sm:p-5 border ${isDark ? 'border-gray-600' : 'border-gray-200'
+                    } cursor-pointer transition-all duration-300 hover:scale-105 shadow-md hover:shadow-xl group`}
                 >
                   <div
                     className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br ${tool.gradient} flex items-center justify-center mb-3 shadow-lg group-hover:scale-110 transition-transform duration-300`}
@@ -195,18 +191,16 @@ const Home = ({ isDark = true }) => {
 
         {/* Recent Sessions */}
         <div
-          className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-5 sm:p-6 border ${
-            isDark ? 'border-gray-700' : 'border-gray-200'
-          } shadow-lg flex flex-col`}
+          className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-5 sm:p-6 border ${isDark ? 'border-gray-700' : 'border-gray-200'
+            } shadow-lg flex flex-col`}
         >
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h3 className={`text-lg sm:text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Сегодняшние занятия
             </h3>
             {!isLoading && !error && recentSessions.length > 0 && (
-              <span className={`text-xs px-2 py-1 rounded-lg ${
-                isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'
-              } font-medium`}>
+              <span className={`text-xs px-2 py-1 rounded-lg ${isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'
+                } font-medium`}>
                 {recentSessions.length}
               </span>
             )}
@@ -247,34 +241,29 @@ const Home = ({ isDark = true }) => {
           {/* Schedule list with scroll */}
           {!isLoading && !error && recentSessions.length > 0 && (
             <>
-              <div className={`flex-1 ${
-                showAll ? 'max-h-[500px] overflow-y-auto' : ''
-              } space-y-3 sm:space-y-4 pr-1 ${
-                isDark 
-                  ? 'scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50' 
+              <div className={`flex-1 ${showAll ? 'max-h-[500px] overflow-y-auto' : ''
+                } space-y-3 sm:space-y-4 pr-1 ${isDark
+                  ? 'scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50'
                   : 'scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'
-              }`}>
+                }`}>
                 {displayedSessions.map((session, index) => (
                   <div
                     key={session.id || index}
-                    className={`${isDark ? 'bg-gray-700/30' : 'bg-gray-50'} rounded-xl p-3 sm:p-4 border ${
-                      isDark ? 'border-gray-600' : 'border-gray-200'
-                    } transition-all duration-300 cursor-pointer hover:shadow-lg ${
-                      isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'
-                    }`}
+                    className={`${isDark ? 'bg-gray-700/30' : 'bg-gray-50'} rounded-xl p-3 sm:p-4 border ${isDark ? 'border-gray-600' : 'border-gray-200'
+                      } transition-all duration-300 cursor-pointer hover:shadow-lg ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'
+                      }`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className={`font-semibold text-sm sm:text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         {session.group}
                       </span>
                       <span
-                        className={`text-xs px-2 py-1 rounded-lg font-medium ${
-                          session.status === 'active'
+                        className={`text-xs px-2 py-1 rounded-lg font-medium ${session.status === 'active'
                             ? isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
                             : session.status === 'completed'
-                            ? isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-700'
-                            : isDark ? 'bg-gray-500/20 text-gray-400' : 'bg-gray-100 text-gray-700'
-                        }`}
+                              ? isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-700'
+                              : isDark ? 'bg-gray-500/20 text-gray-400' : 'bg-gray-100 text-gray-700'
+                          }`}
                       >
                         {session.status === 'active' ? 'Идет' : session.status === 'completed' ? 'Завершено' : 'Скоро'}
                       </span>
@@ -305,11 +294,10 @@ const Home = ({ isDark = true }) => {
               {hasMore && (
                 <button
                   onClick={() => setShowAll(!showAll)}
-                  className={`mt-4 w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl border ${
-                    isDark 
-                      ? 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-700' 
+                  className={`mt-4 w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl border ${isDark
+                      ? 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-700'
                       : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-                  } cursor-pointer transition-all duration-300 text-sm font-medium`}
+                    } cursor-pointer transition-all duration-300 text-sm font-medium`}
                 >
                   <span>{showAll ? `Скрыть` : `Показать все (${recentSessions.length})`}</span>
                   <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${showAll ? 'rotate-90' : ''}`} />
@@ -324,11 +312,10 @@ const Home = ({ isDark = true }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-6 sm:mb-8">
         <button
           onClick={() => navigate('/attendance/scan')}
-          className={`${
-            isDark
+          className={`${isDark
               ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500'
               : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600'
-          } rounded-2xl p-6 sm:p-8 cursor-pointer transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-purple-500/50 group`}
+            } rounded-2xl p-6 sm:p-8 cursor-pointer transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-purple-500/50 group`}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -341,11 +328,10 @@ const Home = ({ isDark = true }) => {
 
         <button
           onClick={() => console.log('Export report')}
-          className={`${
-            isDark
+          className={`${isDark
               ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500'
               : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
-          } rounded-2xl p-6 sm:p-8 cursor-pointer transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-green-500/50 group`}
+            } rounded-2xl p-6 sm:p-8 cursor-pointer transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-green-500/50 group`}
         >
           <div className="flex items-center justify-between">
             <div>

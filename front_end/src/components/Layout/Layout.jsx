@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Moon, Sun, Scan, Home, Camera, Users, BarChart3, Settings, 
+import {
+  Moon, Sun, Scan, Home, Camera, Users, BarChart3, Settings,
   LogOut, User, ChevronLeft, ChevronRight, Menu, X, Bell, Search
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { getUserProfile } from '../../api/authAPI';
 
 const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onNavigate }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
@@ -15,7 +17,7 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
   const isDark = theme === 'dark';
 
   // Получаем данные пользователя из localStorage
-  const user = JSON.parse(localStorage.getItem('user') || '{"name":"Иванов Иван","role":"Преподаватель","department":"Кафедра ИС"}');
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     localStorage.setItem('sidebarOpen', JSON.stringify(isSidebarOpen));
@@ -29,8 +31,20 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
     { id: 'settings', icon: Settings, label: 'Настройки', path: '/settings' }
   ];
 
-  const getInitials = (name) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  const getInitials = (firstName, lastName) => {
+    const first = firstName || '';
+    const last = lastName || '';
+    return ((first[0] || '') + (last[0] || '')).toUpperCase();
+  };
+
+
+  const getFullName = (firstName, lastName, username) => {
+    if (firstName && lastName) {
+      return `${firstName} ${lastName}`;
+    }
+    if (firstName) return firstName;
+    if (lastName) return lastName;
+    return username || 'Пользователь';
   };
 
   const handleNavigation = (path) => {
@@ -54,32 +68,46 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
     return () => document.removeEventListener('click', handleClickOutside);
   }, [isProfileOpen]);
 
+  useEffect(() => {
+    const cached = JSON.parse(localStorage.getItem("user") || "null");
+    if (cached) setUser(cached);
+
+    getUserProfile()
+      .then(setUser)
+      .catch((err) => {
+        console.error("Failed to fetch user:", err);
+      });
+  }, []);
+
+
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDark ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-gray-50 via-white to-gray-100'}`}>
       {/* Sidebar Desktop */}
       <aside className={`hidden lg:flex flex-col fixed left-0 top-0 h-full ${isDark ? 'bg-gray-800/50' : 'bg-white/80'} backdrop-blur-xl border-r ${isDark ? 'border-gray-700' : 'border-gray-200'} transition-all duration-300 z-40 ${isSidebarOpen ? 'w-64' : 'w-20'}`}>
         {/* Logo */}
-        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-          {isSidebarOpen ? (
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
+        <Link to="/" className="block">
+          <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+            {isSidebarOpen ? (
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
+                  <Scan className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    AI Attendance
+                  </h1>
+                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    v1.0.0 alpha
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg mx-auto">
                 <Scan className="w-6 h-6 text-white" />
               </div>
-              <div>
-                <h1 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  AI Attendance
-                </h1>
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  v1.0.0 alpha
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg mx-auto">
-              <Scan className="w-6 h-6 text-white" />
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </Link>
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -87,15 +115,14 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
             <button
               key={item.id}
               onClick={() => handleNavigation(item.path)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 ${
-                currentPage === item.id
-                  ? isDark 
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' 
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 ${currentPage === item.id
+                  ? isDark
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
                     : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
                   : isDark
                     ? 'text-gray-400 hover:bg-gray-700/50 hover:text-white'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-              }`}
+                }`}
             >
               <item.icon className={`w-5 h-5 ${isSidebarOpen ? '' : 'mx-auto'}`} />
               {isSidebarOpen && (
@@ -118,11 +145,11 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
 
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
           onClick={() => setIsMobileMenuOpen(false)}
         >
-          <aside 
+          <aside
             className={`fixed left-0 top-0 h-full w-64 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-2xl z-50`}
             onClick={(e) => e.stopPropagation()}
           >
@@ -150,13 +177,12 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
                 <button
                   key={item.id}
                   onClick={() => handleNavigation(item.path)}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 ${
-                    currentPage === item.id
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 ${currentPage === item.id
                       ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
                       : isDark
                         ? 'text-gray-400 hover:bg-gray-700 hover:text-white'
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   <item.icon className="w-5 h-5" />
                   <span className="font-medium">{item.label}</span>
@@ -218,15 +244,14 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
                   className={`flex items-center space-x-3 px-3 py-2 rounded-xl cursor-pointer transition-all duration-300 ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
                 >
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
-                    {/* {getInitials(user.name)} */}
-                    test
+                    {user ? getInitials(user.first_name, user.last_name) : '?'}
                   </div>
                   <div className="hidden sm:block text-left">
                     <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {user.name}
+                      {user ? getFullName(user.first_name, user.last_name, user.username) : 'Загрузка...'}
                     </p>
                     <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      {user.role}
+                      {user?.role || 'Не указано'}
                     </p>
                   </div>
                 </button>
@@ -237,14 +262,14 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
                     <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
                       <div className="flex items-center space-x-3">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
-                          {getInitials(user.name)}
+                          {user ? getInitials(user.first_name, user.last_name) : '?'}
                         </div>
                         <div className="flex-1">
                           <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            {user.name}
+                            {user ? getFullName(user.first_name, user.last_name, user.username) : '—'}
                           </p>
                           <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                            {user.department}
+                            {user?.email || user?.username || '—'}
                           </p>
                         </div>
                       </div>

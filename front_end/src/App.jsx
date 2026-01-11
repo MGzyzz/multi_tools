@@ -87,7 +87,7 @@ function App() {
           }
         />
         <Route
-          path="/test"
+          path="/groups"
           element={
             <ProtectedRoute>
               <Layout 

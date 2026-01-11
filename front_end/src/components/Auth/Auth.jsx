@@ -19,7 +19,7 @@ const Auth = ({ onLogin, theme, setTheme }) => {
       ...prev,
       [name]: value
     }));
-    
+
     // Очищаем ошибки при вводе
     if (errors[name]) {
       setErrors(prev => ({
@@ -34,40 +34,40 @@ const Auth = ({ onLogin, theme, setTheme }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.login.trim()) {
       newErrors.login = 'Введите логин';
     }
-    
+
     if (!formData.password) {
       newErrors.password = 'Введите пароль';
     }
-    
+
     return newErrors;
   };
 
   const handleSubmit = async () => {
     const newErrors = validateForm();
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    
+
     setIsLoading(true);
     setLoginError('');
-    
+
     try {
       // Реальный запрос к API
       const result = await authLogin(formData.login, formData.password);
-      
+
       // Успешная авторизация
       if (onLogin) {
         onLogin(result.user);
       }
     } catch (error) {
       console.error('Login failed:', error);
-      
+
       // Обработка разных типов ошибок
       if (error.response) {
         // Сервер ответил с ошибкой
@@ -99,11 +99,10 @@ const Auth = ({ onLogin, theme, setTheme }) => {
     <div className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${isDark ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-gray-50 via-white to-gray-100'} p-4`}>
       <button
         onClick={() => setTheme(isDark ? 'light' : 'dark')}
-        className={`fixed top-6 right-6 p-3 rounded-xl cursor-pointer transition-all duration-300 z-50 ${
-          isDark 
-            ? 'bg-gray-800 hover:bg-gray-700 text-yellow-400' 
+        className={`fixed top-6 right-6 p-3 rounded-xl cursor-pointer transition-all duration-300 z-50 ${isDark
+            ? 'bg-gray-800 hover:bg-gray-700 text-yellow-400'
             : 'bg-white hover:bg-gray-100 text-gray-700'
-        } shadow-lg hover:shadow-xl hover:scale-105`}
+          } shadow-lg hover:shadow-xl hover:scale-105`}
       >
         {isDark ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
       </button>
@@ -150,15 +149,13 @@ const Auth = ({ onLogin, theme, setTheme }) => {
                 onKeyPress={handleKeyPress}
                 placeholder="Введите ваш логин"
                 disabled={isLoading}
-                className={`w-full pl-12 pr-4 py-3 rounded-xl border ${
-                  errors.login 
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' 
-                    : isDark 
-                      ? 'border-gray-600 focus:border-blue-500 focus:ring-blue-500/20' 
+                className={`w-full pl-12 pr-4 py-3 rounded-xl border ${errors.login
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                    : isDark
+                      ? 'border-gray-600 focus:border-blue-500 focus:ring-blue-500/20'
                       : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500/20'
-                } ${
-                  isDark ? 'bg-gray-700/50 text-white placeholder-gray-500' : 'bg-gray-50 text-gray-900 placeholder-gray-400'
-                } focus:outline-none focus:ring-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+                  } ${isDark ? 'bg-gray-700/50 text-white placeholder-gray-500' : 'bg-gray-50 text-gray-900 placeholder-gray-400'
+                  } focus:outline-none focus:ring-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
               />
             </div>
             {errors.login && (
@@ -185,15 +182,13 @@ const Auth = ({ onLogin, theme, setTheme }) => {
                 onKeyPress={handleKeyPress}
                 placeholder="Введите ваш пароль"
                 disabled={isLoading}
-                className={`w-full pl-12 pr-12 py-3 rounded-xl border ${
-                  errors.password 
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' 
-                    : isDark 
-                      ? 'border-gray-600 focus:border-blue-500 focus:ring-blue-500/20' 
+                className={`w-full pl-12 pr-12 py-3 rounded-xl border ${errors.password
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                    : isDark
+                      ? 'border-gray-600 focus:border-blue-500 focus:ring-blue-500/20'
                       : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500/20'
-                } ${
-                  isDark ? 'bg-gray-700/50 text-white placeholder-gray-500' : 'bg-gray-50 text-gray-900 placeholder-gray-400'
-                } focus:outline-none focus:ring-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+                  } ${isDark ? 'bg-gray-700/50 text-white placeholder-gray-500' : 'bg-gray-50 text-gray-900 placeholder-gray-400'
+                  } focus:outline-none focus:ring-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
               />
               <button
                 type="button"
@@ -240,11 +235,10 @@ const Auth = ({ onLogin, theme, setTheme }) => {
           <button
             onClick={handleSubmit}
             disabled={isLoading}
-            className={`w-full py-3.5 rounded-xl font-semibold text-white cursor-pointer transition-all duration-300 ${
-              isLoading
+            className={`w-full py-3.5 rounded-xl font-semibold text-white cursor-pointer transition-all duration-300 ${isLoading
                 ? 'bg-gray-600 cursor-not-allowed'
                 : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 hover:scale-105 shadow-lg hover:shadow-xl hover:shadow-purple-500/50'
-            }`}
+              }`}
           >
             {isLoading ? (
               <div className="flex items-center justify-center space-x-2">
@@ -273,7 +267,7 @@ const Auth = ({ onLogin, theme, setTheme }) => {
             Используйте учетные данные, выданные администрацией университета
           </p>
           <div className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-500'}`}>
-            Возникли проблемы? <button 
+            Возникли проблемы? <button
               type="button"
               onClick={() => console.log('Contact support')}
               className={`${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} font-medium cursor-pointer transition-colors duration-200`}

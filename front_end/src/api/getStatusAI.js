@@ -3,7 +3,7 @@ import axios from "axios";
 
 export const getStatusAI = async () => {
     try {
-        const response = await axios.get('http://localhost:8002/status');
+        const response = await axios.get('http://localhost:8002/status/');
         console.log(response.data)
         return response.data
     } catch (error) {

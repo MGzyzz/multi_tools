@@ -51,18 +51,22 @@ export const refreshAccessToken = async () => {
 // Получение профиля пользователя (замени endpoint на свой)
 export const getUserProfile = async () => {
   try {
-    // Замени '/api/user/profile/' на твой реальный endpoint
-    const response = await api.get('/api/user/profile/');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching user profile:', error);
-    // Возвращаем mock данные, если endpoint еще не готов
-    return {
-      name: 'Иванов Иван Петрович',
-      role: 'Преподаватель',
-      department: 'Кафедра информационных систем',
-      email: 'ivanov@university.edu'
+    const { data } = await api.get("/api/me/");
+    
+    // Нормализация данных (добавление полей если их нет)
+    const normalizedData = {
+      ...data,
+      first_name: data.first_name || '',
+      last_name: data.last_name || '',
+      role: data.role || 'user'
     };
+    
+    localStorage.setItem("user", JSON.stringify(normalizedData));
+    console.log("Fetched user data:", normalizedData);
+    return normalizedData;
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+    throw error;
   }
 };
 

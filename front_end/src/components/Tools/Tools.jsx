@@ -1,49 +1,55 @@
 import React from 'react';
 import { Users, UserPlus, Upload, Download, FileText, Settings, Search, Filter } from 'lucide-react';
+import { path } from 'motion/react-client';
+import { Link } from 'react-router-dom';
 
 const Tools = ({ isDark = true }) => {
   const tools = [
-    {
-      icon: Users,
-      title: 'Управление студентами',
-      description: 'Добавление, редактирование и удаление студентов',
-      color: 'from-blue-500 to-blue-600',
-      action: 'manage-students'
-    },
-    {
-      icon: UserPlus,
-      title: 'Добавить студента',
-      description: 'Регистрация нового студента в системе',
-      color: 'from-green-500 to-green-600',
-      action: 'add-student'
-    },
+    // {
+    //   icon: Users,
+    //   title: 'Управление студентами',
+    //   description: 'Добавление, редактирование и удаление студентов',
+    //   color: 'from-blue-500 to-blue-600',
+    //   action: 'manage-students'
+    // },
+    // {
+    //   icon: UserPlus,
+    //   title: 'Добавить студента',
+    //   description: 'Регистрация нового студента в системе',
+    //   color: 'from-green-500 to-green-600',
+    //   action: 'add-student'
+    // },
     {
       icon: Upload,
       title: 'Импорт данных',
       description: 'Загрузка списков студентов из Excel/CSV',
       color: 'from-purple-500 to-purple-600',
-      action: 'import'
+      action: 'import',
+      path: '/test'
     },
     {
       icon: Download,
       title: 'Экспорт отчетов',
       description: 'Выгрузка данных о посещаемости',
       color: 'from-orange-500 to-orange-600',
-      action: 'export'
+      action: 'export',
+      path: '/attendance'
     },
     {
       icon: FileText,
       title: 'Журнал посещений',
       description: 'Просмотр истории всех занятий',
       color: 'from-pink-500 to-pink-600',
-      action: 'journal'
+      action: 'journal',
+      path: '/attendance'
     },
     {
       icon: Settings,
       title: 'Настройки групп',
       description: 'Конфигурация учебных групп и расписания',
       color: 'from-gray-500 to-gray-600',
-      action: 'group-settings'
+      action: 'group-settings',
+      path: '/groups'
     }
   ];
 
@@ -85,20 +91,27 @@ const Tools = ({ isDark = true }) => {
       {/* Tools Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
         {tools.map((tool, index) => (
-          <button
-            key={index}
-            className={`${isDark ? 'bg-gray-800/50 hover:bg-gray-800' : 'bg-white hover:bg-gray-50'} border ${isDark ? 'border-gray-700' : 'border-gray-200'} rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl text-left group`}
-          >
-            <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${tool.color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-              <tool.icon className="w-7 h-7 text-white" />
-            </div>
-            <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {tool.title}
-            </h3>
-            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              {tool.description}
-            </p>
-          </button>
+          <Link key={index} to={tool.path}>
+    <button
+      className={`${isDark ? 'bg-gray-800/50 hover:bg-gray-800' : 'bg-white hover:bg-gray-50'}
+      border ${isDark ? 'border-gray-700' : 'border-gray-200'}
+      rounded-2xl p-6 cursor-pointer transition-all duration-300
+      hover:scale-105 shadow-lg hover:shadow-xl text-left group w-full`}
+    >
+      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${tool.color}
+        flex items-center justify-center mb-4 shadow-lg group-hover:scale-110`}>
+        <tool.icon className="w-7 h-7 text-white" />
+      </div>
+
+      <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+        {tool.title}
+      </h3>
+
+      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+        {tool.description}
+      </p>
+    </button>
+  </Link>
         ))}
       </div>
 

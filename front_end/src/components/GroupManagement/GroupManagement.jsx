@@ -1,35 +1,29 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Edit2, 
-  Trash2, 
-  UserPlus,
-  X,
-  Check,
-  ChevronDown,
+import {
+  Users,
+  Plus,
+  Search,
+  Filter,
+  MoreVertical,
+  Edit2,
+  Trash2,
   AlertCircle,
   Mail,
   Phone,
-  Calendar,
   BookOpen,
   TrendingUp,
   UserCheck,
   UserX,
-  Loader2
+  Loader2,
+  UserPlus
 } from 'lucide-react';
-import { getGroupList } from '../../api/getGroupList';
-import { getStudentsListGroup } from '../../api/getGroupStudentList';
-import {getAllStudentsListGroup} from "../../api/getAllStudentGroup";
-import AddGroupModal from "../AddGroupModal/AddGroupModal";
+import AddGroupModal from '../AddGroupModal/AddGroupModal';
+import AddStudentModal from '../AddStudentModal/AddStudentModal';
 
 const GroupManagement = ({ isDark = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('all');
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [students, setStudents] = useState([]);
@@ -39,101 +33,171 @@ const GroupManagement = ({ isDark = false }) => {
   const [totalStudents, setTotalStudents] = useState(0);
   const [showAddGroupModal, setShowAddGroupModal] = useState(false);
 
-
   const [groups, setGroups] = useState([{ id: 'all', name: 'Все группы', count: 0 }]);
 
-
+  // Загрузка списка групп
   useEffect(() => {
-  let mounted = true;
+    let mounted = true;
 
-  (async () => {
-    setIsLoadingGroups(true);
-    try {
-      const data = await getGroupList();
+    (async () => {
+      setIsLoadingGroups(true);
+      try {
+        const { getGroupList } = await import('../../api/getGroupList');
+        const data = await getGroupList();
 
-      const list = Array.isArray(data) ? data : (data?.groups ?? data?.data ?? []);
-      const totalFromApi = Number(data?.total_students ?? 0);
+        const list = Array.isArray(data) ? data : (data?.groups ?? data?.data ?? []);
+        const totalFromApi = Number(data?.total_students ?? 0);
 
-      const normalized = list.map((g) => ({
-        id: String(g.id),
-        name: g.name,
-        count: Number(g.students_count ?? g.count ?? 0), // <-- ВАЖНО
-        course: g.course,
-        specialty: undefined,
-      }));
+        const normalized = list.map((g) => ({
+          id: String(g.id), // ВАЖНО: приводим к строке
+          name: g.name,
+          count: Number(g.students_count ?? g.count ?? 0),
+          course: g.course,
+          specialty: g.group_specialty ?? g.specialty,
+        }));
 
-      // если total_students не пришел — посчитаем из групп
-      const total = totalFromApi || normalized.reduce((sum, g) => sum + (g.count || 0), 0);
+        const total = totalFromApi || normalized.reduce((sum, g) => sum + (g.count || 0), 0);
 
-      if (!mounted) return;
-      setTotalStudents(total);
-      setGroups([{ id: 'all', name: 'Все группы', count: total }, ...normalized]);
-    } catch (e) {
-      if (!mounted) return;
-      setTotalStudents(0);
-      setGroups([{ id: 'all', name: 'Все группы', count: 0 }]);
-    } finally {
-      if (mounted) setIsLoadingGroups(false);
-    }
-  })();
+        if (!mounted) return;
+        setTotalStudents(total);
+        setGroups([{ id: 'all', name: 'Все группы', count: total }, ...normalized]);
+      } catch (e) {
+        console.error('Ошибка загрузки групп:', e);
+        if (!mounted) return;
+        setTotalStudents(0);
+        setGroups([{ id: 'all', name: 'Все группы', count: 0 }]);
+      } finally {
+        if (mounted) setIsLoadingGroups(false);
+      }
+    })();
 
-  return () => { mounted = false; };
-}, []);
+    return () => { mounted = false; };
+  }, []);
 
-
+  // Загрузка студентов
   useEffect(() => {
-  let mounted = true;
+    let mounted = true;
 
-  (async () => {
-    setIsLoadingStudents(true);
-    try {
-      const data =
-        selectedGroup === "all"
+    (async () => {
+      setIsLoadingStudents(true);
+      try {
+        const { getStudentsListGroup } = await import('../../api/getGroupStudentList');
+        const { getAllStudentsListGroup } = await import('../../api/getAllStudentGroup');
+
+        const data = selectedGroup === "all"
           ? await getAllStudentsListGroup()
           : await getStudentsListGroup(selectedGroup);
 
-      const list = Array.isArray(data?.results)
-        ? data.results
-        : Array.isArray(data)
-        ? data
-        : [];
+        const list = Array.isArray(data?.results)
+          ? data.results
+          : Array.isArray(data)
+            ? data
+            : [];
 
-      const normalizedStudents = list.map((s) => ({
-        id: s.id,
-        name: `${s.first_name ?? ""} ${s.last_name ?? ""}`.trim() || "Без имени",
-        email: s.email ?? "",
-        phone: s.phone ?? "",
-        group: s.group?.name ?? s.group_name ?? s.group ?? (selectedGroup === "all" ? "" : selectedGroup),
-        avatar: "👨‍🎓",
-        attendance: 0,
-        status: "active",
-      }));
+        const normalizedStudents = list.map((s) => ({
+          id: s.id,
+          name: `${s.first_name ?? ""} ${s.last_name ?? ""}`.trim() || "Без имени",
+          email: s.email ?? "",
+          phone: s.phone ?? "",
+          group: s.group?.name ?? s.group_name ?? s.group ?? (selectedGroup === "all" ? "" : selectedGroup),
 
-      if (!mounted) return;
-      setStudents(normalizedStudents);
-      setStudentsCount(Number(data?.count) || normalizedStudents.length);
-    } catch (e) {
-      if (!mounted) return;
-      setStudents([]);
-      setStudentsCount(0);
-    } finally {
-      if (mounted) setIsLoadingStudents(false);
-    }
-  })();
+          groupId: String(
+            s.group?.id ??
+            s.group_id ??
+            s.groupId ??
+            (selectedGroup !== "all" ? selectedGroup : "")
+          ),
 
-  return () => {
-    mounted = false;
+          avatar: (s.first_name?.[0] || s.last_name?.[0] || "T").toUpperCase(),
+          attendance: 0,
+          status: "active",
+        }));
+
+        if (!mounted) return;
+        setStudents(normalizedStudents);
+        setStudentsCount(Number(data?.count) || normalizedStudents.length);
+      } catch (e) {
+        console.error('Ошибка загрузки студентов:', e);
+        if (!mounted) return;
+        setStudents([]);
+        setStudentsCount(0);
+      } finally {
+        if (mounted) setIsLoadingStudents(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [selectedGroup]);
+
+  // Обработчик создания новой группы
+  const handleGroupCreated = async (newGroup) => {
+    setGroups((prevGroups) => {
+      const updatedGroups = [...prevGroups];
+      updatedGroups.splice(1, 0, newGroup);
+
+      updatedGroups[0] = {
+        ...updatedGroups[0],
+        count: updatedGroups[0].count + (newGroup.count || 0)
+      };
+
+      return updatedGroups;
+    });
+
+    setTotalStudents((prev) => prev + (newGroup.count || 0));
+    setSelectedGroup(String(newGroup.id)); // ВАЖНО: приводим к строке
   };
-}, [selectedGroup]);
 
+  // Обработчик создания нового студента
+  const handleStudentCreated = async (newStudent) => {
+    console.log('Student created:', newStudent);
+    console.log('Current selected group:', selectedGroup);
+    console.log('Student groupId:', newStudent.groupId);
 
+    // ВАЖНО: Добавляем студента в текущий список только если смотрим:
+    // 1. "Все группы" ИЛИ
+    // 2. Ту же группу, куда добавили студента
+    const shouldAddToCurrentList =
+      selectedGroup === 'all' ||
+      String(selectedGroup) === String(newStudent.groupId);
+
+    console.log('Should add to current list:', shouldAddToCurrentList);
+
+    if (shouldAddToCurrentList) {
+      setStudents((prevStudents) => {
+        console.log('Adding student to list. Previous count:', prevStudents.length);
+        return [newStudent, ...prevStudents];
+      });
+      setStudentsCount((prev) => prev + 1);
+    }
+
+    // Обновляем счетчики в группах
+    setGroups((prevGroups) => {
+      return prevGroups.map((g) => {
+        // Обновляем счетчик для конкретной группы
+        if (String(g.id) === String(newStudent.groupId)) {
+          return { ...g, count: g.count + 1 };
+        }
+        // Обновляем счетчик для "Все группы"
+        if (g.id === 'all') {
+          return { ...g, count: g.count + 1 };
+        }
+        return g;
+      });
+    });
+
+    // Обновляем общий счетчик студентов
+    setTotalStudents((prev) => prev + 1);
+  };
 
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
       const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          String(student.group).toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesGroup = selectedGroup === 'all' || String(student.group) === String(selectedGroup);
+        student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(student.group).toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesGroup =
+        selectedGroup === 'all' || String(student.groupId) === String(selectedGroup);
       return matchesSearch && matchesGroup;
     });
   }, [searchTerm, selectedGroup, students]);
@@ -176,13 +240,6 @@ const GroupManagement = ({ isDark = false }) => {
             Редактирование списков студентов и групп
           </p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-purple-500/50 cursor-pointer"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Добавить студента</span>
-        </button>
       </div>
 
       {/* Stats Cards */}
@@ -194,7 +251,9 @@ const GroupManagement = ({ isDark = false }) => {
             </div>
           </div>
           <p className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Всего студентов</p>
-          <p className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{isLoadingGroups ? '...' : totalStudents}</p>
+          <p className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            {isLoadingGroups ? '...' : totalStudents}
+          </p>
         </div>
 
         <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-4 sm:p-6 border ${isDark ? 'border-gray-700' : 'border-gray-200'} shadow-lg`}>
@@ -204,7 +263,9 @@ const GroupManagement = ({ isDark = false }) => {
             </div>
           </div>
           <p className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Активных групп</p>
-          <p className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-yellow-300' : 'text-gray-900'}`}>В разработке</p>
+          <p className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            {isLoadingGroups ? '...' : groups.length - 1}
+          </p>
         </div>
 
         <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-4 sm:p-6 border ${isDark ? 'border-gray-700' : 'border-gray-200'} shadow-lg`}>
@@ -230,81 +291,76 @@ const GroupManagement = ({ isDark = false }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Groups Sidebar */}
-        {/* Groups Sidebar */}
-<div className={`${isDark ? 'bg-gray-800/50' : 'bg-white/80'} backdrop-blur-sm rounded-2xl p-5 border ${isDark ? 'border-gray-700' : 'border-white/50'} shadow-lg lg:sticky lg:top-24 lg:self-start`}>
-  <div className="flex items-center justify-between mb-4">
-    <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Группы</h3>
-    <button 
-  onClick={() => setShowAddGroupModal(true)}
-  className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} transition-colors cursor-pointer`}
->
-  <Plus className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-</button>
-  </div>
+        <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white/80'} backdrop-blur-sm rounded-2xl p-5 border ${isDark ? 'border-gray-700' : 'border-white/50'} shadow-lg lg:sticky lg:top-24 lg:self-start`}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Группы</h3>
+            <button
+              onClick={() => setShowAddGroupModal(true)}
+              className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} transition-colors cursor-pointer`}
+            >
+              <Plus className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+            </button>
+          </div>
 
-  <div className="space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent pr-2">
-    {isLoadingGroups ? (
-      <div className="space-y-2">
-        {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className={`w-full px-4 py-3 rounded-xl ${
-              isDark ? 'bg-gray-700/30' : 'bg-gray-100'
-            } animate-pulse`}
-          >
-            <div className="flex items-center justify-between">
-              <div className={`h-4 w-24 rounded ${isDark ? 'bg-gray-600' : 'bg-gray-300'}`}></div>
-              <div className={`h-5 w-8 rounded-lg ${isDark ? 'bg-gray-600' : 'bg-gray-300'}`}></div>
-            </div>
+          <div className="space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent pr-2">
+            {isLoadingGroups ? (
+              <div className="space-y-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-gray-700/30' : 'bg-gray-100'
+                      } animate-pulse`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className={`h-4 w-24 rounded ${isDark ? 'bg-gray-600' : 'bg-gray-300'}`}></div>
+                      <div className={`h-5 w-8 rounded-lg ${isDark ? 'bg-gray-600' : 'bg-gray-300'}`}></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              groups.map((group) => (
+                <button
+                  key={group.id}
+                  onClick={() => setSelectedGroup(String(group.id))} // ВАЖНО: приводим к строке
+                  className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${selectedGroup === group.id
+                    ? isDark
+                      ? 'bg-blue-500/20 border-blue-500/50 border'
+                      : 'bg-blue-100 border-blue-300 border'
+                    : isDark
+                      ? 'hover:bg-gray-700/50 border border-transparent'
+                      : 'hover:bg-gray-50 border border-transparent'
+                    }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={`font-medium text-sm ${selectedGroup === group.id
+                      ? isDark ? 'text-blue-400' : 'text-blue-700'
+                      : isDark ? 'text-white' : 'text-gray-900'
+                      }`}>
+                      {group.name}
+                    </span>
+                    <span className={`text-xs px-2 py-1 rounded-lg ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
+                      }`}>
+                      {group.count}
+                    </span>
+                  </div>
+                  {group.specialty && (
+                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {group.course} курс • {group.specialty}
+                    </p>
+                  )}
+                </button>
+              ))
+            )}
           </div>
-        ))}
-      </div>
-    ) : (
-      groups.map((group) => (
-        <button
-          key={group.id}
-          onClick={() => setSelectedGroup(group.id)}
-          className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
-            selectedGroup === group.id
-              ? isDark 
-                ? 'bg-blue-500/20 border-blue-500/50 border' 
-                : 'bg-blue-100 border-blue-300 border'
-              : isDark 
-                ? 'hover:bg-gray-700/50 border border-transparent' 
-                : 'hover:bg-gray-50 border border-transparent'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className={`font-medium text-sm ${
-              selectedGroup === group.id
-                ? isDark ? 'text-blue-400' : 'text-blue-700'
-                : isDark ? 'text-white' : 'text-gray-900'
-            }`}>
-              {group.name}
-            </span>
-            <span className={`text-xs px-2 py-1 rounded-lg ${
-              isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
-            }`}>
-              {group.count}
-            </span>
-          </div>
-          {group.specialty && (
-            <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              {group.course} курс • {group.specialty}
-            </p>
-          )}
-        </button>
-      ))
-    )}
-  </div>
-</div>
+        </div>
 
         {/* Students List */}
         <div className="lg:col-span-3">
           <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white/80'} backdrop-blur-sm rounded-2xl border ${isDark ? 'border-gray-700' : 'border-white/50'} shadow-lg`}>
-            {/* Search and Filters */}
+            {/* Search and Filters with Add Student Button */}
             <div className={`p-5 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 mb-3">
                 <div className="flex-1 relative">
                   <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
                   <input
@@ -312,23 +368,28 @@ const GroupManagement = ({ isDark = false }) => {
                     placeholder="Поиск студентов..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border ${
-                      isDark 
-                        ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400' 
-                        : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
-                    } focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
+                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border ${isDark
+                      ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400'
+                      : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+                      } focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
                   />
                 </div>
-                <button className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl border ${
-                  isDark ? 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-700' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
-                } transition-colors cursor-pointer shadow-sm`}>
+                <button className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl border ${isDark ? 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-700' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                  } transition-colors cursor-pointer shadow-sm`}>
                   <Filter className="w-4 h-4" />
                   <span className="text-sm font-medium">Фильтры</span>
+                </button>
+                <button
+                  onClick={() => setShowAddStudentModal(true)}
+                  className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-emerald-500/50 cursor-pointer"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span className="text-sm">Добавить студента</span>
                 </button>
               </div>
 
               {selectedGroup !== 'all' && selectedGroupData && (
-                <div className="mt-3 flex items-center space-x-2">
+                <div className="flex items-center space-x-2">
                   <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                     Показано студентов: {filteredStudents.length} из {selectedGroupData.count}
                   </span>
@@ -351,16 +412,14 @@ const GroupManagement = ({ isDark = false }) => {
                     {filteredStudents.map((student) => (
                       <div
                         key={student.id}
-                        className={`${isDark ? 'bg-gray-700/30' : 'bg-white'} rounded-xl p-4 border ${
-                          isDark ? 'border-gray-600' : 'border-gray-200'
-                        } hover:shadow-xl transition-all duration-300 cursor-pointer ${
-                          isDark ? 'hover:bg-gray-700/50' : 'hover:bg-blue-50 hover:border-blue-200'
-                        }`}
+                        className={`${isDark ? 'bg-gray-700/30' : 'bg-white'} rounded-xl p-4 border ${isDark ? 'border-gray-600' : 'border-gray-200'
+                          } hover:shadow-xl transition-all duration-300 cursor-pointer ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-blue-50 hover:border-blue-200'
+                          }`}
                         onClick={() => setSelectedStudent(student)}
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center space-x-3">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-2xl shadow-lg">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold shadow-lg">
                               {student.avatar}
                             </div>
                             <div>
@@ -382,11 +441,10 @@ const GroupManagement = ({ isDark = false }) => {
                             >
                               <MoreVertical className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
                             </button>
-                            
+
                             {activeDropdown === student.id && (
-                              <div className={`absolute right-0 mt-2 w-48 ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-xl border ${
-                                isDark ? 'border-gray-700' : 'border-gray-200'
-                              } shadow-xl z-10`}>
+                              <div className={`absolute right-0 mt-2 w-48 ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-xl border ${isDark ? 'border-gray-700' : 'border-gray-200'
+                                } shadow-xl z-10`}>
                                 <button className={`w-full text-left px-4 py-2.5 ${isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-50 text-gray-700'} rounded-t-xl transition-colors flex items-center space-x-2 cursor-pointer`}>
                                   <Edit2 className="w-4 h-4" />
                                   <span className="text-sm">Редактировать</span>
@@ -439,13 +497,30 @@ const GroupManagement = ({ isDark = false }) => {
               )}
             </div>
           </div>
-          <AddGroupModal 
-      isOpen={showAddGroupModal} 
-      onClose={() => setShowAddGroupModal(false)}
-      isDark={isDark}
-    />
         </div>
       </div>
+
+      {/* Add Group Modal */}
+      {showAddGroupModal && (
+        <AddGroupModal
+          isOpen={showAddGroupModal}
+          onClose={() => setShowAddGroupModal(false)}
+          onCreated={handleGroupCreated}
+          isDark={isDark}
+        />
+      )}
+
+      {/* Add Student Modal */}
+      {showAddStudentModal && (
+        <AddStudentModal
+          isOpen={showAddStudentModal}
+          onClose={() => setShowAddStudentModal(false)}
+          onCreated={handleStudentCreated}
+          groups={groups}
+          selectedGroupId={selectedGroup}
+          isDark={isDark}
+        />
+      )}
     </div>
   );
 };
