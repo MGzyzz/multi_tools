@@ -6,10 +6,12 @@ from rest_framework import status
 from django.core.cache import cache
 import requests
 
+
 class StudentListAPI(APIView):
     """
     API view to retrieve a list of students.
     """
+
     def get(self, request, *args, **kwargs):
         students = Student.objects.all()
         serializer = StudentSerializer(students, many=True)
@@ -20,6 +22,7 @@ class GetStudentPhoto(APIView):
     """
     API view to retrieve a student's photo.
     """
+
     def get(self, request, first_name, *args, **kwargs):
         student = Student.objects.filter(first_name__iexact=first_name).first()
         if not student:
@@ -29,54 +32,44 @@ class GetStudentPhoto(APIView):
             return Response({"photo_url": photo_url})
         except Student.DoesNotExist:
             return Response({"error": "Student not found"}, status=404)
-        
+
     # TODO: Убрать это пока или просто закоментировать
-        
-    
+
+
 class CreateStudentAPI(APIView):
-    
     """
     API view to create a new student.
     """
-    
+
     def get(self, request, *args, **kwargs):
         return Response({"message": "Use POST method sosunok :d!"})
-    
+
     def post(self, request, *args, **kwargs):
-        serializer = StudentSerializer(
-            data=request.data,
-            context={"request": request}
-        )
+        serializer = StudentSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         student = serializer.save()
 
         teacher = request.user.teacher_profile
         cache.delete(f"students_by_teacher:{teacher.id}")
 
-        return Response(
-            StudentSerializer(student).data,
-            status=status.HTTP_201_CREATED
-        )
+        return Response(StudentSerializer(student).data, status=status.HTTP_201_CREATED)
 
-    
 
 def create_excel_mark_file(APIView):
     pass
-
 
     # TODO: Сделать выгрузку данных
 
 
 class getStudentInformation(APIView):
-    
-    
+
     def get(self, request, *args, **kwargs):
-        first_name = kwargs.get('first_name')
+        first_name = kwargs.get("first_name")
         student = Student.objects.filter(first_name__iexact=first_name).first()
-        
+
         if student:
             serializer = StudentSerializer(student)
-            return Response({'data': serializer.data})
-        return Response({'error': 'student not found'})
-    
+            return Response({"data": serializer.data})
+        return Response({"error": "student not found"})
+
     # TODO: Переписать на id. Либо так же закоментировать

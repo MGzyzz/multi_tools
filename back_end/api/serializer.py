@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 
 
 User = get_user_model()
-        
+
 
 class GroupSerializer(ModelSerializer):
     # students = StudentSerializer(many=True, read_only=True)
@@ -16,18 +16,28 @@ class GroupSerializer(ModelSerializer):
 
     class Meta:
         model = Group
-        fields = ['id', 'name', 'course', 'teacher', 'students_count', 'group_specialty']
-        read_only_fields = ('teacher',)
-        
+        fields = [
+            "id",
+            "name",
+            "course",
+            "teacher",
+            "students_count",
+            "group_specialty",
+        ]
+        read_only_fields = ("teacher",)
+
     def validate(self, attrs):
         teacher = self.context["teacher"]
         name = attrs.get("name")
 
         if Group.objects.filter(name=name, teacher=teacher).exists():
-            raise serializers.ValidationError({
-                "name": "Группа с таким названием у этого преподавателя уже существует."
-            })
+            raise serializers.ValidationError(
+                {
+                    "name": "Группа с таким названием у этого преподавателя уже существует."
+                }
+            )
         return attrs
+
 
 class StudentSerializer(serializers.ModelSerializer):
     group_id = serializers.IntegerField(write_only=True)
@@ -77,60 +87,100 @@ class SubjectSerializer(ModelSerializer):
     """
     Serializer for the Subject model.
     """
+
     # teacher = serializers.PrimaryKeyRelatedField(
     #     queryset=TeacherProfile.objects.all()
     # )
-    
+
     class Meta:
         model = Subject_study
-        fields = '__all__'
-        
-    
+        fields = "__all__"
+
+
 class ScheduleSerializer(ModelSerializer):
     group_id = serializers.PrimaryKeyRelatedField(
-        queryset=Group.objects.all(),
-        source="group",
-        write_only=True
+        queryset=Group.objects.all(), source="group", write_only=True
     )
     subject_id = serializers.PrimaryKeyRelatedField(
-        queryset=Subject_study.objects.all(),
-        source="subject",
-        write_only=True
+        queryset=Subject_study.objects.all(), source="subject", write_only=True
     )
 
     class Meta:
         model = Schedule
         fields = "__all__"
-        
 
-class AttendanceSerializer(ModelSerializer):
+
+class StudentAttendanceSerializer(ModelSerializer):
     """
-    Serializer for the Attendance model.
+    Serializer for the Student model with attendance details.
     """
+
+    class Meta:
+        model = Student
+        fields = ("id", "first_name", "last_name", "telegram_username")
+
+
+class AttendanceRowSerializer(serializers.ModelSerializer):
+    student = StudentAttendanceSerializer(read_only=True)
+
     class Meta:
         model = Attendance
-        fields = '__all__'
-        
-    
+        fields = ("id", "presense", "marked_at", "student")
+
+
+class GroupMiniSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+
+
+class SubjectMiniSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+
+
+class ScheduleMiniSerializer(serializers.ModelSerializer):
+    group = serializers.SerializerMethodField()
+    subject = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Schedule
+        fields = ("id", "date", "time", "group", "subject")
+
+    def get_group(self, obj):
+        return {"id": obj.group_id, "name": obj.group.name}
+
+    def get_subject(self, obj):
+        return {"id": obj.subject_id, "name": obj.subject.name}
+
+
 class TeacherProfileSerializer(ModelSerializer):
     """
     Serializer for the TeacherProfile model.
     """
-    
+
     role = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = User
-        fields = ("id", "username", "email", "first_name", "last_name", "role", "avatar", "description")
+        fields = (
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "role",
+            "avatar",
+            "description",
+        )
 
     def _get_profile(self, obj):
         try:
             return obj.teacher_profile
         except TeacherProfile.DoesNotExist:
             return None
-    
+
     def get_role(self, obj):
         p = self._get_profile(obj)
         return p.role if p else None
@@ -142,3 +192,10 @@ class TeacherProfileSerializer(ModelSerializer):
     def get_description(self, obj):
         p = self._get_profile(obj)
         return p.description if p else ""
+
+
+class MarkAttendanceSerializer(serializers.Serializer):
+    schedule_id = serializers.IntegerField(min_value=1)
+    present_student_ids = serializers.ListField(
+        child=serializers.IntegerField(min_value=1), allow_empty=True
+    )

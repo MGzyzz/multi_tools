@@ -8,4 +8,3 @@ from .models import TeacherProfile
 def ensure_teacher_profile(sender, instance, created, **kwargs):
     if created:
         TeacherProfile.objects.create(user=instance)
-

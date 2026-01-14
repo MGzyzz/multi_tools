@@ -6,12 +6,12 @@ from .models import User, TeacherProfile
 
 class ProfileInline(admin.StackedInline):
     model = TeacherProfile
-    fields = ['avatar', 'description', 'role']
+    fields = ["avatar", "description", "role"]
 
 
 class UserProfileAdmin(UserAdmin):
-    list_display = ['id', 'username']
-    field = ['is_online']
+    list_display = ["id", "username"]
+    field = ["is_online"]
     inlines = [ProfileInline]
 
 
