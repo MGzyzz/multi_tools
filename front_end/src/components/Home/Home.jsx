@@ -249,6 +249,7 @@ const Home = ({ isDark = true }) => {
                 {displayedSessions.map((session, index) => (
                   <div
                     key={session.id || index}
+                    onClick={() => navigate(`/attendance/scan/${session.id}`)}
                     className={`${isDark ? 'bg-gray-700/30' : 'bg-gray-50'} rounded-xl p-3 sm:p-4 border ${isDark ? 'border-gray-600' : 'border-gray-200'
                       } transition-all duration-300 cursor-pointer hover:shadow-lg ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'
                       }`}

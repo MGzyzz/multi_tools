@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Users,
   Plus,
@@ -7,7 +7,6 @@ import {
   MoreVertical,
   Edit2,
   Trash2,
-  AlertCircle,
   Mail,
   Phone,
   BookOpen,
@@ -19,21 +18,24 @@ import {
 } from 'lucide-react';
 import AddGroupModal from '../AddGroupModal/AddGroupModal';
 import AddStudentModal from '../AddStudentModal/AddStudentModal';
+import SubjectGroup from '../SubjectGroup/SubjectGroup';
 
 const GroupManagement = ({ isDark = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('all');
-  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [activeDropdown, setActiveDropdown] = useState(null);
-  const [students, setStudents] = useState([]);
-  const [studentsCount, setStudentsCount] = useState(0);
+  const [selectedSubject, setSelectedSubject] = useState(null);
   const [isLoadingGroups, setIsLoadingGroups] = useState(true);
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
   const [totalStudents, setTotalStudents] = useState(0);
   const [showAddGroupModal, setShowAddGroupModal] = useState(false);
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [students, setStudents] = useState([]);
+  const [studentsCount, setStudentsCount] = useState(0);
+  const [studentsRefreshKey, setStudentsRefreshKey] = useState(0);
 
   const [groups, setGroups] = useState([{ id: 'all', name: 'Все группы', count: 0 }]);
+  const selectedGroupData = groups.find(g => g.id === selectedGroup);
 
   // Загрузка списка групп
   useEffect(() => {
@@ -74,19 +76,34 @@ const GroupManagement = ({ isDark = false }) => {
     return () => { mounted = false; };
   }, []);
 
-  // Загрузка студентов
+  useEffect(() => {
+    setSelectedSubject(null);
+    setStudents([]);
+    setStudentsCount(0);
+    setSearchTerm('');
+    setActiveDropdown(null);
+  }, [selectedGroup]);
+
+  useEffect(() => {
+    setSearchTerm('');
+    setActiveDropdown(null);
+  }, [selectedSubject]);
+
   useEffect(() => {
     let mounted = true;
+
+    if (selectedGroup === 'all' || !selectedSubject?.id) {
+      setStudents([]);
+      setStudentsCount(0);
+      setIsLoadingStudents(false);
+      return () => { mounted = false; };
+    }
 
     (async () => {
       setIsLoadingStudents(true);
       try {
         const { getStudentsListGroup } = await import('../../api/getGroupStudentList');
-        const { getAllStudentsListGroup } = await import('../../api/getAllStudentGroup');
-
-        const data = selectedGroup === "all"
-          ? await getAllStudentsListGroup()
-          : await getStudentsListGroup(selectedGroup);
+        const data = await getStudentsListGroup(selectedGroup, selectedSubject.id);
 
         const list = Array.isArray(data?.results)
           ? data.results
@@ -94,30 +111,28 @@ const GroupManagement = ({ isDark = false }) => {
             ? data
             : [];
 
-        const normalizedStudents = list.map((s) => ({
-          id: s.id,
-          name: `${s.first_name ?? ""} ${s.last_name ?? ""}`.trim() || "Без имени",
-          email: s.email ?? "",
-          phone: s.phone ?? "",
-          group: s.group?.name ?? s.group_name ?? s.group ?? (selectedGroup === "all" ? "" : selectedGroup),
+        const normalizedStudents = list.map((student) => {
+          const attendancePercent = Number(student.attendance?.percent ?? student.attendance_percent ?? 0);
+          const status = attendancePercent >= 75 ? 'active' : attendancePercent >= 50 ? 'warning' : 'danger';
 
-          groupId: String(
-            s.group?.id ??
-            s.group_id ??
-            s.groupId ??
-            (selectedGroup !== "all" ? selectedGroup : "")
-          ),
-
-          avatar: (s.first_name?.[0] || s.last_name?.[0] || "T").toUpperCase(),
-          attendance: 0,
-          status: "active",
-        }));
+          return {
+            id: student.id,
+            name: `${student.first_name ?? ""} ${student.last_name ?? ""}`.trim() || "Без имени",
+            email: student.email ?? "",
+            phone: student.phone ?? student.telegram_username ?? "",
+            group: selectedGroupData?.name ?? "",
+            groupId: String(selectedGroup),
+            avatar: (student.first_name?.[0] || student.last_name?.[0] || "S").toUpperCase(),
+            attendance: attendancePercent,
+            status,
+          };
+        });
 
         if (!mounted) return;
         setStudents(normalizedStudents);
         setStudentsCount(Number(data?.count) || normalizedStudents.length);
-      } catch (e) {
-        console.error('Ошибка загрузки студентов:', e);
+      } catch (error) {
+        console.error('Ошибка загрузки студентов:', error);
         if (!mounted) return;
         setStudents([]);
         setStudentsCount(0);
@@ -126,10 +141,8 @@ const GroupManagement = ({ isDark = false }) => {
       }
     })();
 
-    return () => {
-      mounted = false;
-    };
-  }, [selectedGroup]);
+    return () => { mounted = false; };
+  }, [selectedGroup, selectedSubject?.id, studentsRefreshKey, selectedGroupData]);
 
   // Обработчик создания новой группы
   const handleGroupCreated = async (newGroup) => {
@@ -149,37 +162,12 @@ const GroupManagement = ({ isDark = false }) => {
     setSelectedGroup(String(newGroup.id)); // ВАЖНО: приводим к строке
   };
 
-  // Обработчик создания нового студента
   const handleStudentCreated = async (newStudent) => {
-    console.log('Student created:', newStudent);
-    console.log('Current selected group:', selectedGroup);
-    console.log('Student groupId:', newStudent.groupId);
-
-    // ВАЖНО: Добавляем студента в текущий список только если смотрим:
-    // 1. "Все группы" ИЛИ
-    // 2. Ту же группу, куда добавили студента
-    const shouldAddToCurrentList =
-      selectedGroup === 'all' ||
-      String(selectedGroup) === String(newStudent.groupId);
-
-    console.log('Should add to current list:', shouldAddToCurrentList);
-
-    if (shouldAddToCurrentList) {
-      setStudents((prevStudents) => {
-        console.log('Adding student to list. Previous count:', prevStudents.length);
-        return [newStudent, ...prevStudents];
-      });
-      setStudentsCount((prev) => prev + 1);
-    }
-
-    // Обновляем счетчики в группах
     setGroups((prevGroups) => {
       return prevGroups.map((g) => {
-        // Обновляем счетчик для конкретной группы
         if (String(g.id) === String(newStudent.groupId)) {
           return { ...g, count: g.count + 1 };
         }
-        // Обновляем счетчик для "Все группы"
         if (g.id === 'all') {
           return { ...g, count: g.count + 1 };
         }
@@ -187,22 +175,26 @@ const GroupManagement = ({ isDark = false }) => {
       });
     });
 
-    // Обновляем общий счетчик студентов
     setTotalStudents((prev) => prev + 1);
+    if (selectedSubject?.id) {
+      setStudentsRefreshKey((prev) => prev + 1);
+    }
   };
 
   const filteredStudents = useMemo(() => {
-    return students.filter(student => {
-      const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        String(student.group).toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesGroup =
-        selectedGroup === 'all' || String(student.groupId) === String(selectedGroup);
-      return matchesSearch && matchesGroup;
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return students;
+    return students.filter((student) => {
+      return (
+        student.name.toLowerCase().includes(term) ||
+        student.email.toLowerCase().includes(term) ||
+        student.phone.toLowerCase().includes(term) ||
+        String(student.group).toLowerCase().includes(term)
+      );
     });
-  }, [searchTerm, selectedGroup, students]);
+  }, [searchTerm, students]);
 
-  const selectedGroupData = groups.find(g => g.id === selectedGroup);
+  const canShowStudents = selectedGroup !== 'all' && selectedSubject?.id;
 
   const getAttendanceColor = (attendance) => {
     if (attendance >= 90) return isDark ? 'text-green-400' : 'text-green-600';
@@ -355,148 +347,157 @@ const GroupManagement = ({ isDark = false }) => {
           </div>
         </div>
 
-        {/* Students List */}
-        <div className="lg:col-span-3">
-          <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white/80'} backdrop-blur-sm rounded-2xl border ${isDark ? 'border-gray-700' : 'border-white/50'} shadow-lg`}>
-            {/* Search and Filters with Add Student Button */}
-            <div className={`p-5 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-              <div className="flex flex-col sm:flex-row gap-3 mb-3">
-                <div className="flex-1 relative">
-                  <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                  <input
-                    type="text"
-                    placeholder="Поиск студентов..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border ${isDark
-                      ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400'
-                      : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
-                      } focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
-                  />
+        {/* Subjects and Students */}
+        <div className="lg:col-span-3 space-y-6">
+          <SubjectGroup
+            groupId={selectedGroup}
+            groupName={selectedGroupData?.name}
+            isDark={isDark}
+            onSelectSubject={setSelectedSubject}
+            selectedSubjectId={selectedSubject?.id}
+          />
+
+          {canShowStudents && (
+            <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white/80'} backdrop-blur-sm rounded-2xl border ${isDark ? 'border-gray-700' : 'border-white/50'} shadow-lg`}>
+              <div className={`p-5 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                <div className="flex flex-col sm:flex-row gap-3 mb-3">
+                  <div className="flex-1 relative">
+                    <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                    <input
+                      type="text"
+                      placeholder="Поиск студентов..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className={`w-full pl-10 pr-4 py-2.5 rounded-xl border ${isDark
+                        ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400'
+                        : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+                        } focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
+                    />
+                  </div>
+                  <button
+                    className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl border ${isDark ? 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-700' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                      } transition-colors cursor-pointer shadow-sm`}
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span className="text-sm font-medium">Фильтры</span>
+                  </button>
+                  <button
+                    onClick={() => setShowAddStudentModal(true)}
+                    className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-emerald-500/50 cursor-pointer"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span className="text-sm">Добавить студента</span>
+                  </button>
                 </div>
-                <button className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl border ${isDark ? 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-700' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
-                  } transition-colors cursor-pointer shadow-sm`}>
-                  <Filter className="w-4 h-4" />
-                  <span className="text-sm font-medium">Фильтры</span>
-                </button>
-                <button
-                  onClick={() => setShowAddStudentModal(true)}
-                  className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-emerald-500/50 cursor-pointer"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  <span className="text-sm">Добавить студента</span>
-                </button>
+
+                {selectedGroupData && (
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Показано студентов: {filteredStudents.length} из {studentsCount}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              {selectedGroup !== 'all' && selectedGroupData && (
-                <div className="flex items-center space-x-2">
-                  <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Показано студентов: {filteredStudents.length} из {selectedGroupData.count}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Students Grid */}
-            <div className="p-5 relative">
-              {isLoadingStudents ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <Loader2 className={`w-12 h-12 ${isDark ? 'text-blue-400' : 'text-blue-600'} animate-spin mb-4`} />
-                  <p className={`text-base font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Загрузка студентов...
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {filteredStudents.map((student) => (
-                      <div
-                        key={student.id}
-                        className={`${isDark ? 'bg-gray-700/30' : 'bg-white'} rounded-xl p-4 border ${isDark ? 'border-gray-600' : 'border-gray-200'
-                          } hover:shadow-xl transition-all duration-300 cursor-pointer ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-blue-50 hover:border-blue-200'
-                          }`}
-                        onClick={() => setSelectedStudent(student)}
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold shadow-lg">
-                              {student.avatar}
-                            </div>
-                            <div>
-                              <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                {student.name}
-                              </h4>
-                              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                {student.group}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="relative">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveDropdown(activeDropdown === student.id ? null : student.id);
-                              }}
-                              className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-600' : 'hover:bg-gray-200'} transition-colors cursor-pointer`}
-                            >
-                              <MoreVertical className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-                            </button>
-
-                            {activeDropdown === student.id && (
-                              <div className={`absolute right-0 mt-2 w-48 ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-xl border ${isDark ? 'border-gray-700' : 'border-gray-200'
-                                } shadow-xl z-10`}>
-                                <button className={`w-full text-left px-4 py-2.5 ${isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-50 text-gray-700'} rounded-t-xl transition-colors flex items-center space-x-2 cursor-pointer`}>
-                                  <Edit2 className="w-4 h-4" />
-                                  <span className="text-sm">Редактировать</span>
-                                </button>
-                                <button className={`w-full text-left px-4 py-2.5 ${isDark ? 'hover:bg-gray-700 text-red-400' : 'hover:bg-gray-50 text-red-600'} rounded-b-xl transition-colors flex items-center space-x-2 cursor-pointer`}>
-                                  <Trash2 className="w-4 h-4" />
-                                  <span className="text-sm">Удалить</span>
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Mail className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                            <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                              {student.email}
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Phone className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                            <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                              {student.phone}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className={`mt-3 pt-3 border-t ${isDark ? 'border-gray-600' : 'border-gray-200'} flex items-center justify-between`}>
-                          <div className="flex items-center space-x-2">
-                            <TrendingUp className={`w-4 h-4 ${getAttendanceColor(student.attendance)}`} />
-                            <span className={`text-sm font-medium ${getAttendanceColor(student.attendance)}`}>
-                              {student.attendance}% посещаемость
-                            </span>
-                          </div>
-                          {getStatusBadge(student.status)}
-                        </div>
-                      </div>
-                    ))}
+              <div className="p-5 relative">
+                {isLoadingStudents ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Loader2 className={`w-12 h-12 ${isDark ? 'text-blue-400' : 'text-blue-600'} animate-spin mb-4`} />
+                    <p className={`text-base font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Загрузка студентов...
+                    </p>
                   </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {filteredStudents.map((student) => (
+                        <div
+                          key={student.id}
+                          className={`${isDark ? 'bg-gray-700/30' : 'bg-white'} rounded-xl p-4 border ${isDark ? 'border-gray-600' : 'border-gray-200'
+                            } hover:shadow-xl transition-all duration-300 cursor-pointer ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-blue-50 hover:border-blue-200'
+                            }`}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                                {student.avatar}
+                              </div>
+                              <div>
+                                <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                  {student.name}
+                                </h4>
+                                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  {student.group}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="relative">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveDropdown(activeDropdown === student.id ? null : student.id);
+                                }}
+                                className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-600' : 'hover:bg-gray-200'} transition-colors cursor-pointer`}
+                              >
+                                <MoreVertical className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                              </button>
 
-                  {filteredStudents.length === 0 && !isLoadingStudents && (
-                    <div className={`text-center py-12 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      <Users className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                      <p className="text-base font-medium mb-1">Студенты не найдены</p>
-                      <p className="text-sm">Попробуйте изменить критерии поиска</p>
+                              {activeDropdown === student.id && (
+                                <div className={`absolute right-0 mt-2 w-48 ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-xl border ${isDark ? 'border-gray-700' : 'border-gray-200'
+                                  } shadow-xl z-10`}>
+                                  <button className={`w-full text-left px-4 py-2.5 ${isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-50 text-gray-700'} rounded-t-xl transition-colors flex items-center space-x-2 cursor-pointer`}>
+                                    <Edit2 className="w-4 h-4" />
+                                    <span className="text-sm">Редактировать</span>
+                                  </button>
+                                  <button className={`w-full text-left px-4 py-2.5 ${isDark ? 'hover:bg-gray-700 text-red-400' : 'hover:bg-gray-50 text-red-600'} rounded-b-xl transition-colors flex items-center space-x-2 cursor-pointer`}>
+                                    <Trash2 className="w-4 h-4" />
+                                    <span className="text-sm">Удалить</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Mail className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                              <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {student.email}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Phone className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                              <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {student.phone}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className={`mt-3 pt-3 border-t ${isDark ? 'border-gray-600' : 'border-gray-200'} flex items-center justify-between`}>
+                            <div className="flex items-center space-x-2">
+                              <TrendingUp className={`w-4 h-4 ${getAttendanceColor(student.attendance)}`} />
+                              <span className={`text-sm font-medium ${getAttendanceColor(student.attendance)}`}>
+                                {student.attendance}% посещаемость
+                              </span>
+                            </div>
+                            {getStatusBadge(student.status)}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  )}
-                </>
-              )}
+
+                    {filteredStudents.length === 0 && !isLoadingStudents && (
+                      <div className={`text-center py-12 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <Users className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                        <p className="text-base font-medium mb-1">Студенты не найдены</p>
+                        <p className="text-sm">Попробуйте изменить критерии поиска</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -510,7 +511,6 @@ const GroupManagement = ({ isDark = false }) => {
         />
       )}
 
-      {/* Add Student Modal */}
       {showAddStudentModal && (
         <AddStudentModal
           isOpen={showAddStudentModal}
@@ -521,6 +521,7 @@ const GroupManagement = ({ isDark = false }) => {
           isDark={isDark}
         />
       )}
+
     </div>
   );
 };

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Moon, Sun, Scan, Home, Camera, Users, BarChart3, Settings,
-  LogOut, User, ChevronLeft, ChevronRight, Menu, X, Bell, Search
+  Moon, Sun, Scan, Home, Users, BarChart3, Settings,
+  LogOut, User, ChevronLeft, ChevronRight, Menu, X, Bell
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getUserProfile } from '../../api/authAPI';
+
 
 const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onNavigate }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
@@ -25,7 +26,6 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
 
   const menuItems = [
     { id: 'home', icon: Home, label: 'Главная', path: '/' },
-    { id: 'attendance', icon: Camera, label: 'Посещаемость', path: '/attendance' },
     { id: 'tools', icon: Users, label: 'Инструменты', path: '/tools' },
     { id: 'analytics', icon: BarChart3, label: 'Аналитика', path: '/analytics' },
     { id: 'settings', icon: Settings, label: 'Настройки', path: '/settings' }
@@ -206,19 +206,8 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
               <Menu className={`w-6 h-6 ${isDark ? 'text-gray-300' : 'text-gray-700'}`} />
             </button>
 
-            {/* Search Bar */}
-            <div className="hidden md:flex flex-1 max-w-xl mx-4">
-              <div className="relative w-full">
-                <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-                <input
-                  type="text"
-                  placeholder="Поиск студентов, групп..."
-                  className={`w-full pl-10 pr-4 py-2 rounded-xl border ${isDark ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'} focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-300`}
-                />
-              </div>
-            </div>
-
             {/* Right Side */}
+            <div className="flex-1"></div>
             <div className="flex items-center space-x-3">
               {/* Theme Toggle */}
               <button
@@ -279,7 +268,7 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
                       <button
                         onClick={() => {
                           setIsProfileOpen(false);
-                          if (onNavigate) onNavigate('/settings');
+                          if (onNavigate) onNavigate('/teacher-profile');
                         }}
                         className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-300 ${isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}
                       >

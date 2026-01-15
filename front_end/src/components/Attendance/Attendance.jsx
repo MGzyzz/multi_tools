@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   Camera,
   Video,
-  UserCheck,
   Users,
   CheckCircle,
-  XCircle,
   Clock,
   Play,
   Square,
@@ -17,6 +16,7 @@ import {
   Check
 } from 'lucide-react';
 import Loader from '../Loader/Loader';
+import { getDetailSchedule } from '../../api/getDetailSchedule';
 
 // ✅ MediaPipe
 import { FaceMesh } from '@mediapipe/face_mesh';
@@ -25,9 +25,6 @@ import { Camera as MediaPipeCamera } from '@mediapipe/camera_utils';
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 const DEBUG = true;
-const log = (...args) => DEBUG && console.log('[ATT]', ...args);
-const warn = (...args) => DEBUG && console.warn('[ATT]', ...args);
-const err = (...args) => DEBUG && console.error('[ATT]', ...args);
 const lerp = (a, b, t) => a + (b - a) * t;
 
 const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
@@ -48,6 +45,8 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
   const [currentStudent, setCurrentStudent] = useState(null);
   const [scanProgress, setScanProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const { scheduleId: scheduleIdFromParams } = useParams();
+  const effectiveScheduleId = scheduleId ?? scheduleIdFromParams; // если вдруг передаешь пропом
 
   // ✅ состояние рамки для UI
   const [scanFrame, setScanFrame] = useState({
@@ -58,31 +57,61 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
   });
 
   // Mock данные - в будущем из API
-  const [sessionData, setSessionData] = useState({
-    group: 'Группа А',
-    subject: 'Математика',
-    time: '13:00',
-    date: '2026-01-04',
-    totalStudents: 10
-  });
+  const [isLoadingSchedule, setIsLoadingSchedule] = useState(false);
+  const [scheduleError, setScheduleError] = useState(null);
 
-  const [students, setStudents] = useState([
-    { id: 1, name: 'Иванов Иван', status: null, scanTime: null },
-    { id: 2, name: 'Петров Петр', status: null, scanTime: null },
-    { id: 3, name: 'Сидоров Сидор', status: null, scanTime: null },
-    { id: 4, name: 'Козлова Анна', status: null, scanTime: null },
-    { id: 5, name: 'Смирнов Алексей', status: null, scanTime: null },
-    { id: 6, name: 'Новикова Мария', status: null, scanTime: null },
-    { id: 7, name: 'Федоров Дмитрий', status: null, scanTime: null },
-    { id: 8, name: 'Морозова Елена', status: null, scanTime: null },
-    { id: 9, name: 'Волков Андрей', status: null, scanTime: null },
-    { id: 10, name: 'Соколова Ольга', status: null, scanTime: null }
-  ]);
+  const [sessionData, setSessionData] = useState({
+    group: '',
+    subject: '',
+    time: '',
+    date: '',
+    totalStudents: 0
+  });
+  const [students, setStudents] = useState([]);
+
+  const formatTimeHHMM = (timeStr) => {
+    if (!timeStr) return '';
+    // "12:00:00" -> "12:00"
+    return timeStr.slice(0, 5);
+  };
+
+  const formatMarkedAtHHMM = (iso) => {
+    if (!iso) return null;
+    const d = new Date(iso);
+    return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const mapApiToState = (data) => {
+    const schedule = data?.schedule;
+    const attendances = Array.isArray(data?.attendances) ? data.attendances : [];
+
+    const mappedStudents = attendances.map((a) => ({
+      id: a.student?.id,
+      attendanceId: a.id,
+      name: `${a.student?.last_name ?? ''} ${a.student?.first_name ?? ''}`.trim(),
+      telegram: a.student?.telegram_username ?? null,
+
+      // status: present | absent | null
+      status: a.presense === true ? 'present' : 'absent',
+      scanTime: formatMarkedAtHHMM(a.marked_at)
+    }));
+
+    return {
+      session: {
+        group: schedule?.group?.name ?? '',
+        subject: schedule?.subject?.name ?? '',
+        time: formatTimeHHMM(schedule?.time),
+        date: schedule?.date ?? '',
+        totalStudents: mappedStudents.length
+      },
+      students: mappedStudents
+    };
+  };
 
   const stats = {
     present: students.filter(s => s.status === 'present').length,
-    late: students.filter(s => s.status === 'late').length,
-    absent: students.filter(s => s.status === null).length
+    late: students.filter(s => s.status === 'late').length, // если позже появится
+    absent: students.filter(s => s.status === 'absent' || s.status === null).length
   };
 
   // =========================
@@ -334,6 +363,29 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isScanning, isCameraActive]);
 
+  useEffect(() => {
+    if (!effectiveScheduleId) return;
+
+    const load = async () => {
+      setIsLoadingSchedule(true);
+      setScheduleError(null);
+      try {
+        const data = await getDetailSchedule(effectiveScheduleId);
+        const mapped = mapApiToState(data);
+        setSessionData(mapped.session);
+        setStudents(mapped.students);
+      } catch (e) {
+        setScheduleError('Не удалось загрузить данные расписания');
+        console.error(e);
+      } finally {
+        setIsLoadingSchedule(false);
+      }
+    };
+
+    load();
+  }, [effectiveScheduleId]);
+
+
   // =========================
   // Scanning
   // =========================
@@ -452,8 +504,8 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
         {/* Main frame */}
         <div
           className={`absolute inset-8 border-4 rounded-3xl transition-all duration-300 ${isProcessing
-              ? 'border-blue-500 shadow-[0_0_30px_rgba(59,130,246,0.5)]'
-              : 'border-green-500 shadow-[0_0_30px_rgba(34,197,94,0.5)]'
+            ? 'border-blue-500 shadow-[0_0_30px_rgba(59,130,246,0.5)]'
+            : 'border-green-500 shadow-[0_0_30px_rgba(34,197,94,0.5)]'
             }`}
         >
           {/* Corner accents */}
@@ -513,6 +565,17 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
+      {isLoadingSchedule && (
+        <div className="mb-4">
+          <Loader /> {/* или твой Loader2 */}
+        </div>
+      )}
+
+      {scheduleError && (
+        <div className={`mb-4 p-3 rounded-xl border ${isDark ? 'border-red-500/40 bg-red-500/10 text-red-300' : 'border-red-200 bg-red-50 text-red-700'}`}>
+          {scheduleError}
+        </div>
+      )}
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between mb-4">
@@ -533,7 +596,6 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
             <span className="hidden sm:inline">Сбросить</span>
           </button>
         </div>
-        а
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
           {/* present */}
@@ -667,8 +729,8 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
                 <div className="absolute bottom-4 left-4 right-4 bg-black/80 backdrop-blur-md rounded-xl p-4">
                   <div className="flex items-center space-x-3">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center ${currentStudent.status === 'present'
-                        ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                        : 'bg-gradient-to-br from-amber-500 to-orange-500'
+                      ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                      : 'bg-gradient-to-br from-amber-500 to-orange-500'
                       } shadow-lg`}>
                       {currentStudent.status === 'present' ? (
                         <CheckCircle className="w-6 h-6 text-white" />
@@ -703,8 +765,8 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
                     onClick={simulateFaceRecognition}
                     disabled={isProcessing}
                     className={`flex-1 flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-semibold cursor-pointer transition-all duration-300 ${isProcessing
-                        ? 'bg-gray-600 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105'
+                      ? 'bg-gray-600 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105'
                       } text-white shadow-lg`}
                   >
                     {isProcessing ? (
@@ -749,24 +811,24 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
               <div
                 key={student.id}
                 className={`rounded-xl p-3 border transition-all duration-300 ${student.status === 'present'
+                  ? isDark
+                    ? 'bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20'
+                    : 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
+                  : student.status === 'late'
                     ? isDark
-                      ? 'bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20'
-                      : 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
-                    : student.status === 'late'
-                      ? isDark
-                        ? 'bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20'
-                        : 'bg-amber-50 border-amber-200 hover:bg-amber-100'
-                      : isDark
-                        ? 'bg-gray-700/30 border-gray-600 hover:bg-gray-700/50'
-                        : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                      ? 'bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20'
+                      : 'bg-amber-50 border-amber-200 hover:bg-amber-100'
+                    : isDark
+                      ? 'bg-gray-700/30 border-gray-600 hover:bg-gray-700/50'
+                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
                   }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className={`font-semibold text-sm ${student.status
-                      ? student.status === 'present'
-                        ? isDark ? 'text-emerald-400' : 'text-emerald-700'
-                        : isDark ? 'text-amber-400' : 'text-amber-700'
-                      : isDark ? 'text-white' : 'text-gray-900'
+                    ? student.status === 'present'
+                      ? isDark ? 'text-emerald-400' : 'text-emerald-700'
+                      : isDark ? 'text-amber-400' : 'text-amber-700'
+                    : isDark ? 'text-white' : 'text-gray-900'
                     }`}>
                     {student.name}
                   </span>
@@ -782,8 +844,8 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
                     <button
                       onClick={() => markStudent(student.id, 'present')}
                       className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all duration-300 ${isDark
-                          ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30'
-                          : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300'
+                        ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300'
                         }`}
                     >
                       <div className="flex items-center justify-center space-x-1">
@@ -794,8 +856,8 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
                     <button
                       onClick={() => markStudent(student.id, 'late')}
                       className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all duration-300 ${isDark
-                          ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30'
-                          : 'bg-amber-100 hover:bg-amber-200 text-amber-700 border border-amber-300'
+                        ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30'
+                        : 'bg-amber-100 hover:bg-amber-200 text-amber-700 border border-amber-300'
                         }`}
                     >
                       <div className="flex items-center justify-center space-x-1">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, UserPlus, Upload, Download, FileText, Settings, Search, Filter } from 'lucide-react';
+import { Users, UserPlus, Upload, Download, FileText, Settings, Filter } from 'lucide-react';
 import { path } from 'motion/react-client';
 import { Link } from 'react-router-dom';
 
@@ -73,15 +73,7 @@ const Tools = ({ isDark = true }) => {
       </div>
 
       {/* Search and Filter */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 sm:mb-8">
-        <div className="relative">
-          <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-          <input
-            type="text"
-            placeholder="Поиск студентов..."
-            className={`w-full pl-10 pr-4 py-3 rounded-xl border ${isDark ? 'bg-gray-800/50 border-gray-700 text-white placeholder-gray-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'} focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-300`}
-          />
-        </div>
+      <div className="flex justify-center mb-6 sm:mb-8">
         <button className={`flex items-center justify-center space-x-2 px-6 py-3 rounded-xl border ${isDark ? 'bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-700' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'} cursor-pointer transition-all duration-300`}>
           <Filter className="w-5 h-5" />
           <span>Фильтры</span>

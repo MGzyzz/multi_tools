@@ -7,6 +7,7 @@ import AttendanceScanning from './components/Attendance/Attendance'
 import Tools from './components/Tools/Tools'
 import Auth from './components/Auth/Auth'
 import GroupManagement from './components/GroupManagement/GroupManagement'
+import TeacherProfile from './components/TeacherProfile/TeacherProfile'
 import { isAuthenticated, authLogout } from './api/authAPI'
 import './index.css'
 
@@ -46,6 +47,7 @@ function App() {
     if (path.startsWith('/tools')) return 'tools'
     if (path.startsWith('/analytics')) return 'analytics'
     if (path.startsWith('/settings')) return 'settings'
+    if (path.startsWith('/teacher-profile')) return 'profile'
     return 'home'
   }
 
@@ -104,7 +106,7 @@ function App() {
         />
 
         <Route
-          path="/attendance"
+          path="/attendance/scan/:scheduleId"
           element={
             <ProtectedRoute>
               <Layout 
@@ -114,7 +116,7 @@ function App() {
                 setTheme={setTheme}
                 onNavigate={(path) => navigate(path)}
               >
-                <Attendance isDark={theme === 'dark'}/>
+                <AttendanceScanning isDark={theme === 'dark'}/>
               </Layout>
             </ProtectedRoute>
           }
@@ -155,6 +157,23 @@ function App() {
         />
 
         <Route
+          path="/teacher-profile"
+          element={
+            <ProtectedRoute>
+              <Layout 
+                currentPage={getCurrentPage()} 
+                onLogout={handleLogout}
+                theme={theme}
+                setTheme={setTheme}
+                onNavigate={(path) => navigate(path)}
+              >
+                <TeacherProfile isDark={theme === 'dark'} />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/analytics"
           element={
             <ProtectedRoute>
@@ -165,9 +184,11 @@ function App() {
                 setTheme={setTheme}
                 onNavigate={(path) => navigate(path)}
               >
-                <div className="p-8">
-                  <h1 className="text-3xl font-bold text-white">Аналитика</h1>
-                  <p className="text-gray-400 mt-4">Страница в разработке...</p>
+                <div className="p-8 flex items-center justify-center min-h-[60vh] text-center">
+                  <div>
+                    <h1 className="text-3xl font-bold text-white">Аналитика</h1>
+                    <p className="text-gray-400 mt-4">Страница в разработке...</p>
+                  </div>
                 </div>
               </Layout>
             </ProtectedRoute>
@@ -185,9 +206,11 @@ function App() {
                 setTheme={setTheme}
                 onNavigate={(path) => navigate(path)}
               >
-                <div className="p-8">
-                  <h1 className="text-3xl font-bold text-white">Настройки</h1>
-                  <p className="text-gray-400 mt-4">Страница в разработке...</p>
+                <div className="p-8 flex items-center justify-center min-h-[60vh] text-center">
+                  <div>
+                    <h1 className="text-3xl font-bold text-white">Настройки</h1>
+                    <p className="text-gray-400 mt-4">Страница в разработке...</p>
+                  </div>
                 </div>
               </Layout>
             </ProtectedRoute>
