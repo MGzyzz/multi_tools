@@ -41,7 +41,8 @@ class GroupSerializer(ModelSerializer):
 
 class StudentSerializer(serializers.ModelSerializer):
     group_id = serializers.IntegerField(write_only=True)
-    groups = GroupSerializer(many=True, read_only=True)
+    # groups = GroupSerializer(many=True, read_only=True)
+    attendance = serializers.SerializerMethodField()
 
     class Meta:
         model = Student
@@ -56,7 +57,7 @@ class StudentSerializer(serializers.ModelSerializer):
             "platonus_id",
             "face_image",
             "group_id",
-            "groups",
+            "attendance",
         )
 
     def validate_group_id(self, value):
@@ -81,6 +82,22 @@ class StudentSerializer(serializers.ModelSerializer):
         group.students.add(student)
 
         return student
+    
+    def get_attendance(self, obj):
+        """
+        Возвращает посещаемость именно по (group, subject), который пришёл в query params.
+        """
+        stats_map = self.context.get("stats_map") or {}
+        row = stats_map.get(obj.id)
+
+        if not row:
+            return {"total": 0, "attended": 0, "percent": 0}
+
+        total = row["total"] or 0
+        attended = row["attended"] or 0
+        percent = round((attended / total) * 100) if total > 0 else 0
+
+        return {"total": total, "attended": attended, "percent": percent}
 
 
 class SubjectSerializer(ModelSerializer):
@@ -94,7 +111,7 @@ class SubjectSerializer(ModelSerializer):
 
     class Meta:
         model = Subject_study
-        fields = "__all__"
+        fields = ["id", "name", "description"]
 
 
 class ScheduleSerializer(ModelSerializer):

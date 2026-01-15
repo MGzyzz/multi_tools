@@ -1,13 +1,14 @@
 from rest_framework.views import APIView
-from app.models import Group
+from app.models import Group, AttendanceStat, Subject_study
 from api.serializer import GroupSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from django.db.models import Count
+from django.db.models import Count, Q, Sum
 from django.core.cache import cache
 from ..serializer import StudentSerializer
+from api.views.attendanceAPI import IsTeacher
 import logging
 
 logger = logging.getLogger(__name__)
@@ -42,33 +43,62 @@ class GroupListAPI(APIView):
 
 
 class GroupStudentAPI(APIView):
-    """
-    API view to retrive a group with students
+    permission_classes = [IsAuthenticated, IsTeacher]
 
-    """
+    def get(self, request, group_id, subject_id, *args, **kwargs):
+        teacher = request.user.teacher_profile
+        group = get_object_or_404(Group, id=group_id, teacher=teacher)
+        subject = get_object_or_404(Subject_study, id=subject_id, teacher=teacher, groups=group)
 
-    def get(self, request, pk, *args, **kwargs):
-        group = get_object_or_404(Group, id=pk)
-
-        qs = group.students.all()  # или Student.objects.filter(group_id=pk)
+        qs = group.students.all()
 
         search = request.query_params.get("search")
         if search:
-            qs = qs.filter(name__icontains=search)
+            qs = qs.filter(
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(telegram_username__icontains=search)
+            )
 
         page = int(request.query_params.get("page", 1))
         page_size = int(request.query_params.get("page_size", 20))
         start = (page - 1) * page_size
         end = start + page_size
 
-        return Response(
-            {
-                "group": pk,
-                "count": qs.count(),
-                "results": StudentSerializer(qs[start:end], many=True).data,
-            },
-            status=status.HTTP_200_OK,
+        page_students = list(qs.order_by("last_name", "first_name", "id")[start:end])
+        student_ids = [s.id for s in page_students]
+
+        stats_qs = AttendanceStat.objects.filter(
+            group_id=group.id,
+            subject_id=subject.id,
+            student_id__in=student_ids
+        ).values("student_id", "total", "attended")
+
+        stats_map = {r["student_id"]: r for r in stats_qs}
+
+        agg = AttendanceStat.objects.filter(
+            group_id=group.id,
+            subject_id=subject.id
+        ).aggregate(total=Sum("total"), attended=Sum("attended"))
+
+        total = agg["total"] or 0
+        attended = agg["attended"] or 0
+        group_avg = round((attended / total) * 100) if total > 0 else 0
+
+        serializer = StudentSerializer(
+            page_students,
+            many=True,
+            context={"request": request, "stats_map": stats_map}
         )
+
+        return Response({
+            "group": group.id,
+            "subject_id": subject.id,
+            "group_average_attendance_percent": group_avg,
+            "count": qs.count(),
+            "results": serializer.data,
+        })
+
 
 
 class GetAllStudents(APIView):
@@ -86,10 +116,10 @@ class GetAllStudents(APIView):
         cached_data = cache.get(cahce_key)
 
         if cached_data is not None:
-            print("Returning data from cache for teacher %s", teacher.id)
+            logger.info("Returning data from cache for teacher %s", teacher.id)
             return Response(cached_data, status=status.HTTP_200_OK)
 
-        print("Fetching data from DB for teacher %s", teacher.id)
+        logger.info("Fetching data from DB for teacher %s", teacher.id)
 
         for group in groups:
             student = group.students.all()

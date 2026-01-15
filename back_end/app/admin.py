@@ -51,7 +51,7 @@ class AttendanceStatAdmin(admin.ModelAdmin):
 
 
 class SubjectStudyAdmin(admin.ModelAdmin):
-    list_display = ("name", "description", "teacher")
+    list_display = ("id","name", "description", "teacher")
     search_fields = ("name", "teacher")
     list_filter = ("name",)
     ordering = ("name",)

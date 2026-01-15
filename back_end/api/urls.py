@@ -27,9 +27,8 @@ urlpatterns = [
     # === GROUPS ===
     path("get_groups_list/", GroupListAPI.as_view(), name="group_list"),
     path("get_all_students/", GetAllStudents.as_view(), name="all_groups_students"),
-    path(
-        "get_group/<int:pk>/students/", GroupStudentAPI.as_view(), name="group_students"
-    ),
+    path('get_group/<int:group_id>/subjects/', GetSubjectGroupListAPI.as_view(), name='group_subjects'),
+    path("get_group/<int:group_id>/subjects/<int:subject_id>/students/", GroupStudentAPI.as_view(), name="group_students"),
     path("get_group/<int:pk>/", GroupDetailAPI.as_view(), name="group_detail"),
     path("create_group/", GroupCreateAPI.as_view(), name="create_group"),
     # === SUBJECTS ===
