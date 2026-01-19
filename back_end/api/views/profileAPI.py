@@ -16,3 +16,19 @@ class ProfileAPI(APIView):
         return Response(
             TeacherProfileSerializer(request.user).data, status=status.HTTP_200_OK
         )
+
+
+class EditProfileAPI(APIView):
+    """API view for editing user profile information."""
+
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        """Handle PATCH requests to update user profile information."""
+        serializer = TeacherProfileSerializer(
+            request.user, data=request.data, partial=True
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

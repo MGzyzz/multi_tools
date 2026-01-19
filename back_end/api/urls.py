@@ -9,20 +9,20 @@ urlpatterns = [
     path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # path('register/', AccountsProfileCreateViewAPI.as_view() ,name='register'), # В будущем сделаем регистрацию через API
+    
     # === PROFILE ===
     path("me/", ProfileAPI.as_view(), name="user_profile"),
+    path("edit_profile/", EditProfileAPI.as_view(), name="edit_user_profile"),
+    
     # === STUDENTS ===
     path("get_students_list/", StudentListAPI.as_view(), name="student_list"),
-    path(
-        "get_student_photo/<str:first_name>/",
-        GetStudentPhoto.as_view(),
-        name="student_photo",
-    ),
+    path("get_student_photo/<str:first_name>/", GetStudentPhoto.as_view(), name="student_photo",),
     path(
         "get_student_information/<str:first_name>/",
         getStudentInformation.as_view(),
         name="student_information",
     ),
+    path('edit_student/<int:student_id>/', EditStudentAPI.as_view(), name='edit_student'),
     path("create_student/", CreateStudentAPI.as_view(), name="create_student"),
     # === GROUPS ===
     path("get_groups_list/", GroupListAPI.as_view(), name="group_list"),
@@ -56,4 +56,8 @@ urlpatterns = [
         GetScheduleGroupId.as_view(),
         name="schedule_group_id",
     ),
+    
+    # === ANALYTICS ===
+    # path('analytics/summary/', AnalyticsAPI.as_view(), name='analytics_data'),
+    # path('analytics/groups/', AnalyticsGroupListAPI.as_view(), name='analytics_groups'),
 ]

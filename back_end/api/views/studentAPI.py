@@ -73,3 +73,26 @@ class getStudentInformation(APIView):
         return Response({"error": "student not found"})
 
     # TODO: Переписать на id. Либо так же закоментировать
+
+
+class EditStudentAPI(APIView):
+    """
+    API view to edit student information.
+    """
+
+    def patch(self, request, student_id, *args, **kwargs):
+        try:
+            student = Student.objects.get(id=student_id)
+        except Student.DoesNotExist:
+            return Response({"error": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = StudentSerializer(
+            student, data=request.data, partial=True, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        teacher = request.user.teacher_profile
+        cache.delete(f"students_by_teacher:{teacher.id}")
+
+        return Response(serializer.data, status=status.HTTP_200_OK)

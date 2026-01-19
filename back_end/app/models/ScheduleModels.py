@@ -32,3 +32,14 @@ class Schedule(models.Model):
     class Meta:
         verbose_name = "Расписание"
         verbose_name_plural = "Расписания"
+        
+        constraints = [
+            models.UniqueConstraint(
+                fields=["group", "date", "time"],
+                name="uniq_schedule_group_date_time",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["group", "date"]),
+            models.Index(fields=["teacher", "date"]),
+        ]

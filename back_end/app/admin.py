@@ -7,6 +7,7 @@ from .models import Student, Group, Schedule, Attendance, Subject_study, Attenda
 class StudentAdmin(admin.ModelAdmin):
 
     list_display = (
+        "id",
         "first_name",
         "last_name",
         "telegram_username",

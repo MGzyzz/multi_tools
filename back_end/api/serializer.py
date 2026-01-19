@@ -13,6 +13,7 @@ User = get_user_model()
 class GroupSerializer(ModelSerializer):
     # students = StudentSerializer(many=True, read_only=True)
     students_count = IntegerField(read_only=True)
+    marks_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Group
@@ -23,6 +24,7 @@ class GroupSerializer(ModelSerializer):
             "teacher",
             "students_count",
             "group_specialty",
+            "marks_count"
         ]
         read_only_fields = ("teacher",)
 
