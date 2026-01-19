@@ -18,10 +18,12 @@ import {
 } from 'lucide-react';
 import AddGroupModal from '../AddGroupModal/AddGroupModal';
 import AddStudentModal from '../AddStudentModal/AddStudentModal';
+import EditStudentModal from '../EditStudentModal/EditStudentModal';
 import SubjectGroup from '../SubjectGroup/SubjectGroup';
 
 const GroupManagement = ({ isDark = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [groupSearchTerm, setGroupSearchTerm] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [isLoadingGroups, setIsLoadingGroups] = useState(true);
@@ -29,6 +31,8 @@ const GroupManagement = ({ isDark = false }) => {
   const [totalStudents, setTotalStudents] = useState(0);
   const [showAddGroupModal, setShowAddGroupModal] = useState(false);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [showEditStudentModal, setShowEditStudentModal] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [students, setStudents] = useState([]);
   const [studentsCount, setStudentsCount] = useState(0);
@@ -82,11 +86,15 @@ const GroupManagement = ({ isDark = false }) => {
     setStudentsCount(0);
     setSearchTerm('');
     setActiveDropdown(null);
+    setEditingStudent(null);
+    setShowEditStudentModal(false);
   }, [selectedGroup]);
 
   useEffect(() => {
     setSearchTerm('');
     setActiveDropdown(null);
+    setEditingStudent(null);
+    setShowEditStudentModal(false);
   }, [selectedSubject]);
 
   useEffect(() => {
@@ -117,8 +125,12 @@ const GroupManagement = ({ isDark = false }) => {
 
           return {
             id: student.id,
+            firstName: student.first_name ?? "",
+            lastName: student.last_name ?? "",
             name: `${student.first_name ?? ""} ${student.last_name ?? ""}`.trim() || "Без имени",
             email: student.email ?? "",
+            age: student.age ?? "",
+            telegramUsername: student.telegram_username ?? "",
             phone: student.phone ?? student.telegram_username ?? "",
             group: selectedGroupData?.name ?? "",
             groupId: String(selectedGroup),
@@ -181,6 +193,15 @@ const GroupManagement = ({ isDark = false }) => {
     }
   };
 
+  const handleStudentUpdated = async (updatedStudent) => {
+    setStudents((prevStudents) =>
+      prevStudents.map((student) =>
+        student.id === updatedStudent.id ? { ...student, ...updatedStudent } : student
+      )
+    );
+    setEditingStudent(updatedStudent);
+  };
+
   const filteredStudents = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return students;
@@ -193,6 +214,20 @@ const GroupManagement = ({ isDark = false }) => {
       );
     });
   }, [searchTerm, students]);
+
+  const filteredGroups = useMemo(() => {
+    const term = groupSearchTerm.trim().toLowerCase();
+    if (!term) return groups;
+    const baseGroups = groups.filter((group) => group.id !== 'all');
+    const matches = baseGroups.filter((group) => {
+      return (
+        group.name?.toLowerCase().includes(term) ||
+        String(group.specialty ?? '').toLowerCase().includes(term) ||
+        String(group.course ?? '').toLowerCase().includes(term)
+      );
+    });
+    return [{ id: 'all', name: 'Все группы', count: groups[0]?.count ?? 0 }, ...matches];
+  }, [groupSearchTerm, groups]);
 
   const canShowStudents = selectedGroup !== 'all' && selectedSubject?.id;
 
@@ -294,6 +329,22 @@ const GroupManagement = ({ isDark = false }) => {
             </button>
           </div>
 
+          <div className="mb-4">
+            <div className="relative">
+              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+              <input
+                type="text"
+                placeholder="Поиск групп..."
+                value={groupSearchTerm}
+                onChange={(e) => setGroupSearchTerm(e.target.value)}
+                className={`w-full pl-9 pr-3 py-2 rounded-xl border ${isDark
+                  ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400'
+                  : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
+              />
+            </div>
+          </div>
+
           <div className="space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent pr-2">
             {isLoadingGroups ? (
               <div className="space-y-2">
@@ -311,7 +362,7 @@ const GroupManagement = ({ isDark = false }) => {
                 ))}
               </div>
             ) : (
-              groups.map((group) => (
+              filteredGroups.map((group) => (
                 <button
                   key={group.id}
                   onClick={() => setSelectedGroup(String(group.id))} // ВАЖНО: приводим к строке
@@ -445,7 +496,14 @@ const GroupManagement = ({ isDark = false }) => {
                               {activeDropdown === student.id && (
                                 <div className={`absolute right-0 mt-2 w-48 ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-xl border ${isDark ? 'border-gray-700' : 'border-gray-200'
                                   } shadow-xl z-10`}>
-                                  <button className={`w-full text-left px-4 py-2.5 ${isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-50 text-gray-700'} rounded-t-xl transition-colors flex items-center space-x-2 cursor-pointer`}>
+                                  <button
+                                    onClick={() => {
+                                      setEditingStudent(student);
+                                      setShowEditStudentModal(true);
+                                      setActiveDropdown(null);
+                                    }}
+                                    className={`w-full text-left px-4 py-2.5 ${isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-50 text-gray-700'} rounded-t-xl transition-colors flex items-center space-x-2 cursor-pointer`}
+                                  >
                                     <Edit2 className="w-4 h-4" />
                                     <span className="text-sm">Редактировать</span>
                                   </button>
@@ -518,6 +576,20 @@ const GroupManagement = ({ isDark = false }) => {
           onCreated={handleStudentCreated}
           groups={groups}
           selectedGroupId={selectedGroup}
+          isDark={isDark}
+        />
+      )}
+
+      {showEditStudentModal && (
+        <EditStudentModal
+          isOpen={showEditStudentModal}
+          onClose={() => {
+            setShowEditStudentModal(false);
+            setEditingStudent(null);
+          }}
+          onUpdated={handleStudentUpdated}
+          student={editingStudent}
+          groups={groups}
           isDark={isDark}
         />
       )}

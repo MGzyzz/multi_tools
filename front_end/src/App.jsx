@@ -8,6 +8,7 @@ import Tools from './components/Tools/Tools'
 import Auth from './components/Auth/Auth'
 import GroupManagement from './components/GroupManagement/GroupManagement'
 import TeacherProfile from './components/TeacherProfile/TeacherProfile'
+import Analytics from './components/Analytics/Analytics'
 import { isAuthenticated, authLogout } from './api/authAPI'
 import './index.css'
 
@@ -184,12 +185,7 @@ function App() {
                 setTheme={setTheme}
                 onNavigate={(path) => navigate(path)}
               >
-                <div className="p-8 flex items-center justify-center min-h-[60vh] text-center">
-                  <div>
-                    <h1 className="text-3xl font-bold text-white">Аналитика</h1>
-                    <p className="text-gray-400 mt-4">Страница в разработке...</p>
-                  </div>
-                </div>
+                <Analytics isDark={theme === 'dark'} />
               </Layout>
             </ProtectedRoute>
           }

@@ -102,10 +102,13 @@ const AddStudentModal = ({ isOpen, onClose, isDark = false, groups = [], selecte
         
         const newStudent = {
           id: response.id,
+          firstName: response.first_name,
+          lastName: response.last_name,
           name: `${response.first_name} ${response.last_name}`,
           email: response.email,
           age: response.age,
           phone: response.phone || '',
+          telegramUsername: response.telegram_username || '',
           group: response.group?.name || selectedGroupObj?.name || '',
           groupId: String(formData.groupId), // ВАЖНО: приводим к строке
           avatar: response.first_name?.[0]?.toUpperCase() || 'S',

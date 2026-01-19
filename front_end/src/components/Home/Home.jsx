@@ -1,35 +1,28 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Camera,
-  Users,
-  BarChart3,
-  CheckCircle,
-  Clock,
-  TrendingUp,
   AlertCircle,
-  Download,
-  Settings,
-  Calendar,
   CalendarX,
-  ChevronRight
+  ChevronRight,
+  Clock,
+  Info
 } from 'lucide-react';
 import { getScheduleList } from '../../api/getScheduleList';
-import Loader, { SkeletonCard, SkeletonSession } from '../Loader/Loader';
+import { SkeletonSession } from '../Loader/Loader';
 
 const Home = ({ isDark = true }) => {
   const navigate = useNavigate();
-  const stats = [
-    { icon: Users, label: 'Всего студентов', value: '245', trend: '+12', color: 'from-blue-500 to-cyan-500' },
-    { icon: CheckCircle, label: 'Присутствуют', value: '198', trend: '+5', color: 'from-green-500 to-emerald-500' },
-    { icon: Clock, label: 'Опоздали', value: '8', trend: '-2', color: 'from-orange-500 to-yellow-500' },
-    { icon: AlertCircle, label: 'Отсутствуют', value: '39', trend: '+7', color: 'from-red-500 to-pink-500' }
-  ];
-
   const [schedule, setSchedule] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAll, setShowAll] = useState(false);
+  const todayLabel = useMemo(() => {
+    return new Intl.DateTimeFormat('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    }).format(new Date());
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -115,96 +108,50 @@ const Home = ({ isDark = true }) => {
     ? recentSessions
     : recentSessions.slice(0, MAX_VISIBLE_SESSIONS);
   const hasMore = recentSessions.length > MAX_VISIBLE_SESSIONS;
-
-  const quickTools = [
-    { icon: Camera, title: 'Начать сканирование', description: 'Запустить проверку посещаемости', gradient: 'from-blue-500 to-blue-600', action: 'scan' },
-    { icon: Download, title: 'Экспорт данных', description: 'Выгрузить отчет с аналитикой', gradient: 'from-green-500 to-green-600', action: 'export' },
-    { icon: Users, title: 'Управление группами', description: 'Редактировать списки студентов', gradient: 'from-purple-500 to-purple-600', action: 'groups' },
-    { icon: Calendar, title: 'Расписание', description: 'Просмотр занятий на неделю', gradient: 'from-orange-500 to-orange-600', action: 'schedule' },
-    { icon: BarChart3, title: 'Аналитика', description: 'Статистика и отчеты', gradient: 'from-pink-500 to-pink-600', action: 'analytics' },
-    { icon: Settings, title: 'Настройки', description: 'Конфигурация системы', gradient: 'from-gray-500 to-gray-600', action: 'settings' }
-  ];
+  const activeSession = recentSessions.find((session) => session.status === 'active');
+  const nextSession = recentSessions.find((session) => session.status === 'upcoming');
+  const focusSession = activeSession || nextSession || null;
+  const focusTitle = activeSession ? 'Идет сейчас' : nextSession ? 'Следующее занятие' : 'Сегодня без занятий';
+  const focusBadge = activeSession ? 'Активно' : nextSession ? 'Ожидается' : 'Свободное окно';
+  const focusBadgeStyle = activeSession
+    ? isDark ? 'bg-green-500/20 text-green-300' : 'bg-green-100 text-green-700'
+    : nextSession
+      ? isDark ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-100 text-blue-700'
+      : isDark ? 'bg-gray-500/20 text-gray-300' : 'bg-gray-100 text-gray-600';
+  const cardClass = `${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl border ${isDark ? 'border-gray-700' : 'border-gray-200'} shadow-lg`;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-        {stats.map((stat, index) => (
-          <div
-            key={index}
-            className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-4 sm:p-6 border ${isDark ? 'border-gray-700' : 'border-gray-200'
-              } hover:scale-105 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-2xl`}
-          >
-            <div className="flex items-start justify-between mb-3 sm:mb-4">
-              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg`}>
-                <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <span
-                className={`text-xs sm:text-sm font-semibold px-2 py-1 rounded-lg ${stat.trend.startsWith('+')
-                    ? isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
-                    : isDark ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-700'
-                  }`}
-              >
-                {stat.trend}
-              </span>
-            </div>
-            <p className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-1 sm:mb-2`}>{stat.label}</p>
-            <p className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{stat.value}</p>
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-8">
+          <div>
+            <h1 className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-2`}>
+              Рабочий день преподавателя
+            </h1>
+            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              Быстрый доступ к занятиям и отметкам студентов
+            </p>
           </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-        {/* Quick Tools */}
-        <div className="lg:col-span-2">
-          <div
-            className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-5 sm:p-6 border ${isDark ? 'border-gray-700' : 'border-gray-200'
-              } shadow-lg`}
-          >
-            <h3 className={`text-lg sm:text-xl font-bold mb-4 sm:mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Быстрые инструменты
-            </h3>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-              {quickTools.map((tool, index) => (
-                <button
-                  key={index}
-                  className={`${isDark ? 'bg-gray-700/50 hover:bg-gray-700' : 'bg-gray-50 hover:bg-gray-100'} rounded-xl p-4 sm:p-5 border ${isDark ? 'border-gray-600' : 'border-gray-200'
-                    } cursor-pointer transition-all duration-300 hover:scale-105 shadow-md hover:shadow-xl group`}
-                >
-                  <div
-                    className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br ${tool.gradient} flex items-center justify-center mb-3 shadow-lg group-hover:scale-110 transition-transform duration-300`}
-                  >
-                    <tool.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                  </div>
-                  <h4 className={`text-xs sm:text-sm font-semibold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    {tool.title}
-                  </h4>
-                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} line-clamp-2`}>
-                    {tool.description}
-                  </p>
-                </button>
-              ))}
-            </div>
+          <div className={`px-4 py-2 rounded-xl border ${isDark ? 'border-gray-700 text-gray-300' : 'border-gray-200 text-gray-700'} text-sm`}>
+            {todayLabel}
           </div>
         </div>
 
-        {/* Recent Sessions */}
-        <div
-          className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-5 sm:p-6 border ${isDark ? 'border-gray-700' : 'border-gray-200'
-            } shadow-lg flex flex-col`}
-        >
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h3 className={`text-lg sm:text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Сегодняшние занятия
-            </h3>
-            {!isLoading && !error && recentSessions.length > 0 && (
-              <span className={`text-xs px-2 py-1 rounded-lg ${isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'
-                } font-medium`}>
-                {recentSessions.length}
-              </span>
-            )}
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div
+            className={`${cardClass} lg:col-span-2 p-5 sm:p-6 flex flex-col`}
+          >
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h3 className={`text-lg sm:text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Сегодняшние занятия
+              </h3>
+              {!isLoading && !error && recentSessions.length > 0 && (
+                <span className={`text-xs px-2 py-1 rounded-lg ${isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'
+                  } font-medium`}>
+                  {recentSessions.length}
+                </span>
+              )}
+            </div>
 
           {/* Loading state */}
           {isLoading && (
@@ -250,43 +197,60 @@ const Home = ({ isDark = true }) => {
                   <div
                     key={session.id || index}
                     onClick={() => navigate(`/attendance/scan/${session.id}`)}
-                    className={`${isDark ? 'bg-gray-700/30' : 'bg-gray-50'} rounded-xl p-3 sm:p-4 border ${isDark ? 'border-gray-600' : 'border-gray-200'
-                      } transition-all duration-300 cursor-pointer hover:shadow-lg ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'
-                      }`}
+                    className={`${isDark ? 'bg-gray-900/40 border-gray-700 hover:border-blue-500/40' : 'bg-white border-gray-200 hover:border-blue-200'} rounded-2xl p-4 sm:p-5 border transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md`}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`font-semibold text-sm sm:text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {session.group}
-                      </span>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`mt-1 h-10 w-1.5 rounded-full ${session.status === 'active'
+                              ? isDark ? 'bg-green-400' : 'bg-green-600'
+                              : session.status === 'completed'
+                                ? isDark ? 'bg-blue-400' : 'bg-blue-600'
+                                : isDark ? 'bg-gray-500' : 'bg-gray-400'
+                            }`}
+                        />
+                        <div>
+                          <p className={`text-sm sm:text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            {session.group}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700/60 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>
+                              {session.time}
+                            </span>
+                            <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                              Студентов: {session.total}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                       <span
-                        className={`text-xs px-2 py-1 rounded-lg font-medium ${session.status === 'active'
-                            ? isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
+                        className={`text-xs px-2.5 py-1 rounded-lg font-medium ${session.status === 'active'
+                            ? isDark ? 'bg-green-500/20 text-green-300' : 'bg-green-100 text-green-700'
                             : session.status === 'completed'
-                              ? isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-700'
-                              : isDark ? 'bg-gray-500/20 text-gray-400' : 'bg-gray-100 text-gray-700'
+                              ? isDark ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-100 text-blue-700'
+                              : isDark ? 'bg-gray-500/20 text-gray-300' : 'bg-gray-100 text-gray-700'
                           }`}
                       >
                         {session.status === 'active' ? 'Идет' : session.status === 'completed' ? 'Завершено' : 'Скоро'}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="mt-3 flex items-center justify-between">
                       <span className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {session.time}
+                        Отмечено: {session.present}/{session.total}
                       </span>
-                      <span className={`text-xs sm:text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        {session.present}/{session.total}
-                      </span>
+                      {session.status === 'active' && (
+                        <span
+                          className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border ${isDark
+                            ? 'border-blue-500/40 text-blue-300 bg-blue-500/10'
+                            : 'border-blue-200 text-blue-700 bg-blue-50'
+                            }`}
+                        >
+                          Продолжить
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </span>
+                      )}
                     </div>
 
-                    {session.status === 'active' && (
-                      <div className={`mt-2 pt-2 border-t ${isDark ? 'border-gray-600' : 'border-gray-200'}`}>
-                        <div className="flex space-x-2">
-                          <button className="flex-1 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-xs font-medium cursor-pointer hover:scale-105 transition-all duration-300">
-                            Продолжить
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
@@ -306,42 +270,68 @@ const Home = ({ isDark = true }) => {
               )}
             </>
           )}
+          </div>
+
+          <div className="space-y-6">
+            <div className={`${cardClass} p-5 sm:p-6`}>
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <p className={`text-xs uppercase tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Фокус дня
+                  </p>
+                  <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {focusTitle}
+                  </h3>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded-lg ${focusBadgeStyle}`}>
+                  {focusBadge}
+                </span>
+              </div>
+
+              {focusSession ? (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/attendance/scan/${focusSession.id}`)}
+                  className={`w-full text-left rounded-xl border ${isDark ? 'border-gray-700 bg-gray-900/40 hover:bg-gray-900/60' : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
+                    } transition-all duration-300 p-4 cursor-pointer`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {focusSession.group}
+                      </p>
+                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {focusSession.time}
+                      </p>
+                    </div>
+                    <Clock className={`w-5 h-5 ${isDark ? 'text-blue-300' : 'text-blue-600'}`} />
+                  </div>
+                  <div className={`mt-3 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Нажмите, чтобы перейти к отметкам
+                  </div>
+                </button>
+              ) : (
+                <div className={`rounded-xl border ${isDark ? 'border-gray-700 bg-gray-900/40' : 'border-gray-200 bg-gray-50'} p-4 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  В расписании нет занятий. Можно подготовить материалы или обновить планы.
+                </div>
+              )}
+            </div>
+
+            <div className={`${cardClass} p-5 sm:p-6`}>
+              <div className="flex items-center gap-2 mb-3">
+                <Info className={`w-5 h-5 ${isDark ? 'text-purple-300' : 'text-purple-600'}`} />
+                <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Подсказки
+                </h3>
+              </div>
+              <ul className={`space-y-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <li>Нажмите на занятие, чтобы открыть отметки.</li>
+                <li>Статус «Идет» означает, что можно продолжить отметку.</li>
+                <li>Список автоматически обновляется после изменения расписания.</li>
+              </ul>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Actions Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-6 sm:mb-8">
-        <button
-          onClick={() => navigate('/attendance/scan')}
-          className={`${isDark
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500'
-              : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600'
-            } rounded-2xl p-6 sm:p-8 cursor-pointer transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-purple-500/50 group`}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="text-white text-lg sm:text-xl font-bold mb-2">Новая проверка</h4>
-              <p className="text-blue-100 text-xs sm:text-sm">Начать сканирование лиц студентов</p>
-            </div>
-            <Camera className="w-10 h-10 sm:w-12 sm:h-12 text-white group-hover:scale-110 transition-transform duration-300" />
-          </div>
-        </button>
-
-        <button
-          onClick={() => console.log('Export report')}
-          className={`${isDark
-              ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500'
-              : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
-            } rounded-2xl p-6 sm:p-8 cursor-pointer transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-green-500/50 group`}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="text-white text-lg sm:text-xl font-bold mb-2">Экспорт отчета</h4>
-              <p className="text-green-100 text-xs sm:text-sm">Скачать аналитику за период</p>
-            </div>
-            <Download className="w-10 h-10 sm:w-12 sm:h-12 text-white group-hover:scale-110 transition-transform duration-300" />
-          </div>
-        </button>
       </div>
     </div>
   );

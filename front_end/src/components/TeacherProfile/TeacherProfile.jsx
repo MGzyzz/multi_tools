@@ -4,8 +4,10 @@ import {
   Mail,
   Phone,
   User,
-  Briefcase
+  Briefcase,
+  AlertCircle
 } from 'lucide-react';
+import { editProfileTeacher } from '../../api/editProfile';
 
 const TeacherProfile = ({ isDark = true }) => {
   const [formData, setFormData] = useState({
@@ -23,22 +25,107 @@ const TeacherProfile = ({ isDark = true }) => {
     qualification: 'assistant',
     bio: ''
   });
+  const [initialData, setInitialData] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     const cached = JSON.parse(localStorage.getItem('user') || 'null');
     if (!cached) return;
-    setFormData((prev) => ({
-      ...prev,
+    const normalized = {
       firstName: cached.first_name || '',
       lastName: cached.last_name || '',
+      middleName: cached.middle_name || '',
       email: cached.email || '',
-      position: cached.role || ''
-    }));
+      phone: cached.phone || '',
+      telegram: cached.telegram_username || cached.telegram || '',
+      department: cached.department || '',
+      subject: cached.subject || '',
+      position: cached.position || cached.role || '',
+      experience: cached.experience ?? '',
+      office: cached.office || '',
+      qualification: cached.qualification || 'assistant',
+      bio: cached.bio || ''
+    };
+
+    setFormData((prev) => ({ ...prev, ...normalized }));
+    setInitialData(normalized);
   }, []);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveError('');
+
+    try {
+      const experienceValue = formData.experience?.toString().trim();
+      const payload = {
+        first_name: formData.firstName.trim(),
+        last_name: formData.lastName.trim(),
+        middle_name: formData.middleName.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        telegram_username: formData.telegram.trim(),
+        department: formData.department.trim(),
+        subject: formData.subject.trim(),
+        position: formData.position.trim(),
+        experience: experienceValue ? Number(experienceValue) : null,
+        office: formData.office.trim(),
+        qualification: formData.qualification,
+        bio: formData.bio.trim()
+      };
+
+      const response = await editProfileTeacher(payload);
+      const cached = JSON.parse(localStorage.getItem('user') || '{}');
+      const merged = {
+        ...cached,
+        ...payload,
+        ...(response && typeof response === 'object' ? response : {})
+      };
+
+      localStorage.setItem('user', JSON.stringify(merged));
+
+      const nextData = {
+        firstName: merged.first_name || '',
+        lastName: merged.last_name || '',
+        middleName: merged.middle_name || '',
+        email: merged.email || '',
+        phone: merged.phone || '',
+        telegram: merged.telegram_username || merged.telegram || '',
+        department: merged.department || '',
+        subject: merged.subject || '',
+        position: merged.position || merged.role || '',
+        experience: merged.experience ?? '',
+        office: merged.office || '',
+        qualification: merged.qualification || 'assistant',
+        bio: merged.bio || ''
+      };
+
+      setFormData((prev) => ({ ...prev, ...nextData }));
+      setInitialData(nextData);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      let message = 'Не удалось сохранить изменения. Попробуйте еще раз.';
+      if (error?.response?.data?.detail) {
+        message = error.response.data.detail;
+      } else if (error?.response?.data?.message) {
+        message = error.response.data.message;
+      }
+      setSaveError(message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    if (initialData) {
+      setFormData((prev) => ({ ...prev, ...initialData }));
+    }
+    setSaveError('');
   };
 
   const initials = `${formData.firstName?.[0] || ''}${formData.lastName?.[0] || ''}`.toUpperCase() || '?';
@@ -63,18 +150,31 @@ const TeacherProfile = ({ isDark = true }) => {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            className="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+            onClick={handleSave}
+            disabled={isSaving}
+            className="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Сохранить изменения
+            {isSaving ? 'Сохранение...' : 'Сохранить изменения'}
           </button>
           <button
             type="button"
-            className={`px-5 py-3 rounded-xl border ${isDark ? 'border-gray-700 text-gray-300 hover:bg-gray-800/70' : 'border-gray-200 text-gray-700 hover:bg-gray-50'} transition-all duration-300 cursor-pointer`}
+            onClick={handleReset}
+            disabled={isSaving}
+            className={`px-5 py-3 rounded-xl border ${isDark ? 'border-gray-700 text-gray-300 hover:bg-gray-800/70' : 'border-gray-200 text-gray-700 hover:bg-gray-50'} transition-all duration-300 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed`}
           >
             Сбросить
           </button>
         </div>
       </div>
+
+      {saveError && (
+        <div className={`mb-6 p-4 rounded-xl border ${isDark ? 'bg-red-500/10 border-red-500/20' : 'bg-red-50 border-red-200'}`}>
+          <div className="flex items-start gap-2">
+            <AlertCircle className={`w-5 h-5 mt-0.5 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
+            <p className={`text-sm ${isDark ? 'text-red-300' : 'text-red-700'}`}>{saveError}</p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
@@ -115,12 +215,12 @@ const TeacherProfile = ({ isDark = true }) => {
                 </p>
               </div>
               */}
-              <div className={`p-3 rounded-xl border ${isDark ? 'bg-gray-700/40 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+              {/* <div className={`p-3 rounded-xl border ${isDark ? 'bg-gray-700/40 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
                 <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Стаж</p>
                 <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   {formData.experience ? `${formData.experience} лет` : '—'}
                 </p>
-              </div>
+              </div> */}
             </div>
 
             <button
