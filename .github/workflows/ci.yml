@@ -28,7 +28,7 @@ jobs:
             - name: Install dependencies (back_end)
               working-directory: back_end
               run: |
-                  poetry install --no-interaction --no-ansi
+                  poetry install --no-interaction --no-ansi --no-root
 
             - name: Ruff (back_end)
               working-directory: back_end
