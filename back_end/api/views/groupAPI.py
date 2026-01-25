@@ -104,6 +104,8 @@ class GetAllStudents(APIView):
 
     """
 
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, *args, **kwargs):
         teacher = request.user.teacher_profile
         groups = Group.objects.filter(teacher=teacher).prefetch_related("students")
@@ -133,6 +135,8 @@ class GroupDetailAPI(APIView):
 
     """
 
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, pk, *args, **kwargs):
         try:
             group = Group.objects.get(id=pk)
@@ -148,6 +152,8 @@ class GroupCreateAPI(APIView):
     API view to create a group
 
     """
+
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         teacher = request.user.teacher_profile
