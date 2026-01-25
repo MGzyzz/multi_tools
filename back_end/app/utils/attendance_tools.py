@@ -1,6 +1,6 @@
 from django.db import transaction
-from django.utils import timezone
 from django.db.models import F
+from django.utils import timezone
 
 
 def mark_attendance(schedule_id: int, present_student_ids: list[int]) -> dict:
@@ -8,7 +8,7 @@ def mark_attendance(schedule_id: int, present_student_ids: list[int]) -> dict:
     Отмечает посещаемость по занятию (Schedule) списком присутствующих.
     Быстро: 2 UPDATE по Attendance + 0-2 UPDATE по AttendanceStat.
     """
-    from app.models import Schedule, Attendance, AttendanceStat
+    from app.models import Attendance, AttendanceStat, Schedule
 
     now = timezone.now()
 
@@ -24,21 +24,17 @@ def mark_attendance(schedule_id: int, present_student_ids: list[int]) -> dict:
         # Снимем "прошлое состояние" presense для вычисления дельты
         # (в твоей архитектуре Attendance должны существовать для всех студентов группы)
         prev_map = dict(
-            Attendance.objects.filter(schedule_id=schedule_id).values_list(
-                "student_id", "presense"
-            )
+            Attendance.objects.filter(schedule_id=schedule_id).values_list("student_id", "presense")
         )
 
         # 1) Сбросить всем False
-        Attendance.objects.filter(schedule_id=schedule_id).update(
-            presense=False, marked_at=now
-        )
+        Attendance.objects.filter(schedule_id=schedule_id).update(presense=False, marked_at=now)
 
         # 2) Проставить True присутствующим
         if present_set:
-            Attendance.objects.filter(
-                schedule_id=schedule_id, student_id__in=present_set
-            ).update(presense=True, marked_at=now)
+            Attendance.objects.filter(schedule_id=schedule_id, student_id__in=present_set).update(
+                presense=True, marked_at=now
+            )
 
         # 3) Посчитать дельту attended
         delta_plus = []  # False -> True

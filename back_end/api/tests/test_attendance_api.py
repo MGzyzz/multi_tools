@@ -6,8 +6,8 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 from app.models import Attendance, Group, Schedule, Student, Subject_study
-from .utils import BaseJWTAPITestCase
 
+from .utils import BaseJWTAPITestCase
 
 User = get_user_model()
 

@@ -1,6 +1,7 @@
 import openpyxl
 from django.http import HttpResponse
-from app.models import Student, Attendance
+
+from app.models import Student
 
 
 def create_excel_attendance_file(request):
@@ -14,9 +15,7 @@ def create_excel_attendance_file(request):
     headers = ["Group", "Student Name", "Subject", "Presence"]
     worksheet.append(headers)
 
-    students = Student.objects.all().prefetch_related(
-        "groups", "mark_set", "mark_set__subject"
-    )
+    students = Student.objects.all().prefetch_related("groups", "mark_set", "mark_set__subject")
 
     for student in students:
         # Берем первую группу (если у студента несколько — можно адаптировать)
@@ -36,9 +35,7 @@ def create_excel_attendance_file(request):
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    response["Content-Disposition"] = (
-        'attachment; filename="student_marks_grouped.xlsx"'
-    )
+    response["Content-Disposition"] = 'attachment; filename="student_marks_grouped.xlsx"'
 
     # Сохранение Excel в ответ
     workbook.save(response)

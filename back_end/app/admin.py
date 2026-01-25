@@ -1,11 +1,11 @@
 from django.contrib import admin
-from .models import Student, Group, Schedule, Attendance, Subject_study, AttendanceStat
+
+from .models import Attendance, AttendanceStat, Group, Schedule, Student, Subject_study
 
 # Register your models here.
 
 
 class StudentAdmin(admin.ModelAdmin):
-
     list_display = (
         "id",
         "first_name",
@@ -52,7 +52,7 @@ class AttendanceStatAdmin(admin.ModelAdmin):
 
 
 class SubjectStudyAdmin(admin.ModelAdmin):
-    list_display = ("id","name", "description", "teacher")
+    list_display = ("id", "name", "description", "teacher")
     search_fields = ("name", "teacher")
     list_filter = ("name",)
     ordering = ("name",)

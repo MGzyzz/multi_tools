@@ -7,9 +7,7 @@ class Student(models.Model):
     telegram_username = models.CharField(
         "Telegram username", max_length=100, unique=True, blank=True, null=True
     )
-    telegram_id = models.CharField(
-        "Telegram ID", max_length=10, unique=True, blank=True, null=True
-    )
+    telegram_id = models.CharField("Telegram ID", max_length=10, unique=True, blank=True, null=True)
     email = models.EmailField(
         "Platonus Email",
     )

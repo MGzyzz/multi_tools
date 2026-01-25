@@ -1,12 +1,12 @@
 from django.urls import path
+
 from .views import (
     HomePageView,
-    ToolsView,
     StudentDetail,
-    send_telegram_message,
+    ToolsView,
     check_bot_status,
+    send_telegram_message,
 )
-
 
 urlpatterns = [
     path("", HomePageView.as_view(), name="home"),

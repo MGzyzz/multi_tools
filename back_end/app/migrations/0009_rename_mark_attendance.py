@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("app", "0008_remove_teacher_subject_alter_schedule_subject"),
     ]

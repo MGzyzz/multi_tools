@@ -4,7 +4,8 @@ from datetime import date, time
 
 from django.urls import reverse
 
-from app.models import Group, Schedule, Student, Subject_study, Attendance
+from app.models import Attendance, Group, Schedule, Student, Subject_study
+
 from .utils import BaseJWTAPITestCase
 
 

@@ -2,6 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
 from accounts.models import TeacherProfile
+
 from .GroupModels import Group
 
 
@@ -12,7 +13,7 @@ class Subject_study(models.Model):
         TeacherProfile, on_delete=models.CASCADE, verbose_name="Преподаватель"
     )
     groups = models.ManyToManyField(
-        Group, related_name='subjects', verbose_name="Группы", blank=True
+        Group, related_name="subjects", verbose_name="Группы", blank=True
     )
 
     def __str__(self):

@@ -24,14 +24,14 @@ class Attendance(models.Model):
     class Meta:
         verbose_name = "Посещаемость"
         verbose_name_plural = "Посещаемости"
-        
+
         constraints = [
             models.UniqueConstraint(
                 fields=["student", "schedule"],
                 name="uniq_attendance_student_schedule",
             )
         ]
-        
+
         indexes = [
             models.Index(fields=["schedule"]),
             models.Index(fields=["student"]),

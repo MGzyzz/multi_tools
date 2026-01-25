@@ -1,13 +1,5 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from django.db.models import Q, F, ExpressionWrapper, IntegerField
-from django.shortcuts import get_object_or_404
-from django.db.models import Count
-from app.models import Group, AttendanceStat, Schedule, Attendance, Student
-from api.serializer import GroupSerializer
 from datetime import date, timedelta
+
 
 def get_period(period: str):
     today = date.today()

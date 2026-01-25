@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("app", "0014_remove_attendance_subject_remove_attendance_time_and_more"),
     ]
@@ -49,9 +48,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="attendance",
             name="marked_at",
-            field=models.DateTimeField(
-                blank=True, null=True, verbose_name="Отмечено в"
-            ),
+            field=models.DateTimeField(blank=True, null=True, verbose_name="Отмечено в"),
         ),
         migrations.AlterField(
             model_name="attendance",
@@ -231,16 +228,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="student",
             name="telegram_id",
-            field=models.CharField(
-                max_length=10, unique=True, verbose_name="Telegram ID"
-            ),
+            field=models.CharField(max_length=10, unique=True, verbose_name="Telegram ID"),
         ),
         migrations.AlterField(
             model_name="student",
             name="telegram_username",
-            field=models.CharField(
-                max_length=100, unique=True, verbose_name="Telegram username"
-            ),
+            field=models.CharField(max_length=100, unique=True, verbose_name="Telegram username"),
         ),
         migrations.AlterField(
             model_name="subject_study",

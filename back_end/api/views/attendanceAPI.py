@@ -1,12 +1,11 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from app.models import Attendance, Schedule
-from api.serializer import ScheduleMiniSerializer, AttendanceRowSerializer
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, BasePermission
-from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.permissions import BasePermission, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from api.serializer import AttendanceRowSerializer, MarkAttendanceSerializer, ScheduleMiniSerializer
+from app.models import Attendance, Schedule
 from app.utils.attendance_tools import mark_attendance
-from api.serializer import MarkAttendanceSerializer
 
 
 class IsTeacher(BasePermission):
@@ -49,7 +48,6 @@ class AttendanceScheduleDetailAPI(APIView):
 
 
 class AttendanceAPI(APIView):
-
     def patch(self, request, pk):
         try:
             attendance = Attendance.objects.get(id=pk)
@@ -83,9 +81,7 @@ class MarkAttendanceAPIView(APIView):
         try:
             schedule = Schedule.objects.select_related("teacher").get(id=schedule_id)
         except Schedule.DoesNotExist:
-            return Response(
-                {"detail": "Schedule not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"detail": "Schedule not found"}, status=status.HTTP_404_NOT_FOUND)
 
         teacher_profile = request.user.teacher_profile
 
@@ -98,9 +94,7 @@ class MarkAttendanceAPIView(APIView):
 
         if schedule.teacher_id != teacher_profile.id:
             return Response(
-                {
-                    "detail": "You do not have permission to mark attendance for this schedule."
-                },
+                {"detail": "You do not have permission to mark attendance for this schedule."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 

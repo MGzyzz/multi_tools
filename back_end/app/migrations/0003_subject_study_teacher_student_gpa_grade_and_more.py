@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("app", "0002_alter_student_telegram_id"),
     ]
@@ -113,15 +112,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="subject_study",
             name="teacher",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to="app.teacher"
-            ),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="app.teacher"),
         ),
         migrations.AlterField(
             model_name="schedule",
             name="teacher",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to="app.teacher"
-            ),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="app.teacher"),
         ),
     ]

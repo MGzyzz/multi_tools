@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("accounts", "0001_initial"),
         ("app", "0027_delete_grade"),
@@ -13,27 +12,19 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddIndex(
             model_name="attendance",
-            index=models.Index(
-                fields=["schedule"], name="app_attenda_schedul_5cc1a1_idx"
-            ),
+            index=models.Index(fields=["schedule"], name="app_attenda_schedul_5cc1a1_idx"),
         ),
         migrations.AddIndex(
             model_name="attendance",
-            index=models.Index(
-                fields=["student"], name="app_attenda_student_fe6358_idx"
-            ),
+            index=models.Index(fields=["student"], name="app_attenda_student_fe6358_idx"),
         ),
         migrations.AddIndex(
             model_name="schedule",
-            index=models.Index(
-                fields=["group", "date"], name="app_schedul_group_i_abadd3_idx"
-            ),
+            index=models.Index(fields=["group", "date"], name="app_schedul_group_i_abadd3_idx"),
         ),
         migrations.AddIndex(
             model_name="schedule",
-            index=models.Index(
-                fields=["teacher", "date"], name="app_schedul_teacher_de9427_idx"
-            ),
+            index=models.Index(fields=["teacher", "date"], name="app_schedul_teacher_de9427_idx"),
         ),
         migrations.AddConstraint(
             model_name="attendance",

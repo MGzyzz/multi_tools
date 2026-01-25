@@ -1,12 +1,12 @@
-from django.db.models.signals import post_save, pre_save, post_delete
-from django.dispatch import receiver
-from django.db import transaction
-from django.utils import timezone
-from django.db.models import F
 import logging
 
-from .models import Schedule, Attendance, AttendanceStat
+from django.db import transaction
+from django.db.models import F
+from django.db.models.signals import post_delete, post_save, pre_save
+from django.dispatch import receiver
+from django.utils import timezone
 
+from .models import Attendance, AttendanceStat, Schedule
 
 logger = logging.getLogger(__name__)
 

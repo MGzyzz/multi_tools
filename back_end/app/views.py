@@ -1,9 +1,9 @@
-from django.shortcuts import render
-from django.views.generic import TemplateView, ListView, CreateView, DetailView
-from .models import *
+import requests
 from django.http import JsonResponse
 from django.shortcuts import redirect
-import requests
+from django.views.generic import CreateView, DetailView, ListView
+
+from .models import Group, Schedule, Student
 
 # Create your views here.
 

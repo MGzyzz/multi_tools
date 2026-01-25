@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("app", "0020_alter_group_students"),
     ]
@@ -28,9 +27,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="student",
             name="phone",
-            field=models.CharField(
-                blank=True, max_length=15, null=True, verbose_name="Телефон"
-            ),
+            field=models.CharField(blank=True, max_length=15, null=True, verbose_name="Телефон"),
         ),
         migrations.AlterField(
             model_name="student",

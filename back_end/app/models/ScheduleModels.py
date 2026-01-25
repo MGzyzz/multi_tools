@@ -2,7 +2,6 @@ from django.db import models
 
 from accounts.models import TeacherProfile
 
-
 """
 Schedule класс - отвечает за модель расписания и подробности о ней
 
@@ -11,9 +10,7 @@ Schedule класс - отвечает за модель расписания и
 
 class Schedule(models.Model):
     group = models.ForeignKey("Group", on_delete=models.CASCADE, verbose_name="Группа")
-    subject = models.ForeignKey(
-        "Subject_study", on_delete=models.CASCADE, verbose_name="Предмет"
-    )
+    subject = models.ForeignKey("Subject_study", on_delete=models.CASCADE, verbose_name="Предмет")
     teacher = models.ForeignKey(
         TeacherProfile,
         on_delete=models.CASCADE,
@@ -32,7 +29,7 @@ class Schedule(models.Model):
     class Meta:
         verbose_name = "Расписание"
         verbose_name_plural = "Расписания"
-        
+
         constraints = [
             models.UniqueConstraint(
                 fields=["group", "date", "time"],

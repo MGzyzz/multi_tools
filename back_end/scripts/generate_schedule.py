@@ -1,11 +1,12 @@
-import os
-import sys
-from pathlib import Path
 import calendar
-import django
-from datetime import date, time, timedelta
+import os
 import random
 import string
+import sys
+from datetime import date, time, timedelta
+from pathlib import Path
+
+import django
 
 # Ensure project root on sys.path and bind settings
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -15,8 +16,7 @@ django.setup()
 
 from accounts.models import TeacherProfile, User  # noqa: E402
 from accounts.models._choices import RoleChoices  # noqa: E402
-from app.models import Subject_study, Group, Schedule, Student  # noqa: E402
-
+from app.models import Group, Schedule, Student, Subject_study  # noqa: E402
 
 weekdays = [0, 1, 2, 3, 4]  # Monday to Friday
 times = [time(9, 0), time(11, 0), time(13, 0), time(15, 0)]
@@ -38,7 +38,9 @@ def create_teachers(count=10):
                 "email": f"{username}@mail.com",
             },
         )
-        profile, _ = TeacherProfile.objects.get_or_create(user=user, defaults={"role": RoleChoices.TEACHER})
+        profile, _ = TeacherProfile.objects.get_or_create(
+            user=user, defaults={"role": RoleChoices.TEACHER}
+        )
         created.append(profile)
     return created
 
@@ -82,7 +84,9 @@ def main():
     subjects = []
     for name in subject_names:
         teacher = random.choice(teachers)
-        s, _ = Subject_study.objects.get_or_create(name=name, description=f"Описание {name}", teacher=teacher)
+        s, _ = Subject_study.objects.get_or_create(
+            name=name, description=f"Описание {name}", teacher=teacher
+        )
         subjects.append(s)
 
     group, _ = Group.objects.get_or_create(name="Группа А", course="10 класс")
@@ -104,7 +108,7 @@ def main():
                     subject=subject,
                     date=current_date,
                     time=times[i],
-                    teacher=subject.teacher
+                    teacher=subject.teacher,
                 )
                 created += 1
                 if created >= 20:
@@ -117,5 +121,3 @@ def main():
 if __name__ == "__main__":
     print("Hello World!")
     main()
-
-

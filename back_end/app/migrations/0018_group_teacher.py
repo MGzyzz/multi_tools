@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("accounts", "0001_initial"),
         ("app", "0017_alter_schedule_teacher_alter_subject_study_teacher_and_more"),

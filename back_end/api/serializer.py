@@ -1,14 +1,10 @@
 from rest_framework import serializers
-from rest_framework.serializers import ModelSerializer
-from accounts.models import TeacherProfile
-from app.models import *
-from accounts.models._choices import RoleChoices
-from accounts.models import TeacherProfile, User
 from rest_framework.fields import IntegerField
-from django.contrib.auth import get_user_model
+from rest_framework.serializers import ModelSerializer
 
-
-User = get_user_model()
+from accounts.models import TeacherProfile, User
+from accounts.models._choices import RoleChoices
+from app.models import Attendance, Group, Schedule, Student, Subject_study
 
 
 class GroupSerializer(ModelSerializer):
@@ -25,7 +21,7 @@ class GroupSerializer(ModelSerializer):
             "teacher",
             "students_count",
             "group_specialty",
-            "marks_count"
+            "marks_count",
         ]
         read_only_fields = ("teacher",)
 
@@ -35,9 +31,7 @@ class GroupSerializer(ModelSerializer):
 
         if Group.objects.filter(name=name, teacher=teacher).exists():
             raise serializers.ValidationError(
-                {
-                    "name": "Группа с таким названием у этого преподавателя уже существует."
-                }
+                {"name": "Группа с таким названием у этого преподавателя уже существует."}
             )
         return attrs
 
@@ -85,7 +79,7 @@ class StudentSerializer(serializers.ModelSerializer):
         group.students.add(student)
 
         return student
-    
+
     def get_attendance(self, obj):
         """
         Возвращает посещаемость именно по (group, subject), который пришёл в query params.
@@ -178,14 +172,14 @@ class TeacherProfileSerializer(ModelSerializer):
     Serializer for the TeacherProfile model.
     """
 
-    role = serializers.ChoiceField(source="teacher_profile.role", choices=RoleChoices, required=False, allow_blank=True)
+    role = serializers.ChoiceField(
+        source="teacher_profile.role", choices=RoleChoices, required=False, allow_blank=True
+    )
     avatar = serializers.SerializerMethodField()
     description = serializers.CharField(
-        source="teacher_profile.description",
-        required=False,
-        allow_blank=True
+        source="teacher_profile.description", required=False, allow_blank=True
     )
-    
+
     class Meta:
         model = User
         fields = (
@@ -198,7 +192,7 @@ class TeacherProfileSerializer(ModelSerializer):
             "avatar",
             "description",
         )
-        
+
     def update(self, instance, validated_data):
         profile_data = validated_data.pop("teacher_profile", {})
 

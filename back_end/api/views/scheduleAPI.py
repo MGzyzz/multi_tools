@@ -1,18 +1,18 @@
-from rest_framework.views import APIView
-from api.serializer import ScheduleSerializer, GroupSerializer
-from app.models import Schedule, Student, Attendance
-from rest_framework.response import Response
-from rest_framework import status
-from django.core.cache import cache
-from datetime import date
 import logging
+from datetime import date
 
+from django.core.cache import cache
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from api.serializer import GroupSerializer, ScheduleSerializer
+from app.models import Attendance, Schedule
 
 logger = logging.getLogger(__name__)
 
 
 class ScheduleListAPI(APIView):
-
     def get(self, request, *args, **kwargs):
         """
         API view to retrieve a list of schedules.
@@ -41,9 +41,7 @@ class GetScheduleWithAttendens(APIView):
         try:
             schedule = Schedule.objects.get(id=schedule_id)
         except Schedule.DoesNotExist:
-            return Response(
-                {"error": "Schedule not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Schedule not found"}, status=status.HTTP_404_NOT_FOUND)
 
         students = schedule.group.students.all()  # Получаем всех студентов из группы
 
@@ -74,14 +72,11 @@ class GetScheduleWithAttendens(APIView):
 
 class GetScheduleGroupId(APIView):
     def get(self, request, pk, *args, **kwargs):
-
         try:
             schedule = Schedule.objects.get(id=pk)
             group = schedule.group
         except Schedule.DoesNotExist:
-            return Response(
-                {"error": "Schedule not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Schedule not found"}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = GroupSerializer(group)
         return Response(serializer.data)

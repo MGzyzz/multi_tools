@@ -1,16 +1,16 @@
+from django.core.cache import cache
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from api.serializer import StudentSerializer
 from app.models import Student
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
-from django.core.cache import cache
-import requests
 
 
 class StudentListAPI(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     """
     API view to retrieve a list of students.
     """
@@ -23,7 +23,7 @@ class StudentListAPI(APIView):
 
 class GetStudentPhoto(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     """
     API view to retrieve a student's photo.
     """
@@ -43,7 +43,7 @@ class GetStudentPhoto(APIView):
 
 class CreateStudentAPI(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     """
     API view to create a new student.
     """
@@ -87,7 +87,7 @@ class EditStudentAPI(APIView):
     """
     API view to edit student information.
     """
-    
+
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, student_id, *args, **kwargs):

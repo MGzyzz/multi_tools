@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("app", "0015_alter_attendance_options_alter_grade_options_and_more"),
     ]
@@ -21,8 +20,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="student",
             name="platonus_id",
-            field=models.PositiveBigIntegerField(
-                blank=True, null=True, verbose_name="ID platonus"
-            ),
+            field=models.PositiveBigIntegerField(blank=True, null=True, verbose_name="ID platonus"),
         ),
     ]

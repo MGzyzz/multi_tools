@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("app", "0022_group_specialty_group"),
     ]
@@ -17,9 +16,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="group",
             name="group_specialty",
-            field=models.CharField(
-                default=1, max_length=100, verbose_name="Специальность"
-            ),
+            field=models.CharField(default=1, max_length=100, verbose_name="Специальность"),
             preserve_default=False,
         ),
     ]

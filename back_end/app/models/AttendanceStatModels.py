@@ -1,6 +1,5 @@
 from django.db import models
 
-
 """
 Оценка предмета
 GPA - 4.0
@@ -21,12 +20,8 @@ class Grade(models.Model):
 
 
 class AttendanceStat(models.Model):
-    student = models.ForeignKey(
-        "Student", on_delete=models.CASCADE, verbose_name="Студент"
-    )
-    subject = models.ForeignKey(
-        "Subject_study", on_delete=models.CASCADE, verbose_name="Предмет"
-    )
+    student = models.ForeignKey("Student", on_delete=models.CASCADE, verbose_name="Студент")
+    subject = models.ForeignKey("Subject_study", on_delete=models.CASCADE, verbose_name="Предмет")
     group = models.ForeignKey("Group", on_delete=models.CASCADE, verbose_name="Группа")
 
     total = models.PositiveBigIntegerField("Всего занятий", default=0)

@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("app", "0003_subject_study_teacher_student_gpa_grade_and_more"),
     ]

@@ -26,8 +26,34 @@ django-celery-beat = "^2.8.1"
 django-celery-results = "^2.6.0"
 colorlog = "^6.10.1"
 redis = "^7.1.0"
+ruff = "^0.14.14"
 
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.14.14"
+pre-commit = "^4.5.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+fix = false
+
+[tool.ruff.lint]
+select = [
+  "E",  # pycodestyle errors
+  "F",  # pyflakes
+  "I",  # imports (isort replacement)
+  "B",  # bugbear (частые баги)
+]
+
+ignore = [
+  "E501",  # длина строки — форматер решает
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

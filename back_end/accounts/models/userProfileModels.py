@@ -1,8 +1,9 @@
 # accounts/models.py
 from django.conf import settings
-from django.db import models
-from ._choices import RoleChoices
 from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+from ._choices import RoleChoices
 
 
 class User(AbstractUser):
@@ -10,7 +11,6 @@ class User(AbstractUser):
 
 
 class TeacherProfile(models.Model):
-
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         related_name="teacher_profile",

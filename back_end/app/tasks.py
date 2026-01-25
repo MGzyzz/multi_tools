@@ -26,13 +26,11 @@ def reconcile_attendance_stats():
 
     # 1) Агрегируем по (student, group, subject)
     # subject и group берем через schedule
-    rows = (
-        Attendance.objects
-        .values("student_id", "schedule__group_id", "schedule__subject_id")
-        .annotate(
-            total=Count("id"),
-            attended=Count("id", filter=Q(presense=True)),
-        )
+    rows = Attendance.objects.values(
+        "student_id", "schedule__group_id", "schedule__subject_id"
+    ).annotate(
+        total=Count("id"),
+        attended=Count("id", filter=Q(presense=True)),
     )
 
     # Преобразуем в удобный dict для сравнения/обновления
@@ -94,10 +92,7 @@ def reconcile_attendance_stats():
             # удаляем пачками
             # (делаем по фильтрам, иначе по тройному IN сложнее)
             # Для простоты: сначала соберем ids
-            orphan_ids = [
-                existing[k].id for k in orphan_keys
-                if k in existing
-            ]
+            orphan_ids = [existing[k].id for k in orphan_keys if k in existing]
             AttendanceStat.objects.filter(id__in=orphan_ids).delete()
 
     finished_at = timezone.now()

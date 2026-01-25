@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("app", "0024_group_unique_group_name_per_teacher"),
     ]
@@ -25,15 +24,11 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "total",
-                    models.PositiveBigIntegerField(
-                        default=0, verbose_name="Всего занятий"
-                    ),
+                    models.PositiveBigIntegerField(default=0, verbose_name="Всего занятий"),
                 ),
                 (
                     "attended",
-                    models.PositiveBigIntegerField(
-                        default=0, verbose_name="Посещено занятий"
-                    ),
+                    models.PositiveBigIntegerField(default=0, verbose_name="Посещено занятий"),
                 ),
                 (
                     "updated_at",
