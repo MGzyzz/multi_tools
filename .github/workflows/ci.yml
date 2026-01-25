@@ -13,35 +13,30 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+            - uses: actions/checkout@v4
 
             - name: Set up Python 3.11.7
               uses: actions/setup-python@v5
               with:
                   python-version: "3.11.7"
-                  cache: "pip"
 
             - name: Install Poetry
               run: |
                   python -m pip install --upgrade pip
                   pip install poetry
 
-            - name: Configure Poetry (venv in project)
-              run: |
-                  poetry config virtualenvs.in-project true
-
-            - name: Install dependencies
+            - name: Install dependencies (back_end)
+              working-directory: back_end
               run: |
                   poetry install --no-interaction --no-ansi
 
-            - name: Lint (ruff)
+            - name: Ruff (back_end)
+              working-directory: back_end
               run: |
-                poetry run ruff check .
-                poetry run ruff format --check .
-            - name: Run Django tests
-              env:
-                  DJANGO_SETTINGS_MODULE: ${{ vars.DJANGO_SETTINGS_MODULE }}
-                  SECRET_KEY: ${{ secrets.SECRET_KEY }}
+                  poetry run ruff check .
+                  poetry run ruff format --check .
+
+            - name: Django tests (back_end)
+              working-directory: back_end
               run: |
-                  poetry run python manage.py test
+                  poetry run python manage.py tests
