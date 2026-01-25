@@ -2,12 +2,15 @@ from rest_framework.views import APIView
 from api.serializer import StudentSerializer
 from app.models import Student
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.core.cache import cache
 import requests
 
 
 class StudentListAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    
     """
     API view to retrieve a list of students.
     """
@@ -19,6 +22,8 @@ class StudentListAPI(APIView):
 
 
 class GetStudentPhoto(APIView):
+    permission_classes = [IsAuthenticated]
+    
     """
     API view to retrieve a student's photo.
     """
@@ -37,6 +42,8 @@ class GetStudentPhoto(APIView):
 
 
 class CreateStudentAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    
     """
     API view to create a new student.
     """
@@ -62,6 +69,7 @@ def create_excel_mark_file(APIView):
 
 
 class getStudentInformation(APIView):
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         first_name = kwargs.get("first_name")
@@ -70,7 +78,7 @@ class getStudentInformation(APIView):
         if student:
             serializer = StudentSerializer(student)
             return Response({"data": serializer.data})
-        return Response({"error": "student not found"})
+        return Response({"error": "student not found"}, status=status.HTTP_404_NOT_FOUND)
 
     # TODO: Переписать на id. Либо так же закоментировать
 
@@ -79,6 +87,8 @@ class EditStudentAPI(APIView):
     """
     API view to edit student information.
     """
+    
+    permission_classes = [IsAuthenticated]
 
     def patch(self, request, student_id, *args, **kwargs):
         try:

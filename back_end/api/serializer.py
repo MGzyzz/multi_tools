@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from accounts.models import TeacherProfile
 from app.models import *
+from accounts.models._choices import RoleChoices
 from accounts.models import TeacherProfile, User
 from rest_framework.fields import IntegerField
 from django.contrib.auth import get_user_model
@@ -177,10 +178,14 @@ class TeacherProfileSerializer(ModelSerializer):
     Serializer for the TeacherProfile model.
     """
 
-    role = serializers.SerializerMethodField()
+    role = serializers.ChoiceField(source="teacher_profile.role", choices=RoleChoices, required=False, allow_blank=True)
     avatar = serializers.SerializerMethodField()
-    description = serializers.SerializerMethodField()
-
+    description = serializers.CharField(
+        source="teacher_profile.description",
+        required=False,
+        allow_blank=True
+    )
+    
     class Meta:
         model = User
         fields = (
@@ -193,6 +198,19 @@ class TeacherProfileSerializer(ModelSerializer):
             "avatar",
             "description",
         )
+        
+    def update(self, instance, validated_data):
+        profile_data = validated_data.pop("teacher_profile", {})
+
+        instance = super().update(instance, validated_data)
+
+        if profile_data:
+            profile, _ = TeacherProfile.objects.get_or_create(user=instance)
+            for attr, value in profile_data.items():
+                setattr(profile, attr, value)
+            profile.save()
+
+        return instance
 
     def _get_profile(self, obj):
         try:
