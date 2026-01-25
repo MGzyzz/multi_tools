@@ -1,4 +1,5 @@
 # Запуск Back-End части
+![CI](https://github.com/MGzyzz/multi_tools/actions/workflows/ci.yml/badge.svg)
 
 ## Требования
 - Установленный [Python 3.8+](https://www.python.org/downloads/)
@@ -43,12 +44,20 @@
 
 6. **Доступ к приложению**  
      Откройте в браузере: [http://localhost:8000](http:localhost:8000) или [http://127.0.0.1:8000](http://127.0.0.1:8000)
+7. **Запуск ruff**
+     ```
+     poetry run pre-commit install
+     ```
+     После запуска появиться сообщение:
+     ```pre-commit installed at .git/hooks/pre-commit```
+
 
 ## Дополнительно
 - Для создания суперпользователя:
   ```bash
   python manage.py createsuperuser
   ```
+
 
 ## Поддержка
 Если возникли вопросы, обратитесь к [документации](http:localhost:8000/swagger) или свяжитесь с разработчиком в Telegram: [@MGzyzz](https://t.me/MGzyzz)
