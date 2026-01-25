@@ -39,4 +39,4 @@ jobs:
             - name: Django tests (back_end)
               working-directory: back_end
               run: |
-                  poetry run python manage.py tests
+                  poetry run python manage.py test
