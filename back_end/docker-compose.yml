@@ -1,0 +1,106 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    container_name: postgres
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ai_bot_diplom
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: "123"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d ai_bot_diplom"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  
+
+  redis:
+    container_name: redis
+    image: redis:7.4-alpine
+    ports:
+      - "6379:6379"
+
+
+  app:
+    container_name: app
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - .:/app
+    environment:
+      DB_HOST: postgres
+      DB_NAME: ai_bot_diplom
+      DB_USER: admin
+      DB_PASSWORD: "123"
+      DB_PORT: "5432"
+      TZ: Asia/Almaty
+      CELERY_BROKER_URL: redis://redis:6379/0
+    command: bash -c "python manage.py migrate --noinput &&
+                      python manage.py runserver 0.0.0.0:8000"
+  
+  celery:
+    container_name: celery
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: celery -A core.celery worker -l info
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      DB_HOST: postgres
+      DB_NAME: ai_bot_diplom
+      DB_USER: admin
+      DB_PASSWORD: "123"
+      DB_PORT: "5432"
+      TZ: Asia/Almaty
+      CELERY_BROKER_URL: redis://redis:6379/0
+
+
+  celery-beat:
+    container_name: celery-beat
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: celery -A core.celery beat -l info
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      DB_HOST: postgres
+      DB_NAME: ai_bot_diplom
+      DB_USER: admin
+      DB_PASSWORD: "123"
+      DB_PORT: "5432"
+      TZ: Asia/Almaty
+      CELERY_BROKER_URL: redis://redis:6379/0
+
+# networks:
+#   default:
+#     external: True
+#     name: default_net
+
+volumes:
+  pgdata:
