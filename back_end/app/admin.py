@@ -1,8 +1,24 @@
 from django.contrib import admin
 
-from .models import Attendance, AttendanceStat, Group, Schedule, Student, Subject_study
+from app.utils.face_embedding import trim_face_images
+
+from .models import (
+    Attendance,
+    AttendanceStat,
+    Group,
+    Schedule,
+    Student,
+    StudentFaceImage,
+    Subject_study,
+)
 
 # Register your models here.
+
+
+class StudentFaceImageInline(admin.TabularInline):
+    model = StudentFaceImage
+    extra = 0
+    readonly_fields = ("created_at",)
 
 
 class StudentAdmin(admin.ModelAdmin):
@@ -21,6 +37,15 @@ class StudentAdmin(admin.ModelAdmin):
     search_fields = ("first_name", "last_name", "telegram_username")
     list_filter = ("age",)
     ordering = ("first_name",)
+    inlines = (StudentFaceImageInline,)
+
+    def save_model(self, request, obj, form, change):
+        face_changed = "face_image" in form.changed_data
+        super().save_model(request, obj, form, change)
+
+        if face_changed and obj.face_image:
+            StudentFaceImage.objects.create(student=obj, image=obj.face_image)
+            trim_face_images(obj)
 
 
 class GroupAdmin(admin.ModelAdmin):
@@ -59,6 +84,7 @@ class SubjectStudyAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Student, StudentAdmin)
+admin.site.register(StudentFaceImage)
 admin.site.register(Group, GroupAdmin)
 admin.site.register(Schedule, ScheduleAdmin)
 admin.site.register(Attendance, AttendanceAdmin)

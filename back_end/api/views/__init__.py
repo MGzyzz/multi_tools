@@ -5,6 +5,7 @@ from .attendanceAPI import (
     IsTeacher,
     MarkAttendanceAPIView,
 )
+from .faceRecognitionAPI import RecognizeStudentByFace, UpdateStudentFaceEmbedding
 from .groupAPI import (
     GetAllStudents,
     GroupCreateAPI,
@@ -45,8 +46,10 @@ __all__ = [
     "IsTeacher",
     "MarkAttendanceAPIView",
     "ProfileAPI",
+    "RecognizeStudentByFace",
     "ScheduleListAPI",
     "StudentListAPI",
+    "UpdateStudentFaceEmbedding",
     "getStudentInformation",
     "get_period",
 ]

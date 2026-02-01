@@ -1,15 +1,14 @@
-// editAttendance.js
-import axios from "axios";
+import api from "./api";
 
-export const editAttendance = async (attendanceId, status, markedAt) => {
-    try {
-    const response = await axios.patch(`http://localhost:8000/api/edit_attendance/${attendanceId}/`, {
-            presense: status,
-            marked_at: markedAt
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error updating attendance:', error);
-        throw error;
-    }
+export const editAttendance = async (attendanceId, presense, markedAt) => {
+  try {
+    const response = await api.patch(`/api/edit_attendance/${attendanceId}/`, {
+      presense,
+      marked_at: markedAt
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating attendance:', error);
+    throw error;
+  }
 };

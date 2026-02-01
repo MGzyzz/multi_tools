@@ -41,6 +41,10 @@ NGROK_DOMAIN = "394610267b27"
 
 NGROK_URL = f"{STANDART_URL}{NGROK_DOMAIN}.ngrok-free.app"
 
+AI_SERVICE_URL = os.getenv("AI_SERVICE_URL", "http://localhost:8002")
+FACE_RECOGNITION_THRESHOLD = float(os.getenv("FACE_RECOGNITION_THRESHOLD", "0.7"))
+FACE_IMAGE_LIMIT = int(os.getenv("FACE_IMAGE_LIMIT", "5"))
+
 CORS_ALLOWED_ORIGINS = [
     NGROK_URL,
 ]
@@ -243,13 +247,3 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
 CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-
-if os.getenv("CI") == "true":
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": ":memory:",
-        }
-    }
-
-# НЕ ЗАБУДЬ УБРАТЬ!!!

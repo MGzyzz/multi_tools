@@ -6,4 +6,5 @@ class AppConfig(AppConfig):
     name = "app"
 
     def ready(self):
-        pass
+        import app.face_signals  # noqa: F401
+        import app.signals  # noqa: F401
