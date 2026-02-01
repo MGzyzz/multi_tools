@@ -32,11 +32,30 @@ class AttendanceScheduleDetailAPI(APIView):
         if schedule.teacher_id != request.user.teacher_profile.id:
             return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
 
+        group_student_ids = list(schedule.group.students.values_list("id", flat=True))
+        if group_student_ids:
+            existing_ids = set(
+                Attendance.objects.filter(schedule_id=schedule_id).values_list(
+                    "student_id", flat=True
+                )
+            )
+            missing_ids = [sid for sid in group_student_ids if sid not in existing_ids]
+            if missing_ids:
+                Attendance.objects.bulk_create(
+                    [
+                        Attendance(student_id=sid, schedule_id=schedule_id, presense=False)
+                        for sid in missing_ids
+                    ],
+                    ignore_conflicts=True,
+                    batch_size=1000,
+                )
+
         attendances = (
-            Attendance.objects.filter(schedule_id=schedule_id)
+            Attendance.objects.filter(schedule_id=schedule_id, student_id__in=group_student_ids)
             .select_related("student")
             .order_by("student__last_name", "student__first_name", "student__id")
         )
+        print(attendances)
 
         return Response(
             {

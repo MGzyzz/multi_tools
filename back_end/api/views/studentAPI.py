@@ -1,3 +1,5 @@
+import logging
+
 from django.core.cache import cache
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -5,7 +7,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.serializer import StudentSerializer
-from app.models import Student
+from app.models import Student, StudentFaceImage
+from app.utils.face_embedding import fetch_embedding_from_file, trim_face_images
+
+logger = logging.getLogger(__name__)
 
 
 class StudentListAPI(APIView):
@@ -56,6 +61,20 @@ class CreateStudentAPI(APIView):
         serializer.is_valid(raise_exception=True)
         student = serializer.save()
 
+        if "face_image" in request.FILES:
+            file_obj = request.FILES.get("face_image")
+            if file_obj:
+                embedding, error = fetch_embedding_from_file(file_obj)
+                if error:
+                    logger.warning("Face embedding failed for student_id=%s: %s", student.id, error)
+                else:
+                    file_obj.seek(0)
+                    StudentFaceImage.objects.create(
+                        student=student, image=file_obj, embedding=embedding
+                    )
+                    trim_face_images(student)
+                    student.save(update_fields=["face_updated_at"])
+
         teacher = request.user.teacher_profile
         cache.delete(f"students_by_teacher:{teacher.id}")
 
@@ -101,6 +120,20 @@ class EditStudentAPI(APIView):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
+        if "face_image" in request.FILES:
+            file_obj = request.FILES.get("face_image")
+            if file_obj:
+                embedding, error = fetch_embedding_from_file(file_obj)
+                if error:
+                    logger.warning("Face embedding failed for student_id=%s: %s", student.id, error)
+                else:
+                    file_obj.seek(0)
+                    StudentFaceImage.objects.create(
+                        student=student, image=file_obj, embedding=embedding
+                    )
+                    trim_face_images(student)
+                    student.save(update_fields=["face_updated_at"])
 
         teacher = request.user.teacher_profile
         cache.delete(f"students_by_teacher:{teacher.id}")
