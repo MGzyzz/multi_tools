@@ -7,3 +7,4 @@ class AppConfig(AppConfig):
 
     def ready(self):
         import app.face_signals  # noqa: F401
+        import app.signals  # noqa: F401
