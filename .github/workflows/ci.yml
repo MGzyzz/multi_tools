@@ -11,6 +11,20 @@ permissions:
 jobs:
     test:
         runs-on: ubuntu-latest
+        services:
+            postgres:
+                image: pgvector/pgvector:pg16
+                env:
+                    POSTGRES_DB: ai_bot_diplom_test
+                    POSTGRES_USER: admin
+                    POSTGRES_PASSWORD: admin
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd="pg_isready -U admin -d ai_bot_diplom_test"
+                    --health-interval=10s
+                    --health-timeout=5s
+                    --health-retries=5
 
         steps:
             - uses: actions/checkout@v4
@@ -30,6 +44,12 @@ jobs:
               run: |
                   poetry install --no-interaction --no-ansi --no-root
 
+            - name: Prepare database (pgvector)
+              env:
+                  PGPASSWORD: admin
+              run: |
+                  psql -h localhost -U admin -d ai_bot_diplom_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
             - name: Ruff (back_end)
               working-directory: back_end
               run: |
@@ -38,5 +58,11 @@ jobs:
 
             - name: Django tests (back_end)
               working-directory: back_end
+              env:
+                  DATABASE_NAME: ai_bot_diplom_test
+                  DATABASE_USER: admin
+                  DATABASE_PASSWORD: admin
+                  DATABASE_HOST: localhost
+                  DATABASE_PORT: 5432
               run: |
                   poetry run python manage.py test
