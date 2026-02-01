@@ -20,8 +20,10 @@ from .views import (
     GroupStudentAPI,
     MarkAttendanceAPIView,
     ProfileAPI,
+    RecognizeStudentByFace,
     ScheduleListAPI,
     StudentListAPI,
+    UpdateStudentFaceEmbedding,
     getStudentInformation,
 )
 
@@ -44,6 +46,16 @@ urlpatterns = [
         "get_student_information/<str:first_name>/",
         getStudentInformation.as_view(),
         name="student_information",
+    ),
+    path(
+        "students/<int:student_id>/face_embedding/",
+        UpdateStudentFaceEmbedding.as_view(),
+        name="student_face_embedding",
+    ),
+    path(
+        "students/recognize_face/",
+        RecognizeStudentByFace.as_view(),
+        name="student_face_recognize",
     ),
     path("edit_student/<int:student_id>/", EditStudentAPI.as_view(), name="edit_student"),
     path("create_student/", CreateStudentAPI.as_view(), name="create_student"),
