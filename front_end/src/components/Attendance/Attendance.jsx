@@ -1,31 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import {
-  Camera,
-  Video,
-  Users,
-  CheckCircle,
-  Clock,
-  Play,
-  Square,
-  RotateCcw,
-  Download,
-  AlertCircle,
-  Scan,
-  Loader2,
-  Check
-} from 'lucide-react';
-import Loader from '../Loader/Loader';
-import { getDetailSchedule } from '../../api/getDetailSchedule';
-
-// ✅ MediaPipe
 import { FaceMesh } from '@mediapipe/face_mesh';
 import { Camera as MediaPipeCamera } from '@mediapipe/camera_utils';
-// import { drawConnectors } from '@mediapipe/drawing_utils';
+import Loader from '../Loader/Loader';
+import { getDetailSchedule } from '../../api/getDetailSchedule';
+import { sendPhotoAI } from '../../api/sendPhotoAI';
+import { editAttendance } from '../../api/editAttendance';
+import AttendanceHeader from './AttendanceHeader';
+import AttendanceCamera from './AttendanceCamera';
+import AttendanceStudentsList from './AttendanceStudentsList';
+import { clamp, lerp, mapApiToState } from './attendanceUtils';
 
-const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-const DEBUG = true;
-const lerp = (a, b, t) => a + (b - a) * t;
+const DEBUG_FACE_PREVIEW = false;
 
 const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
   const videoRef = useRef(null);
@@ -35,6 +21,7 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
   const faceMeshRef = useRef(null);
   const mpCameraRef = useRef(null);
   const rafRef = useRef(null);
+  const faceBoxRef = useRef({ minX: 0, minY: 0, maxX: 0, maxY: 0, hasFace: false });
 
   // ✅ цель позиции рамки (target) + текущая (smooth)
   const frameTargetRef = useRef({ cx: 0, cy: 0, size: 256, hasFace: false });
@@ -45,6 +32,7 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
   const [currentStudent, setCurrentStudent] = useState(null);
   const [scanProgress, setScanProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [scanNotice, setScanNotice] = useState(null);
   const { scheduleId: scheduleIdFromParams } = useParams();
   const effectiveScheduleId = scheduleId ?? scheduleIdFromParams; // если вдруг передаешь пропом
 
@@ -68,45 +56,6 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
     totalStudents: 0
   });
   const [students, setStudents] = useState([]);
-
-  const formatTimeHHMM = (timeStr) => {
-    if (!timeStr) return '';
-    // "12:00:00" -> "12:00"
-    return timeStr.slice(0, 5);
-  };
-
-  const formatMarkedAtHHMM = (iso) => {
-    if (!iso) return null;
-    const d = new Date(iso);
-    return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const mapApiToState = (data) => {
-    const schedule = data?.schedule;
-    const attendances = Array.isArray(data?.attendances) ? data.attendances : [];
-
-    const mappedStudents = attendances.map((a) => ({
-      id: a.student?.id,
-      attendanceId: a.id,
-      name: `${a.student?.last_name ?? ''} ${a.student?.first_name ?? ''}`.trim(),
-      telegram: a.student?.telegram_username ?? null,
-
-      // status: present | absent | null
-      status: a.presense === true ? 'present' : 'absent',
-      scanTime: formatMarkedAtHHMM(a.marked_at)
-    }));
-
-    return {
-      session: {
-        group: schedule?.group?.name ?? '',
-        subject: schedule?.subject?.name ?? '',
-        time: formatTimeHHMM(schedule?.time),
-        date: schedule?.date ?? '',
-        totalStudents: mappedStudents.length
-      },
-      students: mappedStudents
-    };
-  };
 
   const stats = {
     present: students.filter(s => s.status === 'present').length,
@@ -174,6 +123,7 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
       setScanFrame(prev => ({ ...prev, visible: false }));
       frameTargetRef.current.hasFace = false;
       frameSmoothRef.current.hasFace = false;
+      faceBoxRef.current.hasFace = false;
     } catch (e) {
       console.warn('stopFaceMesh error:', e);
     }
@@ -262,6 +212,7 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
 
         if (!face || w <= 1 || h <= 1) {
           frameTargetRef.current.hasFace = false;
+          faceBoxRef.current.hasFace = false;
           return;
         }
 
@@ -273,6 +224,14 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
           if (p.x > maxX) maxX = p.x;
           if (p.y > maxY) maxY = p.y;
         }
+
+        // Нормализованный бокс (для вырезания по исходному видео)
+        minX = clamp(minX, 0, 1);
+        minY = clamp(minY, 0, 1);
+        maxX = clamp(maxX, 0, 1);
+        maxY = clamp(maxY, 0, 1);
+
+        faceBoxRef.current = { minX, minY, maxX, maxY, hasFace: true };
 
         // Переводим в пиксели (в НЕ-зеркальном пространстве)
         const faceW = (maxX - minX) * w;
@@ -389,6 +348,65 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
   // =========================
   // Scanning
   // =========================
+  const captureCroppedFaceBlob = async () => {
+    const video = videoRef.current;
+    const faceBox = faceBoxRef.current;
+
+    if (!video || !faceBox?.hasFace) return null;
+
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    if (!vw || !vh) return null;
+
+    const faceW = faceBox.maxX - faceBox.minX;
+    const faceH = faceBox.maxY - faceBox.minY;
+
+    // tighter crop to reduce background, with small adaptive padding
+    const padX = clamp(faceW * 0.08, 0.01, 0.04);
+    const padY = clamp(faceH * 0.1, 0.01, 0.05);
+
+    const minX = clamp(faceBox.minX - padX, 0, 1);
+    const minY = clamp(faceBox.minY - padY, 0, 1);
+    const maxX = clamp(faceBox.maxX + padX, 0, 1);
+    const maxY = clamp(faceBox.maxY + padY, 0, 1);
+
+    let sx = Math.round(minX * vw);
+    let sy = Math.round(minY * vh);
+    let sw = Math.round((maxX - minX) * vw);
+    let sh = Math.round((maxY - minY) * vh);
+
+    if (sw <= 0 || sh <= 0) return null;
+
+    sw = Math.min(sw, vw);
+    sh = Math.min(sh, vh);
+    sx = clamp(sx, 0, vw - sw);
+    sy = clamp(sy, 0, vh - sh);
+
+    const cropCanvas = document.createElement('canvas');
+    cropCanvas.width = sw;
+    cropCanvas.height = sh;
+    const ctx = cropCanvas.getContext('2d');
+    if (!ctx) return null;
+
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
+
+    return new Promise((resolve) => {
+      cropCanvas.toBlob(resolve, 'image/jpeg', 0.92);
+    });
+  };
+
+  const openFacePreview = (blob) => {
+    if (!DEBUG_FACE_PREVIEW) return;
+    const url = URL.createObjectURL(blob);
+    const previewWindow = window.open(url, '_blank');
+    // TODO: убрать debug-превью после интеграции.
+    if (previewWindow) {
+      previewWindow.onbeforeunload = () => URL.revokeObjectURL(url);
+    } else {
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
+  };
+
   const startScanning = async () => {
     if (!isCameraActive) {
       await startCamera();
@@ -401,65 +419,151 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
     setScanProgress(0);
     setCurrentStudent(null);
     setIsProcessing(false);
+    setScanNotice(null);
     stopFaceMesh();
     stopCamera();
   };
 
-  // Имитация распознавания лица (в будущем заменить на API)
-  const simulateFaceRecognition = () => {
-    if (!isScanning || isProcessing) return;
+  const applyRecognitionResult = async (student, status = 'present') => {
+    const now = new Date();
+    const nowTime = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    const markedAt = now.toISOString();
+    const presense = status === 'present' || status === 'late';
 
-    setIsProcessing(true);
-    setScanProgress(0);
+    setCurrentStudent({ ...student, status });
+    setStudents(prev => prev.map(s =>
+      s.id === student.id
+        ? { ...s, status, scanTime: nowTime }
+        : s
+    ));
 
-    const interval = setInterval(() => {
-      setScanProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          recognizeStudent();
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 100);
-  };
-
-  const recognizeStudent = () => {
-    const unrecognizedStudents = students.filter(s => s.status === null);
-
-    if (unrecognizedStudents.length === 0) {
-      setIsProcessing(false);
-      setScanProgress(0);
-      return;
+    if (student.attendanceId) {
+      try {
+        await editAttendance(student.attendanceId, presense, markedAt);
+      } catch (error) {
+        console.error('Failed to save attendance:', error);
+        setScanNotice({ type: 'error', text: 'Не удалось сохранить отметку' });
+      }
     }
 
-    const randomStudent = unrecognizedStudents[Math.floor(Math.random() * unrecognizedStudents.length)];
-    const now = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-
-    const status = Math.random() > 0.2 ? 'present' : 'late';
-
-    setCurrentStudent({ ...randomStudent, status });
-
     setTimeout(() => {
-      setStudents(prev => prev.map(s =>
-        s.id === randomStudent.id
-          ? { ...s, status, scanTime: now }
-          : s
-      ));
-
       setIsProcessing(false);
       setScanProgress(0);
       setCurrentStudent(null);
     }, 1500);
   };
 
-  const markStudent = (studentId, status) => {
-    const now = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  // Распознавание через AI
+  const simulateFaceRecognition = async () => {
+    if (!isScanning || isProcessing) return;
+
+    setIsProcessing(true);
+    setScanProgress(0);
+    setScanNotice(null);
+
+    const PROGRESS_MAX = 92;
+    const PROGRESS_RAMP_MS = 5200;
+    const MIN_SCAN_MS = 1600;
+    const startTime = performance.now();
+
+    let intervalId = null;
+    const stopProgress = () => {
+      if (intervalId) clearInterval(intervalId);
+      intervalId = null;
+    };
+
+    intervalId = setInterval(() => {
+      const elapsed = performance.now() - startTime;
+      const t = Math.min(1, elapsed / PROGRESS_RAMP_MS);
+      const eased = t * t * (3 - 2 * t); // smoothstep
+      const next = Math.min(PROGRESS_MAX, Math.round(eased * PROGRESS_MAX));
+      setScanProgress(prev => (next > prev ? next : prev));
+    }, 120);
+
+    const waitMinScan = async () => {
+      const elapsed = performance.now() - startTime;
+      const remaining = MIN_SCAN_MS - elapsed;
+      if (remaining > 0) {
+        await new Promise((r) => setTimeout(r, remaining));
+      }
+    };
+
+    const finishFailure = async (message) => {
+      await waitMinScan();
+      stopProgress();
+      setScanProgress(100);
+      setScanNotice({ type: 'error', text: message });
+      setTimeout(() => {
+        setIsProcessing(false);
+        setScanProgress(0);
+      }, 600);
+    };
+
+    try {
+      const blob = await captureCroppedFaceBlob();
+      if (!blob) {
+        await finishFailure('Лицо не найдено. Попробуйте снова.');
+        return;
+      }
+
+      openFacePreview(blob);
+      const result = await sendPhotoAI(blob);
+
+      await waitMinScan();
+      stopProgress();
+      setScanProgress(100);
+
+      const studentId = result?.student_id;
+      const aiStatus = result?.status;
+
+      if (!studentId || aiStatus !== 'recognized') {
+        console.warn('Face not recognized:', result);
+        const statusText = aiStatus === 'empty_embeddings'
+          ? 'Нет данных для распознавания'
+          : aiStatus === 'no_face'
+            ? 'Лицо не найдено. Попробуйте снова.'
+            : 'Лицо не распознано';
+        await finishFailure(statusText);
+        return;
+      }
+
+      const student = students.find((s) => s.id === studentId) || null;
+      if (!student) {
+        console.warn('No student matched for AI student_id:', studentId);
+        await finishFailure('Студент не найден в списке');
+        return;
+      }
+
+      setScanNotice({ type: 'success', text: `Распознан: ${student.name}` });
+      await applyRecognitionResult(student, 'present');
+    } catch (error) {
+      stopProgress();
+      console.error('Face recognition error:', error);
+      await finishFailure('Ошибка распознавания. Попробуйте снова.');
+    }
+  };
+
+  const markStudent = async (studentId, status) => {
+    const now = new Date();
+    const nowTime = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    const markedAt = now.toISOString();
+    const presense = status === 'present' || status === 'late';
+
     setStudents(prev => prev.map(s =>
       s.id === studentId
-        ? { ...s, status, scanTime: now }
+        ? { ...s, status, scanTime: nowTime }
         : s
     ));
+
+    const target = students.find((s) => s.id === studentId);
+    if (target?.attendanceId) {
+      try {
+        await editAttendance(target.attendanceId, presense, markedAt);
+      } catch (error) {
+        console.error('Failed to save attendance:', error);
+        setScanNotice({ type: 'error', text: 'Не удалось сохранить отметку' });
+      }
+    }
   };
 
   const resetAttendance = () => {
@@ -477,92 +581,6 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const FuturisticFrameOnly = ({ isProcessing, scanProgress }) => (
-    <div className="absolute inset-0 pointer-events-none">
-      <div className="relative w-full h-full">
-        {/* Outer rotating ring */}
-        <div
-          className={`absolute inset-0 border-4 rounded-full transition-all duration-300 ${isProcessing ? 'border-blue-500 animate-spin' : 'border-green-500/50'
-            }`}
-          style={{
-            animationDuration: '3s',
-            borderStyle: 'dashed',
-            borderWidth: '3px'
-          }}
-        />
-
-        {/* Middle rotating ring (opposite direction) */}
-        <div
-          className={`absolute inset-4 border-2 rounded-full transition-all duration-300 ${isProcessing ? 'border-purple-500' : 'border-green-500/30'
-            }`}
-          style={{
-            animation: isProcessing ? 'spin 2s linear infinite reverse' : 'none',
-            borderStyle: 'dotted'
-          }}
-        />
-
-        {/* Main frame */}
-        <div
-          className={`absolute inset-8 border-4 rounded-3xl transition-all duration-300 ${isProcessing
-            ? 'border-blue-500 shadow-[0_0_30px_rgba(59,130,246,0.5)]'
-            : 'border-green-500 shadow-[0_0_30px_rgba(34,197,94,0.5)]'
-            }`}
-        >
-          {/* Corner accents */}
-          {[
-            { top: '-2px', left: '-2px', rotate: '0deg' },
-            { top: '-2px', right: '-2px', rotate: '90deg' },
-            { bottom: '-2px', right: '-2px', rotate: '180deg' },
-            { bottom: '-2px', left: '-2px', rotate: '270deg' }
-          ].map((pos, i) => (
-            <div
-              key={i}
-              className={`absolute w-8 h-8 transition-all duration-300 ${isProcessing ? 'bg-blue-500' : 'bg-green-500'
-                }`}
-              style={{
-                ...pos,
-                clipPath: 'polygon(0 0, 100% 0, 0 100%)',
-                transform: `rotate(${pos.rotate})`
-              }}
-            />
-          ))}
-
-          {/* Scanning line */}
-          {isProcessing && (
-            <div
-              className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent"
-              style={{
-                top: `${scanProgress}%`,
-                transition: 'top 0.1s linear',
-                boxShadow: '0 0 20px rgba(59, 130, 246, 0.8)'
-              }}
-            />
-          )}
-
-          {/* Center icon */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            {scanProgress === 100 ? (
-              <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center animate-bounce">
-                <Check className="w-10 h-10 text-white" strokeWidth={3} />
-              </div>
-            ) : (
-              <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${isProcessing ? 'bg-blue-500/20 animate-pulse' : 'bg-green-500/20'
-                  }`}
-              >
-                <Scan
-                  className={`w-6 h-6 transition-colors duration-300 ${isProcessing ? 'text-blue-400' : 'text-green-400'
-                    }`}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       {isLoadingSchedule && (
@@ -576,308 +594,39 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
           {scheduleError}
         </div>
       )}
-      {/* Header */}
-      <div className="mb-6 sm:mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Отметка студентов
-            </h1>
-            <p className={`text-sm sm:text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              {sessionData.group} • {sessionData.subject} • {sessionData.time}
-            </p>
-          </div>
-          <button
-            onClick={resetAttendance}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-xl ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              } cursor-pointer transition-all duration-300`}
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span className="hidden sm:inline">Сбросить</span>
-          </button>
-        </div>
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
-          {/* present */}
-          <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-4 sm:p-5 border ${isDark ? 'border-gray-700' : 'border-gray-200'
-            } shadow-lg hover:scale-105 transition-all duration-300`}>
-            <div className="flex flex-col">
-              <div className="flex items-center space-x-3 mb-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
-                  <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <span className={`text-3xl sm:text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {stats.present}
-                </span>
-              </div>
-              <p className={`text-xs sm:text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                Присутствуют
-              </p>
-            </div>
-          </div>
-
-          {/* late */}
-          <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-4 sm:p-5 border ${isDark ? 'border-gray-700' : 'border-gray-200'
-            } shadow-lg hover:scale-105 transition-all duration-300`}>
-            <div className="flex flex-col">
-              <div className="flex items-center space-x-3 mb-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
-                  <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <span className={`text-3xl sm:text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {stats.late}
-                </span>
-              </div>
-              <p className={`text-xs sm:text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                Опоздали
-              </p>
-            </div>
-          </div>
-
-          {/* absent */}
-          <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-4 sm:p-5 border ${isDark ? 'border-gray-700' : 'border-gray-200'
-            } shadow-lg hover:scale-105 transition-all duration-300`}>
-            <div className="flex flex-col">
-              <div className="flex items-center space-x-3 mb-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center shadow-lg">
-                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <span className={`text-3xl sm:text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {stats.absent}
-                </span>
-              </div>
-              <p className={`text-xs sm:text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                Не отмечены
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AttendanceHeader
+        isDark={isDark}
+        sessionData={sessionData}
+        stats={stats}
+        onReset={resetAttendance}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Camera Section */}
-        <div className="lg:col-span-2">
-          <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-5 sm:p-6 border ${isDark ? 'border-gray-700' : 'border-gray-200'
-            } shadow-lg`}>
-            <h3 className={`text-lg sm:text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Сканирование лиц
-            </h3>
-
-            {/* Video Preview */}
-            <div className={`relative aspect-video rounded-xl overflow-hidden mb-4 ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover"
-                style={{ transform: 'scaleX(-1)' }}
-              />
-
-              {/* Canvas overlay */}
-              <canvas
-                ref={canvasRef}
-                className="absolute inset-0 w-full h-full pointer-events-none"
-              />
-
-              {!isCameraActive && (
-                <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-                  <div className="text-center">
-                    <Video className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
-                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Камера не активна
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* ✅ ДВИЖУЩАЯСЯ РАМКА */}
-              {isScanning && isCameraActive && scanFrame.visible && (
-                <div className="absolute inset-0 pointer-events-none">
-                  <div
-                    className="absolute"
-                    style={{
-                      left: `${scanFrame.cx}px`,
-                      top: `${scanFrame.cy}px`,
-                      width: `${scanFrame.size}px`,
-                      height: `${scanFrame.size}px`,
-                      transform: 'translate(-50%, -50%)'
-                    }}
-                  >
-                    <FuturisticFrameOnly isProcessing={isProcessing} scanProgress={scanProgress} />
-
-                    {/* (опционально) оставь свой прогресс-бар снизу, если он нужен отдельно */}
-                    {isProcessing && scanProgress > 0 && (
-                      <div className="absolute -bottom-12 left-0 right-0">
-                        <div className="bg-gray-800/80 rounded-full h-3 overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
-                            style={{ width: `${scanProgress}%` }}
-                          />
-                        </div>
-                        <p className="text-white text-center text-sm mt-2">
-                          Распознавание... {scanProgress}%
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Recognition Result */}
-              {currentStudent && isCameraActive && (
-                <div className="absolute bottom-4 left-4 right-4 bg-black/80 backdrop-blur-md rounded-xl p-4">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${currentStudent.status === 'present'
-                      ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                      : 'bg-gradient-to-br from-amber-500 to-orange-500'
-                      } shadow-lg`}>
-                      {currentStudent.status === 'present' ? (
-                        <CheckCircle className="w-6 h-6 text-white" />
-                      ) : (
-                        <Clock className="w-6 h-6 text-white" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-white font-semibold">{currentStudent.name}</p>
-                      <p className="text-gray-300 text-sm">
-                        {currentStudent.status === 'present' ? 'Присутствует' : 'Опоздал'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Controls */}
-            <div className="flex flex-wrap gap-3">
-              {!isScanning ? (
-                <button
-                  onClick={startScanning}
-                  className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl font-semibold cursor-pointer transition-all duration-300 hover:scale-105 shadow-lg"
-                >
-                  <Play className="w-5 h-5" />
-                  <span>Начать сканирование</span>
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={simulateFaceRecognition}
-                    disabled={isProcessing}
-                    className={`flex-1 flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-semibold cursor-pointer transition-all duration-300 ${isProcessing
-                      ? 'bg-gray-600 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105'
-                      } text-white shadow-lg`}
-                  >
-                    {isProcessing ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Распознавание...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Scan className="w-5 h-5" />
-                        <span>Распознать лицо</span>
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={stopScanning}
-                    className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-semibold cursor-pointer transition-all duration-300 hover:scale-105 shadow-lg"
-                  >
-                    <Square className="w-5 h-5" />
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+        <AttendanceCamera
+          isDark={isDark}
+          videoRef={videoRef}
+          canvasRef={canvasRef}
+          isCameraActive={isCameraActive}
+          isScanning={isScanning}
+          scanFrame={scanFrame}
+          isProcessing={isProcessing}
+          scanProgress={scanProgress}
+          currentStudent={currentStudent}
+          notice={scanNotice}
+          onStartScanning={startScanning}
+          onStopScanning={stopScanning}
+          onSimulateRecognition={simulateFaceRecognition}
+        />
 
         {/* Students List */}
-        <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-sm rounded-2xl p-5 sm:p-6 border ${isDark ? 'border-gray-700' : 'border-gray-200'
-          } shadow-lg flex flex-col max-h-[600px]`}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className={`text-lg sm:text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Список студентов
-            </h3>
-            <span className={`text-xs px-2 py-1 rounded-lg ${isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'
-              } font-medium`}>
-              {stats.present + stats.late}/{sessionData.totalStudents}
-            </span>
-          </div>
-
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50">
-            {students.map((student) => (
-              <div
-                key={student.id}
-                className={`rounded-xl p-3 border transition-all duration-300 ${student.status === 'present'
-                  ? isDark
-                    ? 'bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20'
-                    : 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
-                  : student.status === 'late'
-                    ? isDark
-                      ? 'bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20'
-                      : 'bg-amber-50 border-amber-200 hover:bg-amber-100'
-                    : isDark
-                      ? 'bg-gray-700/30 border-gray-600 hover:bg-gray-700/50'
-                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                  }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`font-semibold text-sm ${student.status
-                    ? student.status === 'present'
-                      ? isDark ? 'text-emerald-400' : 'text-emerald-700'
-                      : isDark ? 'text-amber-400' : 'text-amber-700'
-                    : isDark ? 'text-white' : 'text-gray-900'
-                    }`}>
-                    {student.name}
-                  </span>
-                  {student.status && (
-                    <span className="text-xs text-gray-500">
-                      {student.scanTime}
-                    </span>
-                  )}
-                </div>
-
-                {!student.status && (
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => markStudent(student.id, 'present')}
-                      className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all duration-300 ${isDark
-                        ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30'
-                        : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300'
-                        }`}
-                    >
-                      <div className="flex items-center justify-center space-x-1">
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        <span>Присутствует</span>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => markStudent(student.id, 'late')}
-                      className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all duration-300 ${isDark
-                        ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30'
-                        : 'bg-amber-100 hover:bg-amber-200 text-amber-700 border border-amber-300'
-                        }`}
-                    >
-                      <div className="flex items-center justify-center space-x-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>Опоздал</span>
-                      </div>
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <button
-            className="mt-4 w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl font-semibold cursor-pointer transition-all duration-300 hover:scale-105 shadow-lg"
-          >
-            <Download className="w-5 h-5" />
-            <span>Экспорт отчета</span>
-          </button>
-        </div>
+        <AttendanceStudentsList
+          isDark={isDark}
+          students={students}
+          stats={stats}
+          sessionData={sessionData}
+          onMarkStudent={markStudent}
+        />
       </div>
     </div>
   );
