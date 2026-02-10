@@ -12,7 +12,7 @@ export default defineConfig({
     },
     hmr: {
       protocol: "wss",
-      host: "139ca65c6bce.ngrok-free.app", // <-- твой ngrok фронта
+      host: "45f37caba858.ngrok-free.app", // <-- твой ngrok фронта
       clientPort: 443,
     },
   },
