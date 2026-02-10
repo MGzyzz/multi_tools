@@ -12,6 +12,23 @@ import AttendanceStudentsList from './AttendanceStudentsList';
 import { clamp, lerp, mapApiToState } from './attendanceUtils';
 
 const DEBUG_FACE_PREVIEW = false;
+const BLINK_EAR_CLOSED = 0.19;
+const BLINK_EAR_OPEN = 0.24;
+const BLINK_MIN_CLOSED_FRAMES = 2;
+const BLINK_COOLDOWN_MS = 800;
+const LEFT_EYE_IDX = [33, 160, 158, 133, 153, 144];
+const RIGHT_EYE_IDX = [362, 385, 387, 263, 373, 380];
+
+const calcDistance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const computeEAR = (landmarks, indices) => {
+  const [p1, p2, p3, p4, p5, p6] = indices.map((i) => landmarks[i]);
+  if (!p1 || !p2 || !p3 || !p4 || !p5 || !p6) return null;
+  const vertical1 = calcDistance(p2, p6);
+  const vertical2 = calcDistance(p3, p5);
+  const horizontal = calcDistance(p1, p4);
+  if (!horizontal) return null;
+  return (vertical1 + vertical2) / (2 * horizontal);
+};
 
 const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
   const videoRef = useRef(null);
@@ -22,6 +39,12 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
   const mpCameraRef = useRef(null);
   const rafRef = useRef(null);
   const faceBoxRef = useRef({ minX: 0, minY: 0, maxX: 0, maxY: 0, hasFace: false });
+  const livenessRef = useRef({
+    confirmed: false,
+    lastEyeState: 'open',
+    closedFrames: 0,
+    lastBlinkAt: 0
+  });
 
   // ✅ цель позиции рамки (target) + текущая (smooth)
   const frameTargetRef = useRef({ cx: 0, cy: 0, size: 256, hasFace: false });
@@ -29,6 +52,7 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
 
   const [isScanning, setIsScanning] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isLivenessConfirmed, setIsLivenessConfirmed] = useState(false);
   const [currentStudent, setCurrentStudent] = useState(null);
   const [scanProgress, setScanProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -124,6 +148,8 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
       frameTargetRef.current.hasFace = false;
       frameSmoothRef.current.hasFace = false;
       faceBoxRef.current.hasFace = false;
+      livenessRef.current.lastEyeState = 'open';
+      livenessRef.current.closedFrames = 0;
     } catch (e) {
       console.warn('stopFaceMesh error:', e);
     }
@@ -213,7 +239,36 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
         if (!face || w <= 1 || h <= 1) {
           frameTargetRef.current.hasFace = false;
           faceBoxRef.current.hasFace = false;
+          livenessRef.current.lastEyeState = 'open';
+          livenessRef.current.closedFrames = 0;
           return;
+        }
+
+        if (!livenessRef.current.confirmed) {
+          const leftEAR = computeEAR(face, LEFT_EYE_IDX);
+          const rightEAR = computeEAR(face, RIGHT_EYE_IDX);
+          if (leftEAR !== null && rightEAR !== null) {
+            const ear = (leftEAR + rightEAR) / 2;
+            const now = performance.now();
+
+            if (ear < BLINK_EAR_CLOSED) {
+              livenessRef.current.closedFrames += 1;
+              livenessRef.current.lastEyeState = 'closed';
+            } else if (ear > BLINK_EAR_OPEN) {
+              if (
+                livenessRef.current.lastEyeState === 'closed' &&
+                livenessRef.current.closedFrames >= BLINK_MIN_CLOSED_FRAMES &&
+                now - livenessRef.current.lastBlinkAt > BLINK_COOLDOWN_MS
+              ) {
+                livenessRef.current.lastBlinkAt = now;
+                livenessRef.current.confirmed = true;
+                setIsLivenessConfirmed(true);
+                setScanNotice({ type: 'success', text: 'Проверка живости пройдена. Можно распознавать лицо.' });
+              }
+              livenessRef.current.lastEyeState = 'open';
+              livenessRef.current.closedFrames = 0;
+            }
+          }
         }
 
         // ✅ Bounding box лица по landmarks (normalized 0..1)
@@ -411,6 +466,14 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
     if (!isCameraActive) {
       await startCamera();
     }
+    setIsLivenessConfirmed(false);
+    livenessRef.current = {
+      confirmed: false,
+      lastEyeState: 'open',
+      closedFrames: 0,
+      lastBlinkAt: 0
+    };
+    setScanNotice({ type: 'info', text: 'Пожалуйста, моргните для проверки живости.' });
     setIsScanning(true);
   };
 
@@ -420,6 +483,13 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
     setCurrentStudent(null);
     setIsProcessing(false);
     setScanNotice(null);
+    setIsLivenessConfirmed(false);
+    livenessRef.current = {
+      confirmed: false,
+      lastEyeState: 'open',
+      closedFrames: 0,
+      lastBlinkAt: 0
+    };
     stopFaceMesh();
     stopCamera();
   };
@@ -456,6 +526,10 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
   // Распознавание через AI
   const simulateFaceRecognition = async () => {
     if (!isScanning || isProcessing) return;
+    if (!isLivenessConfirmed) {
+      setScanNotice({ type: 'info', text: 'Для проверки моргните в камеру перед распознаванием.' });
+      return;
+    }
 
     setIsProcessing(true);
     setScanProgress(0);
@@ -609,6 +683,7 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
           canvasRef={canvasRef}
           isCameraActive={isCameraActive}
           isScanning={isScanning}
+          isLivenessConfirmed={isLivenessConfirmed}
           scanFrame={scanFrame}
           isProcessing={isProcessing}
           scanProgress={scanProgress}

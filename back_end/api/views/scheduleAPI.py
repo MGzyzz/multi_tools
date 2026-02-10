@@ -30,7 +30,8 @@ class ScheduleListAPI(APIView):
         schedules = Schedule.objects.all().filter(teacher=teacher, date=date.today())
         # Не забудь добавить фильтрацию по дате, когда фронт будет готов к этому
         serializer = ScheduleSerializer(schedules, many=True)
-        cache.set(cache_key, serializer.data, timeout=300)  # Кэшируем на 5 минут
+        cache.set(cache_key, serializer.data, timeout=60)  # Кэшируем на 5 минут
+        # TODO: Поменяй потом на 300 секунд значения
         return Response(serializer.data)
 
 

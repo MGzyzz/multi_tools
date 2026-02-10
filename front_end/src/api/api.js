@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Основной url бэк-энд
-const back_url = "https://b1a0253e3170.ngrok-free.app"
+const back_url = "https://45f37caba858.ngrok-free.app"
 
 
 const DEBUG = true;
