@@ -8,6 +8,7 @@ const AttendanceCamera = ({
   canvasRef,
   isCameraActive,
   isScanning,
+  isLivenessConfirmed,
   scanFrame,
   isProcessing,
   scanProgress,
@@ -122,23 +123,30 @@ const AttendanceCamera = ({
           </button>
         ) : (
           <>
-            <button
-              onClick={onSimulateRecognition}
-              disabled={isProcessing}
-              className={`flex-1 flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-semibold cursor-pointer transition-all duration-300 ${isProcessing
+          <button
+            onClick={onSimulateRecognition}
+            disabled={isProcessing || !isLivenessConfirmed}
+            className={`flex-1 flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-semibold cursor-pointer transition-all duration-300 ${isProcessing
                 ? 'bg-gray-600 cursor-not-allowed'
-                : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105'
+                : !isLivenessConfirmed
+                  ? 'bg-gray-600 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105'
                 } text-white shadow-lg`}
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Распознавание...</span>
-                </>
-              ) : (
-                <>
-                  <Scan className="w-5 h-5" />
-                  <span>Распознать лицо</span>
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Распознавание...</span>
+              </>
+            ) : !isLivenessConfirmed ? (
+              <>
+                <Scan className="w-5 h-5" />
+                <span>Моргните для проверки</span>
+              </>
+            ) : (
+              <>
+                <Scan className="w-5 h-5" />
+                <span>Распознать лицо</span>
                 </>
               )}
             </button>
@@ -159,9 +167,13 @@ const AttendanceCamera = ({
               ? isDark
                 ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
                 : 'border-emerald-200 bg-emerald-50 text-emerald-700'
-              : isDark
-                ? 'border-red-500/40 bg-red-500/10 text-red-300'
-                : 'border-red-200 bg-red-50 text-red-700'
+              : notice.type === 'info'
+                ? isDark
+                  ? 'border-blue-500/40 bg-blue-500/10 text-blue-300'
+                  : 'border-blue-200 bg-blue-50 text-blue-700'
+                : isDark
+                  ? 'border-red-500/40 bg-red-500/10 text-red-300'
+                  : 'border-red-200 bg-red-50 text-red-700'
           }`}
         >
           {notice.text}
