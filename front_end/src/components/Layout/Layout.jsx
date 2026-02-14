@@ -14,6 +14,7 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
   });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const isDark = theme === 'dark';
 
@@ -57,16 +58,44 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
     if (onLogout) onLogout();
   };
 
+  const notifications = [
+    {
+      id: 'schedule-1',
+      title: 'Перенос занятия',
+      detail: 'Группа ИС-301: пара по Алгоритмам с 12:10 перенесена на 14:00, аудитория 312.',
+      time: 'Сегодня, 09:25',
+      isRead: false
+    },
+    {
+      id: 'schedule-2',
+      title: 'Замена аудитории',
+      detail: 'Группа ИС-202: 15:30 → 15:30, аудитория 404 вместо 402.',
+      time: 'Вчера, 18:10',
+      isRead: false
+    },
+    {
+      id: 'schedule-3',
+      title: 'Отмена занятия',
+      detail: 'Группа ИС-303: пара 11:00 отменена, перенос согласовывается.',
+      time: '12 фев, 13:40',
+      isRead: true
+    }
+  ];
+  const unreadCount = notifications.filter((item) => !item.isRead).length;
+
   // Закрытие dropdown при клике вне его
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (isProfileOpen && !e.target.closest('.profile-dropdown')) {
         setIsProfileOpen(false);
       }
+      if (isNotificationsOpen && !e.target.closest('.notifications-dropdown')) {
+        setIsNotificationsOpen(false);
+      }
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, [isProfileOpen]);
+  }, [isProfileOpen, isNotificationsOpen]);
 
   useEffect(() => {
     const cached = JSON.parse(localStorage.getItem("user") || "null");
@@ -218,10 +247,103 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
               </button>
 
               {/* Notifications */}
-              <button className={`p-2 rounded-xl cursor-pointer transition-all duration-300 ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'} relative`}>
-                <Bell className={`w-5 h-5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`} />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
+              <div className="relative notifications-dropdown">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsNotificationsOpen((prev) => !prev);
+                  }}
+                  className={`p-2 rounded-xl cursor-pointer transition-all duration-300 ${
+                    isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
+                  } relative`}
+                  aria-haspopup="dialog"
+                  aria-expanded={isNotificationsOpen}
+                >
+                  <Bell className={`w-5 h-5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-blue-500 text-white text-[10px] font-bold flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+                {isNotificationsOpen && (
+                  <div
+                    role="dialog"
+                    aria-label="Уведомления"
+                    className={`absolute right-0 mt-3 w-[min(90vw,360px)] rounded-2xl border shadow-2xl overflow-hidden z-50 ${
+                      isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
+                    }`}
+                  >
+                    <div
+                      className={`px-4 py-4 border-b ${
+                        isDark ? 'border-gray-700/50' : 'border-gray-200'
+                      }`}
+                    >
+                      <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        Уведомления
+                      </h3>
+                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Изменения расписания
+                      </p>
+                    </div>
+                    <div className="max-h-80 overflow-y-auto p-4 space-y-3">
+                      {notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`rounded-xl border p-3 transition ${
+                            notification.isRead
+                              ? isDark
+                                ? 'border-gray-700 bg-gray-800/40'
+                                : 'border-gray-200 bg-gray-50'
+                              : isDark
+                                ? 'border-blue-500/40 bg-blue-500/10'
+                                : 'border-blue-200 bg-blue-50'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <span
+                              className={`mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                                notification.isRead
+                                  ? isDark
+                                    ? 'bg-gray-600'
+                                    : 'bg-gray-300'
+                                  : 'bg-blue-500'
+                              }`}
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between gap-3">
+                                <h4 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                  {notification.title}
+                                </h4>
+                                <span className={`text-xs whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  {notification.time}
+                                </span>
+                              </div>
+                              <p className={`text-xs mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                {notification.detail}
+                              </p>
+                              <span
+                                className={`mt-3 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${
+                                  notification.isRead
+                                    ? isDark
+                                      ? 'border-gray-600 text-gray-400 bg-gray-800'
+                                      : 'border-gray-200 text-gray-500 bg-white'
+                                    : isDark
+                                      ? 'border-blue-400/40 text-blue-300 bg-blue-500/10'
+                                      : 'border-blue-200 text-blue-700 bg-blue-100'
+                                }`}
+                              >
+                                {notification.isRead ? 'Прочитано' : 'Непрочитано'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Profile Dropdown */}
               <div className="relative profile-dropdown">
@@ -309,6 +431,7 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
           {children}
         </main>
       </div>
+
     </div>
   );
 };
