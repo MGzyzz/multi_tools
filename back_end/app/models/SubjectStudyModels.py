@@ -3,7 +3,7 @@ from django.db import models
 
 from accounts.models import TeacherProfile
 
-from .GroupModels import Group
+from .groupModels import Group
 
 
 class Subject_study(models.Model):
