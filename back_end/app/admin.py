@@ -6,6 +6,7 @@ from .models import (
     Attendance,
     AttendanceStat,
     Group,
+    NotificationModels,
     Schedule,
     Student,
     StudentFaceImage,
@@ -83,6 +84,13 @@ class SubjectStudyAdmin(admin.ModelAdmin):
     ordering = ("name",)
 
 
+class NotificationModelsAdmin(admin.ModelAdmin):
+    list_display = ("id", "title", "message", "created_at")
+    search_fields = ("title",)
+    list_filter = ("created_at",)
+    ordering = ("-created_at",)
+
+
 admin.site.register(Student, StudentAdmin)
 admin.site.register(StudentFaceImage)
 admin.site.register(Group, GroupAdmin)
@@ -90,3 +98,4 @@ admin.site.register(Schedule, ScheduleAdmin)
 admin.site.register(Attendance, AttendanceAdmin)
 admin.site.register(AttendanceStat, AttendanceStatAdmin)
 admin.site.register(Subject_study, SubjectStudyAdmin)
+admin.site.register(NotificationModels, NotificationModelsAdmin)
