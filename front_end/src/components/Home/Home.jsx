@@ -65,12 +65,6 @@ const Home = ({ isDark = true }) => {
     // Фильтруем только сегодняшние занятия
     const todaySchedule = (schedule || []).filter(item => {
       const itemDate = item?.date;
-      console.log('🔍 Проверка:', {
-        itemDate,
-        today,
-        match: itemDate === today,
-        group: item?.group?.name
-      });
       return itemDate === today;
     });
 
@@ -88,7 +82,8 @@ const Home = ({ isDark = true }) => {
         const students = item?.group?.students || [];
         return {
           id: item?.id,
-          group: item?.group?.name ?? '-',
+          // group: item?.group?.name ?? '-',
+          subject_name: item?.subject_name ?? '-',
           time: toHHMM(item?.time ?? '00:00:00'),
           present: 0,
           total: students.length,
@@ -211,7 +206,7 @@ const Home = ({ isDark = true }) => {
                         />
                         <div>
                           <p className={`text-sm sm:text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            {session.group}
+                            {session.subject_name}
                           </p>
                           <div className="flex flex-wrap items-center gap-2 mt-1">
                             <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700/60 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>
