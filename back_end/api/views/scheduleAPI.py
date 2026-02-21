@@ -27,10 +27,13 @@ class ScheduleListAPI(APIView):
             return Response(cached_data, status=status.HTTP_200_OK)
         print("Fetching schedule data from database")
 
-        schedules = Schedule.objects.all().filter(teacher=teacher, date=date.today())
+        schedules = Schedule.objects.select_related("subject").filter(
+            teacher=teacher, date=date.today()
+        )
         # Не забудь добавить фильтрацию по дате, когда фронт будет готов к этому
         serializer = ScheduleSerializer(schedules, many=True)
-        cache.set(cache_key, serializer.data, timeout=60)  # Кэшируем на 5 минут
+        print(serializer.data)
+        cache.set(cache_key, serializer.data, timeout=10)  # Кэшируем на 5 минут
         # TODO: Поменяй потом на 300 секунд значения
         return Response(serializer.data)
 

@@ -1,10 +1,9 @@
 import axios from "axios";
 
 // Основной url бэк-энд
-const back_url = "https://45f37caba858.ngrok-free.app"
+const back_url = import.meta.env.VITE_NGROK_PATH
 
-
-const DEBUG = true;
+const DEBUG = import.meta.env.VITE_DEBUG
 const api = axios.create({
   baseURL: DEBUG ? "http://127.0.0.1:8000" : back_url,
   headers: {

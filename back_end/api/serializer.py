@@ -118,6 +118,7 @@ class ScheduleSerializer(ModelSerializer):
     subject_id = serializers.PrimaryKeyRelatedField(
         queryset=Subject_study.objects.all(), source="subject", write_only=True
     )
+    subject_name = serializers.CharField(source="subject.name", read_only=True)
 
     class Meta:
         model = Schedule
