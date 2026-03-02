@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "telegram-bot-service"
+version = "0.1.0"
+description = "Standalone Telegram bot service powered by FastAPI"
+authors = ["Madi <madi_gaziz@mail.ru>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115.12"
+uvicorn = "^0.34.1"
+aiogram = "^3.20.0"
+python-dotenv = "^1.1.0"
+pydantic-settings = "^2.10.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

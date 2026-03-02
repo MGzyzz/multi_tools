@@ -1,11 +1,13 @@
-from .AttendanceModels import Attendance
-from .AttendanceStatModels import AttendanceStat
-
-# from .GradeModels import Grade
-from .GroupModels import Group
-from .ScheduleModels import Schedule
-from .StudentModels import Student, StudentFaceImage
-from .SubjectStudyModels import Subject_study
+# from .gradeModels import Grade
+from .groupModels import Group
+from .notificationDeliveryModels import NotificationDelivery
+from .notificationModels import NotificationModels
+from .notificationPreferenceModels import NotificationPreference
+from .scheduleModels import Schedule
+from .studentModels import Student, StudentFaceImage
+from .subjectStudyModels import Subject_study
+from .аttendanceModels import Attendance
+from .аttendanceStatModels import AttendanceStat
 
 __all__ = [
     "Attendance",
@@ -16,4 +18,7 @@ __all__ = [
     "Student",
     "StudentFaceImage",
     "Subject_study",
+    "NotificationModels",
+    "NotificationPreference",
+    "NotificationDelivery",
 ]

@@ -13,6 +13,12 @@ from .groupAPI import (
     GroupListAPI,
     GroupStudentAPI,
 )
+from .notificationAPI import (
+    NotificationListAPI,
+    NotificationMarkReadAPI,
+    StudentNotificationListAPI,
+    StudentNotificationPreferenceAPI,
+)
 from .profileAPI import EditProfileAPI, ProfileAPI
 from .scheduleAPI import (
     GetScheduleGroupId,
@@ -45,9 +51,13 @@ __all__ = [
     "GroupStudentAPI",
     "IsTeacher",
     "MarkAttendanceAPIView",
+    "NotificationListAPI",
+    "NotificationMarkReadAPI",
     "ProfileAPI",
     "RecognizeStudentByFace",
     "ScheduleListAPI",
+    "StudentNotificationListAPI",
+    "StudentNotificationPreferenceAPI",
     "StudentListAPI",
     "UpdateStudentFaceEmbedding",
     "getStudentInformation",

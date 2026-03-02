@@ -4,7 +4,16 @@ from rest_framework.serializers import ModelSerializer
 
 from accounts.models import TeacherProfile, User
 from accounts.models._choices import RoleChoices
-from app.models import Attendance, Group, Schedule, Student, Subject_study
+from app.models import (
+    Attendance,
+    Group,
+    NotificationDelivery,
+    NotificationModels,
+    NotificationPreference,
+    Schedule,
+    Student,
+    Subject_study,
+)
 
 
 class GroupSerializer(ModelSerializer):
@@ -166,6 +175,55 @@ class ScheduleMiniSerializer(serializers.ModelSerializer):
 
     def get_subject(self, obj):
         return {"id": obj.subject_id, "name": obj.subject.name}
+
+
+class NotificationDeliverySerializer(ModelSerializer):
+    class Meta:
+        model = NotificationDelivery
+        fields = (
+            "id",
+            "channel",
+            "status",
+            "target",
+            "attempts",
+            "last_error",
+            "sent_at",
+            "provider_message_id",
+        )
+
+
+class NotificationSerializer(ModelSerializer):
+    deliveries = NotificationDeliverySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = NotificationModels
+        fields = (
+            "id",
+            "title",
+            "message",
+            "event_type",
+            "payload",
+            "is_read",
+            "readt_at",
+            "message_format",
+            "image",
+            "created_at",
+            "deliveries",
+        )
+
+
+class NotificationPreferenceSerializer(ModelSerializer):
+    class Meta:
+        model = NotificationPreference
+        fields = (
+            "enabled",
+            "allow_email",
+            "allow_telegram",
+            "threshold_percent",
+            "drop_delta_percent",
+            "updated_at",
+        )
+        read_only_fields = ("updated_at",)
 
 
 class TeacherProfileSerializer(ModelSerializer):
