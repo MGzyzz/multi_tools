@@ -12,6 +12,8 @@ certifi==2025.1.31
 charset-normalizer==3.4.1
 click==8.1.8
 Django==5.2
+channels==4.2.2
+channels-redis==4.2.1
 django-cors-headers==4.7.0
 django-rest-framework==0.1.0
 djangorestframework==3.16.0
@@ -43,4 +45,5 @@ typing_extensions==4.13.2
 uritemplate==4.1.1
 urllib3==2.4.0
 uvicorn==0.34.1
+websockets==13.1
 yarl==1.19.0

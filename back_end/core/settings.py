@@ -42,6 +42,8 @@ NGROK_DOMAIN = "394610267b27"
 NGROK_URL = f"{STANDART_URL}{NGROK_DOMAIN}.ngrok-free.app"
 
 AI_SERVICE_URL = os.getenv("AI_SERVICE_URL", "http://localhost:8002")
+BOT_SERVICE_URL = os.getenv("BOT_SERVICE_URL", "http://localhost:8001")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@example.com")
 FACE_RECOGNITION_THRESHOLD = float(os.getenv("FACE_RECOGNITION_THRESHOLD", "0.7"))
 FACE_IMAGE_LIMIT = int(os.getenv("FACE_IMAGE_LIMIT", "5"))
 
@@ -65,6 +67,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "channels",
     "drf_yasg",
     "corsheaders",
     "rest_framework",
@@ -130,6 +133,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "core.wsgi.application"
+ASGI_APPLICATION = "core.asgi.application"
 
 
 # Database
@@ -247,3 +251,28 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
 CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_BEAT_SCHEDULE = {
+    "enqueue-pending-notification-deliveries": {
+        "task": "enqueue_pending_notification_deliveries",
+        "schedule": 60.0,
+        "kwargs": {"limit": 200},
+    },
+}
+
+CHANNEL_LAYER_BACKEND = os.getenv("CHANNEL_LAYER_BACKEND", "inmemory").lower()
+if CHANNEL_LAYER_BACKEND == "redis":
+    CHANNEL_REDIS_URL = os.getenv("CHANNEL_REDIS_URL", "redis://127.0.0.1:6379/0")
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [CHANNEL_REDIS_URL],
+            },
+        }
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        }
+    }

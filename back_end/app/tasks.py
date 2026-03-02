@@ -1,7 +1,17 @@
+import logging
+import os
+
+import requests
 from celery import shared_task
+from django.conf import settings
+from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Count, Q
 from django.utils import timezone
+
+from app.models._choices import NotificationDeliveryChoices, NotificationStatusChoices
+
+logger = logging.getLogger(__name__)
 
 
 # Данная задача предназначена для тестирования работы Celery.
@@ -104,3 +114,102 @@ def reconcile_attendance_stats():
         "updated": len(to_update),
         "deleted_orphans": len(orphan_keys) if keys else 0,
     }
+
+
+@shared_task(name="process_notification_delivery")
+def process_notification_delivery(delivery_id: int) -> dict:
+    from app.models import NotificationDelivery
+
+    try:
+        delivery = NotificationDelivery.objects.select_related("notification").get(id=delivery_id)
+    except NotificationDelivery.DoesNotExist:
+        return {"delivery_id": delivery_id, "status": "missing"}
+
+    if delivery.status == NotificationStatusChoices.SENT:
+        return {"delivery_id": delivery_id, "status": "already_sent"}
+
+    attempt_number = delivery.attempts + 1
+
+    try:
+        provider_message_id: str | None = None
+        if delivery.channel == NotificationDeliveryChoices.IN_APP:
+            provider_message_id = f"in_app:{delivery.notification_id}:{delivery.id}"
+        elif delivery.channel == NotificationDeliveryChoices.EMAIL:
+            _send_delivery_email(
+                delivery.target, delivery.notification.title, delivery.notification.message
+            )
+        elif delivery.channel == NotificationDeliveryChoices.TELEGRAM:
+            provider_message_id = _send_delivery_telegram(
+                delivery.target, delivery.notification.message
+            )
+        else:
+            raise ValueError(f"Unsupported delivery channel: {delivery.channel}")
+
+        delivery.status = NotificationStatusChoices.SENT
+        delivery.sent_at = timezone.now()
+        delivery.provider_message_id = provider_message_id
+        delivery.last_error = None
+        delivery.attempts = attempt_number
+        delivery.save(
+            update_fields=["status", "sent_at", "provider_message_id", "last_error", "attempts"]
+        )
+        return {"delivery_id": delivery_id, "status": "sent"}
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Notification delivery failed: delivery_id=%s", delivery_id)
+        delivery.status = NotificationStatusChoices.FAILED
+        delivery.attempts = attempt_number
+        delivery.last_error = str(exc)
+        delivery.save(update_fields=["status", "attempts", "last_error"])
+        return {"delivery_id": delivery_id, "status": "failed", "error": str(exc)}
+
+
+@shared_task(name="enqueue_pending_notification_deliveries")
+def enqueue_pending_notification_deliveries(limit: int = 200) -> dict:
+    from app.models import NotificationDelivery
+
+    with transaction.atomic():
+        pending_ids = list(
+            NotificationDelivery.objects.filter(status=NotificationStatusChoices.PENDING)
+            .order_by("id")
+            .values_list("id", flat=True)[:limit]
+        )
+
+    for delivery_id in pending_ids:
+        process_notification_delivery.delay(delivery_id)
+
+    return {"enqueued": len(pending_ids), "limit": limit}
+
+
+def _send_delivery_email(target: str | None, subject: str, message: str) -> None:
+    if not target:
+        raise ValueError("Missing email target.")
+
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@example.com")
+    send_mail(
+        subject=subject,
+        message=message,
+        from_email=from_email,
+        recipient_list=[target],
+        fail_silently=False,
+    )
+
+
+def _send_delivery_telegram(target: str | None, message: str) -> str | None:
+    if not target:
+        raise ValueError("Missing telegram target.")
+
+    bot_service_url = getattr(
+        settings, "BOT_SERVICE_URL", os.getenv("BOT_SERVICE_URL", "http://localhost:8001")
+    )
+    response = requests.post(
+        f"{bot_service_url}/send_message_thread_bot",
+        json={"chat_id": target, "message": message},
+        timeout=5,
+    )
+    response.raise_for_status()
+    payload = response.json() if response.content else {}
+    return (
+        str(payload.get("message_id"))
+        if isinstance(payload, dict) and payload.get("message_id")
+        else None
+    )

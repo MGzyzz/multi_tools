@@ -19,10 +19,14 @@ from .views import (
     GroupListAPI,
     GroupStudentAPI,
     MarkAttendanceAPIView,
+    NotificationListAPI,
+    NotificationMarkReadAPI,
     ProfileAPI,
     RecognizeStudentByFace,
     ScheduleListAPI,
     StudentListAPI,
+    StudentNotificationListAPI,
+    StudentNotificationPreferenceAPI,
     UpdateStudentFaceEmbedding,
     getStudentInformation,
 )
@@ -98,6 +102,23 @@ urlpatterns = [
         "get_schedule_group_id/<int:pk>/",
         GetScheduleGroupId.as_view(),
         name="schedule_group_id",
+    ),
+    # === NOTIFICATIONS ===
+    path("notifications/", NotificationListAPI.as_view(), name="notifications_list"),
+    path(
+        "notifications/<int:notification_id>/read/",
+        NotificationMarkReadAPI.as_view(),
+        name="notifications_mark_read",
+    ),
+    path(
+        "students/<int:student_id>/notifications/",
+        StudentNotificationListAPI.as_view(),
+        name="student_notifications_list",
+    ),
+    path(
+        "students/<int:student_id>/notification-preference/",
+        StudentNotificationPreferenceAPI.as_view(),
+        name="student_notification_preference",
     ),
     # === ANALYTICS ===
     # path('analytics/summary/', AnalyticsAPI.as_view(), name='analytics_data'),

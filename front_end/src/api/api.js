@@ -1,11 +1,19 @@
 import axios from "axios";
 
 // Основной url бэк-энд
-const back_url = import.meta.env.VITE_NGROK_PATH
+const back_url = import.meta.env.VITE_NGROK_PATH;
+const toBoolean = (value) => String(value).toLowerCase() === "true";
+const DEBUG = toBoolean(import.meta.env.VITE_DEBUG);
+const DEFAULT_LOCAL_BACKEND = "http://127.0.0.1:8000";
 
-const DEBUG = import.meta.env.VITE_DEBUG
+const resolveBackendBaseUrl = () => {
+  if (DEBUG) return DEFAULT_LOCAL_BACKEND;
+  if (back_url) return back_url;
+  return DEFAULT_LOCAL_BACKEND;
+};
+
 const api = axios.create({
-  baseURL: DEBUG ? "http://127.0.0.1:8000" : back_url,
+  baseURL: resolveBackendBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
     "ngrok-skip-browser-warning": "true",
@@ -46,7 +54,7 @@ api.interceptors.response.use(
         }
 
         // Пытаемся обновить токен
-        const response = await axios.post('http://127.0.0.1:8000/api/token/refresh/', {
+        const response = await axios.post(`${resolveBackendBaseUrl()}/api/token/refresh/`, {
           refresh: refreshToken
         });
 

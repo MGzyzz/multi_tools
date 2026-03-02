@@ -1,6 +1,8 @@
-# from .GradeModels import Grade
+# from .gradeModels import Grade
 from .groupModels import Group
+from .notificationDeliveryModels import NotificationDelivery
 from .notificationModels import NotificationModels
+from .notificationPreferenceModels import NotificationPreference
 from .scheduleModels import Schedule
 from .studentModels import Student, StudentFaceImage
 from .subjectStudyModels import Subject_study
@@ -17,4 +19,6 @@ __all__ = [
     "StudentFaceImage",
     "Subject_study",
     "NotificationModels",
+    "NotificationPreference",
+    "NotificationDelivery",
 ]

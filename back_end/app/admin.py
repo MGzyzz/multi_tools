@@ -6,7 +6,9 @@ from .models import (
     Attendance,
     AttendanceStat,
     Group,
+    NotificationDelivery,
     NotificationModels,
+    NotificationPreference,
     Schedule,
     Student,
     StudentFaceImage,
@@ -91,6 +93,29 @@ class NotificationModelsAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
 
 
+class NotificationPreferenceAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "student",
+        "enabled",
+        "allow_email",
+        "allow_telegram",
+        "threshold_percent",
+        "drop_delta_percent",
+        "updated_at",
+    )
+    search_fields = ("student__first_name", "student__last_name", "student__email")
+    list_filter = ("enabled", "allow_email", "allow_telegram")
+    ordering = ("-updated_at",)
+
+
+class NotificationDeliveryAdmin(admin.ModelAdmin):
+    list_display = ("id", "notification", "channel", "status", "target", "attempts", "sent_at")
+    search_fields = ("notification__title", "target", "provider_message_id")
+    list_filter = ("channel", "status")
+    ordering = ("-id",)
+
+
 admin.site.register(Student, StudentAdmin)
 admin.site.register(StudentFaceImage)
 admin.site.register(Group, GroupAdmin)
@@ -99,3 +124,5 @@ admin.site.register(Attendance, AttendanceAdmin)
 admin.site.register(AttendanceStat, AttendanceStatAdmin)
 admin.site.register(Subject_study, SubjectStudyAdmin)
 admin.site.register(NotificationModels, NotificationModelsAdmin)
+admin.site.register(NotificationPreference, NotificationPreferenceAdmin)
+admin.site.register(NotificationDelivery, NotificationDeliveryAdmin)

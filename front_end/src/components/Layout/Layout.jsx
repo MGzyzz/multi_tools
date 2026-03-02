@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Moon, Sun, Scan, Home, Users, BarChart3, Settings,
   LogOut, User, ChevronLeft, ChevronRight, Menu, X, Bell
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getUserProfile } from '../../api/authAPI';
+import {
+  connectTeacherNotificationsWS,
+  getTeacherNotifications,
+  markTeacherNotificationRead,
+} from '../../api/notificationAPI';
 
 
 const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onNavigate }) => {
@@ -15,6 +20,10 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [isNotificationsLoading, setIsNotificationsLoading] = useState(false);
+  const wsRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
 
   const isDark = theme === 'dark';
 
@@ -58,30 +67,125 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
     if (onLogout) onLogout();
   };
 
-  const notifications = [
-    {
-      id: 'schedule-1',
-      title: 'Перенос занятия',
-      detail: 'Группа ИС-301: пара по Алгоритмам с 12:10 перенесена на 14:00, аудитория 312.',
-      time: 'Сегодня, 09:25',
-      isRead: false
-    },
-    {
-      id: 'schedule-2',
-      title: 'Замена аудитории',
-      detail: 'Группа ИС-202: 15:30 → 15:30, аудитория 404 вместо 402.',
-      time: 'Вчера, 18:10',
-      isRead: false
-    },
-    {
-      id: 'schedule-3',
-      title: 'Отмена занятия',
-      detail: 'Группа ИС-303: пара 11:00 отменена, перенос согласовывается.',
-      time: '12 фев, 13:40',
-      isRead: true
+  const normalizeNotification = useCallback((rawNotification) => {
+    if (!rawNotification) return null;
+
+    // Поддерживаем оба формата сообщения: готовый notification и envelope с payload.
+    const candidate =
+      rawNotification?.payload && rawNotification?.id == null
+        ? rawNotification.payload
+        : rawNotification;
+
+    const id = Number(candidate?.id);
+    if (!Number.isFinite(id)) return null;
+
+    return {
+      ...candidate,
+      id,
+      is_read: candidate?.is_read === true,
+      created_at: candidate?.created_at || new Date().toISOString(),
+    };
+  }, []);
+
+  const unreadCount = useMemo(
+    () => notifications.filter((item) => item?.is_read !== true).length,
+    [notifications]
+  );
+
+  const formatNotificationTime = (isoDateString) => {
+    if (!isoDateString) return '—';
+    const date = new Date(isoDateString);
+    if (Number.isNaN(date.getTime())) return '—';
+
+    return new Intl.DateTimeFormat('ru-RU', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  };
+
+  const upsertNotification = useCallback((incomingNotification) => {
+    const normalizedNotification = normalizeNotification(incomingNotification);
+    if (!normalizedNotification) return;
+
+    setNotifications((prev) => {
+      const exists = prev.some((item) => item.id === normalizedNotification.id);
+      const next = exists
+        ? prev.map((item) =>
+            item.id === normalizedNotification.id ? { ...item, ...normalizedNotification } : item
+          )
+        : [normalizedNotification, ...prev];
+
+      next.sort((a, b) => {
+        const first = new Date(a.created_at || 0).getTime();
+        const second = new Date(b.created_at || 0).getTime();
+        return second - first;
+      });
+
+      return next.slice(0, 30);
+    });
+  }, [normalizeNotification]);
+
+  const loadNotifications = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
+      setIsNotificationsLoading(true);
     }
-  ];
-  const unreadCount = notifications.filter((item) => !item.isRead).length;
+    try {
+      const data = await getTeacherNotifications({ limit: 30 });
+      const normalizedNotifications = Array.isArray(data)
+        ? data
+            .map((item) => normalizeNotification(item))
+            .filter(Boolean)
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .slice(0, 30)
+        : [];
+
+      setNotifications(normalizedNotifications);
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
+      if (!silent) {
+        setNotifications([]);
+      }
+    } finally {
+      if (!silent) {
+        setIsNotificationsLoading(false);
+      }
+    }
+  }, [normalizeNotification]);
+
+  const handleNotificationClick = async (notification) => {
+    if (!notification || notification.is_read) return;
+
+    setNotifications((prev) =>
+      prev.map((item) =>
+        item.id === notification.id
+          ? {
+              ...item,
+              is_read: true,
+              readt_at: item.readt_at || new Date().toISOString(),
+            }
+          : item
+      )
+    );
+
+    try {
+      await markTeacherNotificationRead(notification.id);
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+      setNotifications((prev) =>
+        prev.map((item) =>
+          item.id === notification.id
+            ? {
+                ...item,
+                is_read: false,
+                readt_at: null,
+              }
+            : item
+        )
+      );
+    }
+  };
 
   // Закрытие dropdown при клике вне его
   useEffect(() => {
@@ -107,6 +211,61 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
         console.error("Failed to fetch user:", err);
       });
   }, []);
+
+  useEffect(() => {
+    loadNotifications({ silent: false });
+    const interval = setInterval(loadNotifications, 60000);
+    return () => clearInterval(interval);
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    let isUnmounted = false;
+
+    const connect = () => {
+      if (isUnmounted) return;
+
+      const socket = connectTeacherNotificationsWS({
+        onMessage: (message) => {
+          upsertNotification(message);
+          // После websocket-события синхронизируем список из API,
+          // чтобы счётчик непрочитанных всегда совпадал с backend.
+          loadNotifications({ silent: true });
+        },
+        onClose: () => {
+          wsRef.current = null;
+          if (isUnmounted) return;
+          reconnectTimeoutRef.current = setTimeout(connect, 3000);
+        },
+        onError: (error) => {
+          console.error('Notification WebSocket error:', error);
+        },
+      });
+
+      if (!socket) return;
+      wsRef.current = socket;
+    };
+
+    connect();
+
+    return () => {
+      isUnmounted = true;
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [loadNotifications, upsertNotification]);
+
+  // Фоновая синхронизация: обновляем счётчик без клика даже если ws-событие пропущено.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadNotifications({ silent: true });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [loadNotifications]);
 
 
   return (
@@ -252,7 +411,13 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setIsNotificationsOpen((prev) => !prev);
+                    setIsNotificationsOpen((prev) => {
+                      const next = !prev;
+                      if (next) {
+                        loadNotifications();
+                      }
+                      return next;
+                    });
                   }}
                   className={`p-2 rounded-xl cursor-pointer transition-all duration-300 ${
                     isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
@@ -288,11 +453,23 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
                       </p>
                     </div>
                     <div className="max-h-80 overflow-y-auto p-4 space-y-3">
-                      {notifications.map((notification) => (
+                      {isNotificationsLoading && (
+                        <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Загрузка уведомлений...
+                        </div>
+                      )}
+
+                      {!isNotificationsLoading && notifications.length === 0 && (
+                        <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Пока нет уведомлений.
+                        </div>
+                      )}
+
+                      {!isNotificationsLoading && notifications.map((notification) => (
                         <div
                           key={notification.id}
-                          className={`rounded-xl border p-3 transition ${
-                            notification.isRead
+                          className={`rounded-xl border p-3 transition cursor-pointer ${
+                            notification.is_read
                               ? isDark
                                 ? 'border-gray-700 bg-gray-800/40'
                                 : 'border-gray-200 bg-gray-50'
@@ -300,11 +477,12 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
                                 ? 'border-blue-500/40 bg-blue-500/10'
                                 : 'border-blue-200 bg-blue-50'
                           }`}
+                          onClick={() => handleNotificationClick(notification)}
                         >
                           <div className="flex items-start gap-3">
                             <span
                               className={`mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                                notification.isRead
+                                notification.is_read
                                   ? isDark
                                     ? 'bg-gray-600'
                                     : 'bg-gray-300'
@@ -317,15 +495,15 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
                                   {notification.title}
                                 </h4>
                                 <span className={`text-xs whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                  {notification.time}
+                                  {formatNotificationTime(notification.created_at)}
                                 </span>
                               </div>
                               <p className={`text-xs mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                                {notification.detail}
+                                {notification.message}
                               </p>
                               <span
                                 className={`mt-3 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${
-                                  notification.isRead
+                                  notification.is_read
                                     ? isDark
                                       ? 'border-gray-600 text-gray-400 bg-gray-800'
                                       : 'border-gray-200 text-gray-500 bg-white'
@@ -334,7 +512,7 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
                                       : 'border-blue-200 text-blue-700 bg-blue-100'
                                 }`}
                               >
-                                {notification.isRead ? 'Прочитано' : 'Непрочитано'}
+                                {notification.is_read ? 'Прочитано' : 'Непрочитано'}
                               </span>
                             </div>
                           </div>
