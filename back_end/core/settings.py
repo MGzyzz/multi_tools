@@ -36,8 +36,6 @@ DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
 CORS_ALLOW_ALL_METHODS = True
 
-CORS_ALLOW_ALL_ORIGINS = True
-
 STANDART_URL = "https://"
 
 NGROK_DOMAIN = "394610267b27"
@@ -52,11 +50,18 @@ FACE_IMAGE_LIMIT = int(os.getenv("FACE_IMAGE_LIMIT", "5"))
 
 CORS_ALLOWED_ORIGINS = [
     NGROK_URL,
+    *[
+        o.strip()
+        for o in os.getenv(
+            "CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
+        ).split(",")
+        if o.strip()
+    ],
 ]
 
-CORS_ALLOW_HEADERS = ["*"]
+CORS_ALLOW_HEADERS = ["Authorization", "Content-Type", "Accept"]
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 AUTH_USER_MODEL = "accounts.User"
 
