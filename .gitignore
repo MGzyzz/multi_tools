@@ -57,3 +57,4 @@ venv/
 **/db.sqlite3
 ai/ai/data/analytics
 back_end/media
+back_end/docs
