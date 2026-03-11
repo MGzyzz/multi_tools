@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/madi_gaziz/Desktop/alter_work/multi_tools/back_end/app/**)",
+      "Read(//Users/madi_gaziz/Desktop/alter_work/multi_tools/back_end/docs/superpowers/plans/**)"
+    ]
+  }
+}

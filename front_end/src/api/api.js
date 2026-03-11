@@ -2,14 +2,30 @@ import axios from "axios";
 
 // Основной url бэк-энд
 const back_url = import.meta.env.VITE_NGROK_PATH;
+const ai_url = import.meta.env.VITE_AI_PATH;
+const bot_url = import.meta.env.VITE_BOT_PATH;
 const toBoolean = (value) => String(value).toLowerCase() === "true";
 const DEBUG = toBoolean(import.meta.env.VITE_DEBUG);
 const DEFAULT_LOCAL_BACKEND = "http://127.0.0.1:8000";
+const DEFAULT_LOCAL_AI = "http://127.0.0.1:8002";
+const DEFAULT_LOCAL_BOT = "http://127.0.0.1:8001";
 
 const resolveBackendBaseUrl = () => {
   if (DEBUG) return DEFAULT_LOCAL_BACKEND;
   if (back_url) return back_url;
   return DEFAULT_LOCAL_BACKEND;
+};
+
+const resolveAiBaseUrl = () => {
+  if (DEBUG) return DEFAULT_LOCAL_AI;
+  if (ai_url) return ai_url;
+  return DEFAULT_LOCAL_AI;
+};
+
+const resolveBotBaseUrl = () => {
+  if (DEBUG) return DEFAULT_LOCAL_BOT;
+  if (bot_url) return bot_url;
+  return DEFAULT_LOCAL_BOT;
 };
 
 const api = axios.create({
@@ -79,5 +95,19 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const aiApi = axios.create({
+  baseURL: resolveAiBaseUrl(),
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
+
+export const botApi = axios.create({
+  baseURL: resolveBotBaseUrl(),
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
 
 export default api;

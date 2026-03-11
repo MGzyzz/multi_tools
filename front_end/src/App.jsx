@@ -3,7 +3,6 @@ import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-
 import Layout from './components/Layout/Layout'
 import Home from './components/Home/Home'
 import Attendance from './components/Attendance/Attendance'
-import AttendanceScanning from './components/Attendance/Attendance'
 import Tools from './components/Tools/Tools'
 import Auth from './components/Auth/Auth'
 import GroupManagement from './components/GroupManagement/GroupManagement'
@@ -11,6 +10,13 @@ import TeacherProfile from './components/TeacherProfile/TeacherProfile'
 import Analytics from './components/Analytics/Analytics'
 import { isAuthenticated, authLogout } from './api/authAPI'
 import './index.css'
+
+const ProtectedRoute = ({ children, authenticated }) => {
+  if (!authenticated) {
+    return <Navigate to="/login" replace />
+  }
+  return children
+}
 
 function App() {
   const navigate = useNavigate()
@@ -52,13 +58,6 @@ function App() {
     return 'home'
   }
 
-  const ProtectedRoute = ({ children }) => {
-    if (!authenticated) {
-      return <Navigate to="/login" replace />
-    }
-    return children
-  }
-
   return (
     <div className="min-h-screen">
       <Routes>
@@ -76,7 +75,7 @@ function App() {
         <Route
           path="/"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute authenticated={authenticated}>
               <Layout 
                 currentPage={getCurrentPage()} 
                 onLogout={handleLogout}
@@ -92,7 +91,7 @@ function App() {
         <Route
           path="/groups"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute authenticated={authenticated}>
               <Layout 
                 currentPage={getCurrentPage()} 
                 onLogout={handleLogout}
@@ -109,7 +108,7 @@ function App() {
         <Route
           path="/attendance/scan/:scheduleId"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute authenticated={authenticated}>
               <Layout 
                 currentPage={getCurrentPage()} 
                 onLogout={handleLogout}
@@ -117,7 +116,7 @@ function App() {
                 setTheme={setTheme}
                 onNavigate={(path) => navigate(path)}
               >
-                <AttendanceScanning isDark={theme === 'dark'}/>
+                <Attendance isDark={theme === 'dark'}/>
               </Layout>
             </ProtectedRoute>
           }
@@ -126,7 +125,7 @@ function App() {
         <Route
           path="/attendance/:scheduleId"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute authenticated={authenticated}>
               <Layout 
                 currentPage="attendance" 
                 onLogout={handleLogout}
@@ -143,7 +142,7 @@ function App() {
         <Route
           path="/tools"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute authenticated={authenticated}>
               <Layout 
                 currentPage={getCurrentPage()} 
                 onLogout={handleLogout}
@@ -160,7 +159,7 @@ function App() {
         <Route
           path="/teacher-profile"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute authenticated={authenticated}>
               <Layout 
                 currentPage={getCurrentPage()} 
                 onLogout={handleLogout}
@@ -177,7 +176,7 @@ function App() {
         <Route
           path="/analytics"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute authenticated={authenticated}>
               <Layout 
                 currentPage={getCurrentPage()} 
                 onLogout={handleLogout}
@@ -194,7 +193,7 @@ function App() {
         <Route
           path="/settings"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute authenticated={authenticated}>
               <Layout 
                 currentPage={getCurrentPage()} 
                 onLogout={handleLogout}

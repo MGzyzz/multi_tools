@@ -1,13 +1,11 @@
-import axios from 'axios';
-
+import api from './api';
 
 export const getAttendanceGroup = async (schedule_id) => {
     try {
-        const response = await axios.get(`http://localhost:8000/api/schedule_and_attendance/${schedule_id}/`);
-        console.log(response.data)
+        const response = await api.get(`/api/schedule_and_attendance/${schedule_id}/`);
         return response.data
     } catch (error) {
-        console.error('Error fetching students list:', error);
+        console.error('Error fetching attendance group:', error);
         throw error;
     }
 }
