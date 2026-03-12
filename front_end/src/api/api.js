@@ -81,3 +81,25 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+// AI-сервис (FastAPI, порт 8002), без auth
+const ai_url = import.meta.env.VITE_AI_PATH;
+const DEFAULT_LOCAL_AI = "http://127.0.0.1:8002";
+
+export const aiApi = axios.create({
+  baseURL: ai_url || DEFAULT_LOCAL_AI,
+  headers: {
+    "ngrok-skip-browser-warning": "true",
+  }
+});
+
+// Telegram-бот (порт 8001), без auth
+const bot_url = import.meta.env.VITE_BOT_PATH;
+const DEFAULT_LOCAL_BOT = "http://127.0.0.1:8001";
+
+export const botApi = axios.create({
+  baseURL: bot_url || DEFAULT_LOCAL_BOT,
+  headers: {
+    "ngrok-skip-browser-warning": "true",
+  }
+});
