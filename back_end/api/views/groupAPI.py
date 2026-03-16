@@ -111,8 +111,8 @@ class GetAllStudents(APIView):
         groups = Group.objects.filter(teacher=teacher).prefetch_related("students")
         all_student = []
 
-        cahce_key = f"students_by_teacher:{teacher.id}"
-        cached_data = cache.get(cahce_key)
+        cache_key = f"students_by_teacher:{teacher.id}"
+        cached_data = cache.get(cache_key)
 
         if cached_data is not None:
             logger.info("Returning data from cache for teacher %s", teacher.id)
@@ -125,7 +125,7 @@ class GetAllStudents(APIView):
             serializer = StudentSerializer(student, many=True)
             all_student.extend(serializer.data)
 
-        cache.set(cahce_key, all_student, timeout=120)
+        cache.set(cache_key, all_student, timeout=120)
         return Response(all_student, status=status.HTTP_200_OK)
 
 
