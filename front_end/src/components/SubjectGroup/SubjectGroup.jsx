@@ -11,14 +11,14 @@ const SubjectGroup = ({ groupId, groupName, isDark = false, onSelectSubject, sel
   const hasGroup = groupId && groupId !== 'all';
 
   useEffect(() => {
-    let mounted = true;
+    const controller = new AbortController();
 
     if (!hasGroup) {
       setSubjects([]);
       setIsLoading(false);
       setLoadError('');
       setSearchTerm('');
-      return () => { mounted = false; };
+      return () => controller.abort();
     }
 
     setSearchTerm('');
@@ -27,7 +27,7 @@ const SubjectGroup = ({ groupId, groupName, isDark = false, onSelectSubject, sel
       setIsLoading(true);
       setLoadError('');
       try {
-        const data = await getSubjectGroup(groupId);
+        const data = await getSubjectGroup(groupId, controller.signal);
         const list = Array.isArray(data?.results)
           ? data.results
           : Array.isArray(data)
@@ -40,19 +40,20 @@ const SubjectGroup = ({ groupId, groupName, isDark = false, onSelectSubject, sel
           description: subject.description ?? '',
         }));
 
-        if (!mounted) return;
+        if (controller.signal.aborted) return;
         setSubjects(normalized);
       } catch (error) {
+        if (error.name === 'CanceledError' || error.name === 'AbortError') return;
         console.error('Ошибка загрузки предметов:', error);
-        if (!mounted) return;
+        if (controller.signal.aborted) return;
         setSubjects([]);
         setLoadError('Не удалось загрузить предметы.');
       } finally {
-        if (mounted) setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     })();
 
-    return () => { mounted = false; };
+    return () => controller.abort();
   }, [groupId, hasGroup]);
 
   const filteredSubjects = useMemo(() => {

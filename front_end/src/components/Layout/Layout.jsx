@@ -258,14 +258,6 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
     };
   }, [loadNotifications, upsertNotification]);
 
-  // Фоновая синхронизация: обновляем счётчик без клика даже если ws-событие пропущено.
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadNotifications({ silent: true });
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [loadNotifications]);
 
 
   return (
