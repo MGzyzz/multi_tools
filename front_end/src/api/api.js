@@ -15,7 +15,6 @@ const resolveBackendBaseUrl = () => {
 const api = axios.create({
   baseURL: resolveBackendBaseUrl(),
   headers: {
-    'Content-Type': 'application/json',
     "ngrok-skip-browser-warning": "true",
   }
 });

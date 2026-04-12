@@ -9,10 +9,12 @@ from .models import (
     NotificationDelivery,
     NotificationModels,
     NotificationPreference,
+    RiskIncident,
     Schedule,
     Student,
     StudentFaceImage,
     Subject_study,
+    TeacherRiskIncidentAction,
 )
 
 # Register your models here.
@@ -116,6 +118,36 @@ class NotificationDeliveryAdmin(admin.ModelAdmin):
     ordering = ("-id",)
 
 
+class TeacherRiskIncidentActionInline(admin.TabularInline):
+    model = TeacherRiskIncidentAction
+    extra = 0
+    readonly_fields = ("teacher", "action_type", "comment", "payload", "created_at")
+
+
+class RiskIncidentAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "student",
+        "incident_type",
+        "reason_code",
+        "status",
+        "assigned_teacher",
+        "escalated_to",
+        "due_at",
+        "notification_sent_at",
+    )
+    search_fields = (
+        "student__first_name",
+        "student__last_name",
+        "student__email",
+        "problem",
+        "reason_code",
+    )
+    list_filter = ("incident_type", "status")
+    ordering = ("-created_at",)
+    inlines = (TeacherRiskIncidentActionInline,)
+
+
 admin.site.register(Student, StudentAdmin)
 admin.site.register(StudentFaceImage)
 admin.site.register(Group, GroupAdmin)
@@ -126,3 +158,4 @@ admin.site.register(Subject_study, SubjectStudyAdmin)
 admin.site.register(NotificationModels, NotificationModelsAdmin)
 admin.site.register(NotificationPreference, NotificationPreferenceAdmin)
 admin.site.register(NotificationDelivery, NotificationDeliveryAdmin)
+admin.site.register(RiskIncident, RiskIncidentAdmin)

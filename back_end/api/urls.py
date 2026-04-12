@@ -23,10 +23,15 @@ from .views import (
     NotificationMarkReadAPI,
     ProfileAPI,
     RecognizeStudentByFace,
+    RiskIncidentAcknowledgeAPI,
+    RiskIncidentEscalateAPI,
+    RiskIncidentListAPI,
+    RiskIncidentResolveAPI,
     ScheduleListAPI,
     StudentListAPI,
     StudentNotificationListAPI,
     StudentNotificationPreferenceAPI,
+    StudentRiskIncidentListAPI,
     UpdateStudentFaceEmbedding,
     getStudentInformation,
 )
@@ -119,6 +124,27 @@ urlpatterns = [
         "students/<int:student_id>/notification-preference/",
         StudentNotificationPreferenceAPI.as_view(),
         name="student_notification_preference",
+    ),
+    path("risk-incidents/", RiskIncidentListAPI.as_view(), name="risk_incident_list"),
+    path(
+        "students/<int:student_id>/risk-incidents/",
+        StudentRiskIncidentListAPI.as_view(),
+        name="student_risk_incident_list",
+    ),
+    path(
+        "risk-incidents/<int:incident_id>/acknowledge/",
+        RiskIncidentAcknowledgeAPI.as_view(),
+        name="risk_incident_acknowledge",
+    ),
+    path(
+        "risk-incidents/<int:incident_id>/resolve/",
+        RiskIncidentResolveAPI.as_view(),
+        name="risk_incident_resolve",
+    ),
+    path(
+        "risk-incidents/<int:incident_id>/escalate/",
+        RiskIncidentEscalateAPI.as_view(),
+        name="risk_incident_escalate",
     ),
     # === ANALYTICS ===
     # path('analytics/summary/', AnalyticsAPI.as_view(), name='analytics_data'),

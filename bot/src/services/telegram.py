@@ -40,10 +40,10 @@ class TelegramService:
 
     async def send_message(
         self,
-        chat_id: int,
+        chat_id: int | str,
         text: str,
         thread_id: int | None = None,
-    ) -> None:
+    ) -> str:
         payload: dict[str, int | str] = {
             "chat_id": chat_id,
             "text": text,
@@ -51,7 +51,8 @@ class TelegramService:
         }
         if thread_id is not None:
             payload["message_thread_id"] = thread_id
-        await self.bot.send_message(**payload)
+        message = await self.bot.send_message(**payload)
+        return str(message.message_id)
 
     async def status(self) -> str:
         try:

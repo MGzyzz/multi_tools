@@ -28,12 +28,12 @@ async def send_message(
     telegram_service: TelegramService = Depends(get_telegram_service),
 ) -> MessageResponse:
     final_message = build_message(payload.subject, payload.message, payload.urgent)
-    await telegram_service.send_message(
+    message_id = await telegram_service.send_message(
         chat_id=payload.recipient,
         text=final_message,
         thread_id=payload.thread_id,
     )
-    return MessageResponse(status="message sent")
+    return MessageResponse(status="message sent", message_id=message_id)
 
 
 @router.post("/send_message_thread_bot", response_model=MessageResponse)
@@ -42,9 +42,9 @@ async def send_message_thread_bot(
     telegram_service: TelegramService = Depends(get_telegram_service),
 ) -> MessageResponse:
     final_message = build_message(payload.subject, payload.message, payload.urgent)
-    await telegram_service.send_message(
+    message_id = await telegram_service.send_message(
         chat_id=payload.group_id,
         text=final_message,
         thread_id=payload.thread_id,
     )
-    return MessageResponse(status="message sent")
+    return MessageResponse(status="message sent", message_id=message_id)

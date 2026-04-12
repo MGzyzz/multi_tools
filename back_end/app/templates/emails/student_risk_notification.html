@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<body style="margin:0;padding:0;background:#f4efe7;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4efe7;padding:32px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="width:640px;max-width:100%;background:#fffaf3;border-collapse:collapse;border:1px solid #e7d8c4;border-radius:24px;overflow:hidden;">
+          <tr>
+            <td style="padding:28px 32px;background:linear-gradient(135deg,#17324d 0%,#2c6b73 100%);color:#fffaf3;">
+              <div style="font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:12px;letter-spacing:1.6px;text-transform:uppercase;opacity:.82;">Student Risk Notice</div>
+              <div style="font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.2;font-weight:700;margin-top:10px;">{{ title }}</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 18px;font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:18px;line-height:1.6;color:#213547;">
+                Здравствуйте, <strong>{{ student_name }}</strong>.
+              </p>
+              <p style="margin:0 0 24px;font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:16px;line-height:1.7;color:#35516a;">
+                Система университета обнаружила ситуацию, на которую стоит отреагировать заранее. Ниже собрана краткая информация и следующий шаг.
+              </p>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;border-collapse:separate;border-spacing:0 10px;">
+                <tr>
+                  <td style="width:50%;padding:16px 18px;background:#f6efe5;border-radius:16px;">
+                    <div style="font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#7a5b3d;">Предмет</div>
+                    <div style="margin-top:6px;font-family:Georgia,'Times New Roman',serif;font-size:20px;color:#17324d;">{{ subject_name }}</div>
+                  </td>
+                  <td style="width:50%;padding:16px 18px;background:#eef5f3;border-radius:16px;">
+                    <div style="font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#4f6f6b;">Группа</div>
+                    <div style="margin-top:6px;font-family:Georgia,'Times New Roman',serif;font-size:20px;color:#17324d;">{{ group_name }}</div>
+                  </td>
+                </tr>
+              </table>
+
+              <div style="padding:22px;background:#fff;border:1px solid #eadcc8;border-radius:18px;">
+                <div style="font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:#8b6d53;">Что произошло</div>
+                <div style="margin-top:8px;font-family:Georgia,'Times New Roman',serif;font-size:24px;line-height:1.3;color:#17324d;">{{ problem }}</div>
+                <p style="margin:16px 0 0;font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:15px;line-height:1.7;color:#35516a;">{{ reason }}</p>
+              </div>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:22px;border-collapse:separate;border-spacing:0 10px;">
+                <tr>
+                  <td style="width:50%;padding:16px 18px;background:#f9f4ec;border-radius:16px;">
+                    <div style="font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#7a5b3d;">Текущий показатель</div>
+                    <div style="margin-top:6px;font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#a24d2d;">{{ metric_value }}</div>
+                  </td>
+                  <td style="width:50%;padding:16px 18px;background:#f0f5fb;border-radius:16px;">
+                    <div style="font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#4b6077;">Минимальный порог</div>
+                    <div style="margin-top:6px;font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#17324d;">{{ threshold_value }}</div>
+                  </td>
+                </tr>
+              </table>
+
+              <div style="margin-top:22px;padding:20px 22px;background:#17324d;border-radius:18px;color:#fffaf3;">
+                <div style="font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:.8;">Что сделать сейчас</div>
+                <p style="margin:10px 0 0;font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:15px;line-height:1.7;">
+                  Пожалуйста, восстановите ситуацию до <strong>{{ due_at_display }}</strong>. Если у вас есть уважительная причина пропусков или нужна помощь, свяжитесь с <strong>{{ contact }}</strong>.
+                </p>
+              </div>
+
+              <p style="margin:26px 0 0;font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:13px;line-height:1.7;color:#6f7e8a;">
+                Это автоматическое уведомление системы мониторинга студентов. Если вопрос уже урегулирован, повторно отвечать на это письмо не требуется.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
