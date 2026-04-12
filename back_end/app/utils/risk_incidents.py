@@ -209,8 +209,7 @@ def sync_attendance_risk_incident(
             incident=active_incident,
             teacher=None,
             comment=(
-                f"Инцидент закрыт автоматически: посещаемость восстановилась до "
-                f"{current_percent}%."
+                f"Инцидент закрыт автоматически: посещаемость восстановилась до {current_percent}%."
             ),
             payload={
                 "actor": "system",
