@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import Layout from './components/Layout/Layout'
-import Home from './components/Home/Home'
-import Attendance from './components/Attendance/Attendance'
-import Tools from './components/Tools/Tools'
-import Auth from './components/Auth/Auth'
-import GroupManagement from './components/GroupManagement/GroupManagement'
-import TeacherProfile from './components/TeacherProfile/TeacherProfile'
-import Analytics from './components/Analytics/Analytics'
 import { isAuthenticated, authLogout } from './api/authAPI'
 import './index.css'
+
+const Home = lazy(() => import('./components/Home/Home'))
+const Attendance = lazy(() => import('./components/Attendance/Attendance'))
+const Tools = lazy(() => import('./components/Tools/Tools'))
+const Auth = lazy(() => import('./components/Auth/Auth'))
+const GroupManagement = lazy(() => import('./components/GroupManagement/GroupManagement'))
+const TeacherProfile = lazy(() => import('./components/TeacherProfile/TeacherProfile'))
+const Analytics = lazy(() => import('./components/Analytics/Analytics'))
 
 function ProtectedRoute({ authenticated, children }) {
   if (!authenticated) {
@@ -60,6 +61,7 @@ function App() {
 
   return (
     <div className="min-h-screen">
+      <Suspense fallback={null}>
       <Routes>
         <Route 
           path="/login" 
@@ -214,6 +216,7 @@ function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </div>
   )
 }

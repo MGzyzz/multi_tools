@@ -52,9 +52,6 @@ const Home = ({ isDark = true }) => {
 
     const nowSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
-    console.log('📅 Текущая дата (локальная):', today);
-    console.log('📦 Всего расписаний:', schedule.length);
-
     const toSeconds = (hhmmss = '00:00:00') => {
       const [h = 0, m = 0, s = 0] = hhmmss.split(':').map(Number);
       return h * 3600 + m * 60 + s;
@@ -67,8 +64,6 @@ const Home = ({ isDark = true }) => {
       const itemDate = item?.date;
       return itemDate === today;
     });
-
-    console.log('✅ Отфильтровано занятий:', todaySchedule.length);
 
     const result = todaySchedule
       .map((item) => {
@@ -93,7 +88,6 @@ const Home = ({ isDark = true }) => {
       })
       .sort((a, b) => a.timeSeconds - b.timeSeconds);
 
-    console.log('📋 Финальный список занятий:', result);
     return result;
   }, [schedule]);
 

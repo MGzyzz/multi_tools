@@ -19,19 +19,17 @@ class NotificationPreferenceTests(TestCase):
         )
 
     def test_create_preference_sets_default_values(self):
-        """Create preference and validate default fields."""
-        preference = NotificationPreference.objects.create(student=self.student)
+        """Student creation should auto-create preference with sensible defaults."""
+        preference = NotificationPreference.objects.get(student=self.student)
 
         self.assertTrue(preference.enabled)
         self.assertTrue(preference.allow_email)
-        self.assertTrue(preference.allow_telegram)
+        self.assertFalse(preference.allow_telegram)
         self.assertEqual(preference.threshold_percent, 60)
         self.assertEqual(preference.drop_delta_percent, 10)
         self.assertIsNotNone(preference.updated_at)
 
     def test_preference_is_unique_per_student(self):
         """Return IntegrityError when creating second preference for student."""
-        NotificationPreference.objects.create(student=self.student)
-
         with self.assertRaises(IntegrityError):
             NotificationPreference.objects.create(student=self.student)

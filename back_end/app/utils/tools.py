@@ -6,37 +6,42 @@ from app.models import Student
 
 def create_excel_attendance_file(request):
     """
-    Create an Excel file with student marks grouped by group and return it as a response.
+    Create an Excel file with student attendance grouped by group and return it as a response.
     """
     workbook = openpyxl.Workbook()
     worksheet = workbook.active
-    worksheet.title = "Student Marks"
+    worksheet.title = "Student Attendance"
 
-    headers = ["Group", "Student Name", "Subject", "Presence"]
+    headers = ["Group", "Student Name", "Subject", "Date", "Presence"]
     worksheet.append(headers)
 
-    students = Student.objects.all().prefetch_related("groups", "mark_set", "mark_set__subject")
+    students = Student.objects.all().prefetch_related(
+        "groups",
+        "attendance",
+        "attendance__schedule",
+        "attendance__schedule__subject",
+    )
 
     for student in students:
-        # Берем первую группу (если у студента несколько — можно адаптировать)
         group_names = ", ".join([g.name for g in student.groups.all()]) or "Без группы"
 
-        marks = student.mark_set.all()
-        for mark in marks:
+        for record in student.attendance.select_related("schedule__subject").all():
+            subject_name = (
+                record.schedule.subject.name if record.schedule and record.schedule.subject else "—"
+            )
             row = [
                 group_names,
                 f"{student.first_name} {student.last_name}",
-                mark.subject.name,
-                "✔️" if mark.presense else "❌",
+                subject_name,
+                str(record.schedule.date) if record.schedule else "—",
+                "✔️" if record.presense else "❌",
             ]
             worksheet.append(row)
 
-    # Подготовка ответа
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    response["Content-Disposition"] = 'attachment; filename="student_marks_grouped.xlsx"'
+    response["Content-Disposition"] = 'attachment; filename="student_attendance.xlsx"'
 
-    # Сохранение Excel в ответ
     workbook.save(response)
     return response

@@ -10,9 +10,11 @@ from app.models import (
     NotificationDelivery,
     NotificationModels,
     NotificationPreference,
+    RiskIncident,
     Schedule,
     Student,
     Subject_study,
+    TeacherRiskIncidentAction,
 )
 
 
@@ -224,6 +226,96 @@ class NotificationPreferenceSerializer(ModelSerializer):
             "updated_at",
         )
         read_only_fields = ("updated_at",)
+
+
+class TeacherRiskIncidentActionSerializer(ModelSerializer):
+    teacher_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TeacherRiskIncidentAction
+        fields = (
+            "id",
+            "action_type",
+            "comment",
+            "payload",
+            "created_at",
+            "teacher",
+            "teacher_name",
+        )
+
+    def get_teacher_name(self, obj):
+        if obj.teacher and obj.teacher.user:
+            return obj.teacher.user.get_full_name() or obj.teacher.user.username
+        return None
+
+
+class RiskIncidentSerializer(ModelSerializer):
+    actions = TeacherRiskIncidentActionSerializer(many=True, read_only=True)
+    student_name = serializers.SerializerMethodField()
+    assigned_teacher_name = serializers.SerializerMethodField()
+    escalated_to_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RiskIncident
+        fields = (
+            "id",
+            "student",
+            "student_name",
+            "assigned_teacher",
+            "assigned_teacher_name",
+            "escalated_to",
+            "escalated_to_name",
+            "group",
+            "subject",
+            "incident_type",
+            "reason_code",
+            "status",
+            "problem",
+            "reason",
+            "contact",
+            "metric_name",
+            "metric_value",
+            "threshold_value",
+            "metric_unit",
+            "payload",
+            "first_detected_at",
+            "last_detected_at",
+            "due_at",
+            "notification_sent_at",
+            "acknowledged_at",
+            "escalated_at",
+            "resolved_at",
+            "escalation_level",
+            "created_at",
+            "updated_at",
+            "actions",
+        )
+
+    def get_student_name(self, obj):
+        return str(obj.student)
+
+    def get_assigned_teacher_name(self, obj):
+        if obj.assigned_teacher and obj.assigned_teacher.user:
+            return obj.assigned_teacher.user.get_full_name() or obj.assigned_teacher.user.username
+        return None
+
+    def get_escalated_to_name(self, obj):
+        if obj.escalated_to and obj.escalated_to.user:
+            return obj.escalated_to.user.get_full_name() or obj.escalated_to.user.username
+        return None
+
+
+class RiskIncidentAcknowledgeSerializer(serializers.Serializer):
+    comment = serializers.CharField(required=False, allow_blank=True)
+
+
+class RiskIncidentResolveSerializer(serializers.Serializer):
+    comment = serializers.CharField(required=False, allow_blank=True)
+
+
+class RiskIncidentEscalateSerializer(serializers.Serializer):
+    teacher_id = serializers.IntegerField()
+    comment = serializers.CharField(required=False, allow_blank=True)
 
 
 class TeacherProfileSerializer(ModelSerializer):

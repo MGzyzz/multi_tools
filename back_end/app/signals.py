@@ -6,14 +6,13 @@ from django.db.models.signals import m2m_changed, post_delete, post_save, pre_sa
 from django.dispatch import receiver
 from django.utils import timezone
 
-from app.models._choices import NotificationDeliveryChoices, NotificationTypeChoices
+from app.models._choices import NotificationTypeChoices
 from app.utils.notification import (
-    create_student_notification,
     create_teacher_notifications,
-    should_send_performance_alert,
 )
+from app.utils.risk_incidents import sync_attendance_risk_incident
 
-from .models import Attendance, AttendanceStat, Group, NotificationModels, Schedule, Student
+from .models import Attendance, AttendanceStat, Group, NotificationPreference, Schedule, Student
 
 logger = logging.getLogger(__name__)
 
@@ -66,35 +65,20 @@ def _notify_student_performance_if_needed(
     if not student:
         return
 
-    if not should_send_performance_alert(student=student, current_percent=current_percent):
-        return
+    schedule = Schedule.objects.select_related("group", "subject", "teacher", "group__teacher").get(
+        id=schedule_id
+    )
+    preference = NotificationPreference.objects.filter(student=student).first()
+    threshold_percent = preference.threshold_percent if preference else 60
 
-    already_sent_today = NotificationModels.objects.filter(
-        recipient_student_id=student_id,
-        event_type=NotificationTypeChoices.PERFOMANCE_DROP,
-        payload__group_id=group_id,
-        payload__subject_id=subject_id,
-        created_at__date=timezone.localdate(),
-    ).exists()
-    if already_sent_today:
-        return
-
-    create_student_notification(
+    sync_attendance_risk_incident(
         student=student,
-        event_type=NotificationTypeChoices.PERFOMANCE_DROP,
-        title="Внимание: снизилась посещаемость",
-        message=f"Текущий процент посещаемости: {current_percent}%.",
-        payload={
-            "student_id": student_id,
-            "group_id": group_id,
-            "subject_id": subject_id,
-            "schedule_id": schedule_id,
-            "attendance_percent": current_percent,
-        },
-        channels=(
-            NotificationDeliveryChoices.EMAIL,
-            NotificationDeliveryChoices.TELEGRAM,
-        ),
+        group=schedule.group,
+        subject=schedule.subject,
+        current_percent=current_percent,
+        threshold_percent=threshold_percent,
+        schedule_id=schedule_id,
+        assigned_teacher=schedule.teacher or schedule.group.teacher,
     )
 
 
@@ -326,6 +310,21 @@ def cache_old_student(sender, instance, **kwargs):
             "telegram_username",
         )
         .first()
+    )
+
+
+@receiver(post_save, sender=Student)
+def ensure_notification_preference_exists(sender, instance, created, **kwargs):
+    if not created:
+        return
+
+    NotificationPreference.objects.get_or_create(
+        student=instance,
+        defaults={
+            "enabled": True,
+            "allow_email": bool(instance.email),
+            "allow_telegram": bool(instance.telegram_id or instance.telegram_username),
+        },
     )
 
 

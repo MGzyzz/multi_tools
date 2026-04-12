@@ -20,6 +20,13 @@ from .notificationAPI import (
     StudentNotificationPreferenceAPI,
 )
 from .profileAPI import EditProfileAPI, ProfileAPI
+from .riskIncidentAPI import (
+    RiskIncidentAcknowledgeAPI,
+    RiskIncidentEscalateAPI,
+    RiskIncidentListAPI,
+    RiskIncidentResolveAPI,
+    StudentRiskIncidentListAPI,
+)
 from .scheduleAPI import (
     GetScheduleGroupId,
     GetScheduleWithAttendens,
@@ -55,9 +62,14 @@ __all__ = [
     "NotificationMarkReadAPI",
     "ProfileAPI",
     "RecognizeStudentByFace",
+    "RiskIncidentAcknowledgeAPI",
+    "RiskIncidentEscalateAPI",
+    "RiskIncidentListAPI",
+    "RiskIncidentResolveAPI",
     "ScheduleListAPI",
     "StudentNotificationListAPI",
     "StudentNotificationPreferenceAPI",
+    "StudentRiskIncidentListAPI",
     "StudentListAPI",
     "UpdateStudentFaceEmbedding",
     "getStudentInformation",

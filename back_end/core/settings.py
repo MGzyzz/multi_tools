@@ -26,20 +26,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-a9iq5=kyj__h&**#aash0tx*xh$6$f9775xj)0na09=ww4^)60"
+SECRET_KEY = os.getenv(
+    "SECRET_KEY", "django-insecure-a9iq5=kyj__h&**#aash0tx*xh$6$f9775xj)0na09=ww4^)60"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "true").lower() == "true"
 
 CORS_ALLOW_ALL_METHODS = True
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 
 STANDART_URL = "https://"
 
-NGROK_DOMAIN = "394610267b27"
+NGROK_DOMAIN = os.getenv("NGROK_DOMAIN", "")
 
-NGROK_URL = f"{STANDART_URL}{NGROK_DOMAIN}.ngrok-free.app"
+NGROK_URL = f"{STANDART_URL}{NGROK_DOMAIN}.ngrok-free.app" if NGROK_DOMAIN else ""
 
 AI_SERVICE_URL = os.getenv("AI_SERVICE_URL", "http://localhost:8002")
 BOT_SERVICE_URL = os.getenv("BOT_SERVICE_URL", "http://localhost:8001")
@@ -47,9 +49,7 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@example.com")
 FACE_RECOGNITION_THRESHOLD = float(os.getenv("FACE_RECOGNITION_THRESHOLD", "0.7"))
 FACE_IMAGE_LIMIT = int(os.getenv("FACE_IMAGE_LIMIT", "5"))
 
-CORS_ALLOWED_ORIGINS = [
-    NGROK_URL,
-]
+CORS_ALLOWED_ORIGINS = [url for url in [NGROK_URL] if url]
 
 CORS_ALLOW_HEADERS = ["*"]
 
@@ -276,3 +276,15 @@ else:
             "BACKEND": "channels.layers.InMemoryChannelLayer",
         }
     }
+
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend",
+)
+EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "25"))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() == "true"
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "false").lower() == "true"
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "20"))

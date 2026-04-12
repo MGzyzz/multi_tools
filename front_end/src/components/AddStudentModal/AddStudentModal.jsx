@@ -88,17 +88,11 @@ const AddStudentModal = ({ isOpen, onClose, isDark = false, groups = [], selecte
         group_id: Number(formData.groupId),
       };
 
-      console.log('Creating student with data:', studentData);
-
       const response = await createStudent(studentData);
 
       if (response && response.id) {
         // Находим название группы
         const selectedGroupObj = groups.find(g => String(g.id) === String(formData.groupId));
-        
-        console.log('Student created successfully:', response);
-        console.log('Selected group object:', selectedGroupObj);
-        console.log('FormData groupId:', formData.groupId);
         
         const newStudent = {
           id: response.id,
@@ -115,8 +109,6 @@ const AddStudentModal = ({ isOpen, onClose, isDark = false, groups = [], selecte
           attendance: 0,
           status: 'active',
         };
-
-        console.log('New student object:', newStudent);
 
         if (typeof onCreated === 'function') {
           await onCreated(newStudent);

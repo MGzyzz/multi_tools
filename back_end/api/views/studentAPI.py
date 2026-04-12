@@ -64,6 +64,15 @@ class CreateStudentAPI(APIView):
         if "face_image" in request.FILES:
             file_obj = request.FILES.get("face_image")
             if file_obj:
+                if file_obj.size > 5 * 1024 * 1024:
+                    return Response(
+                        {"error": "File size exceeds 5MB limit"}, status=status.HTTP_400_BAD_REQUEST
+                    )
+                if not file_obj.content_type.startswith("image/"):
+                    return Response(
+                        {"error": "Only image files are allowed"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
                 embedding, error = fetch_embedding_from_file(file_obj)
                 if error:
                     logger.warning("Face embedding failed for student_id=%s: %s", student.id, error)
@@ -124,6 +133,15 @@ class EditStudentAPI(APIView):
         if "face_image" in request.FILES:
             file_obj = request.FILES.get("face_image")
             if file_obj:
+                if file_obj.size > 5 * 1024 * 1024:
+                    return Response(
+                        {"error": "File size exceeds 5MB limit"}, status=status.HTTP_400_BAD_REQUEST
+                    )
+                if not file_obj.content_type.startswith("image/"):
+                    return Response(
+                        {"error": "Only image files are allowed"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
                 embedding, error = fetch_embedding_from_file(file_obj)
                 if error:
                     logger.warning("Face embedding failed for student_id=%s: %s", student.id, error)

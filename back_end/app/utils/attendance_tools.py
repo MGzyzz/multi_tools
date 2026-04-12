@@ -2,15 +2,15 @@ from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 
+from app.utils.risk_incidents import sync_attendance_risk_incident
+
 
 def mark_attendance(schedule_id: int, present_student_ids: list[int]) -> dict:
     """
     Отмечает посещаемость по занятию (Schedule) списком присутствующих.
     Быстро: 2 UPDATE по Attendance + 0-2 UPDATE по AttendanceStat.
     """
-    from app.models import Attendance, AttendanceStat, NotificationModels, Schedule, Student
-    from app.models._choices import NotificationDeliveryChoices, NotificationTypeChoices
-    from app.utils.notification import create_student_notification, should_send_performance_alert
+    from app.models import Attendance, AttendanceStat, NotificationPreference, Schedule, Student
 
     now = timezone.now()
 
@@ -66,7 +66,7 @@ def mark_attendance(schedule_id: int, present_student_ids: list[int]) -> dict:
                 attended__gt=0,
             ).update(attended=F("attended") - 1)
 
-        # 5) Проверить порог падения посещаемости и создать уведомления студентам.
+        # 5) Обновить риск-инциденты по посещаемости.
         affected_student_ids = set(delta_plus + delta_minus)
         if affected_student_ids:
             stats = AttendanceStat.objects.filter(
@@ -87,38 +87,17 @@ def mark_attendance(schedule_id: int, present_student_ids: list[int]) -> dict:
                     continue
 
                 current_percent = round((stat.attended / stat.total) * 100)
-                if not should_send_performance_alert(
+                preference = NotificationPreference.objects.filter(student=student).first()
+                threshold_percent = preference.threshold_percent if preference else 60
+
+                sync_attendance_risk_incident(
                     student=student,
+                    group=schedule.group,
+                    subject=schedule.subject,
                     current_percent=current_percent,
-                ):
-                    continue
-
-                already_sent_today = NotificationModels.objects.filter(
-                    recipient_student_id=student.id,
-                    event_type=NotificationTypeChoices.PERFOMANCE_DROP,
-                    payload__group_id=group_id,
-                    payload__subject_id=subject_id,
-                    created_at__date=timezone.localdate(),
-                ).exists()
-                if already_sent_today:
-                    continue
-
-                create_student_notification(
-                    student=student,
-                    event_type=NotificationTypeChoices.PERFOMANCE_DROP,
-                    title="Внимание: снизилась посещаемость",
-                    message=f"Текущий процент посещаемости: {current_percent}%.",
-                    payload={
-                        "student_id": student.id,
-                        "group_id": group_id,
-                        "subject_id": subject_id,
-                        "schedule_id": schedule_id,
-                        "attendance_percent": current_percent,
-                    },
-                    channels=(
-                        NotificationDeliveryChoices.EMAIL,
-                        NotificationDeliveryChoices.TELEGRAM,
-                    ),
+                    threshold_percent=threshold_percent,
+                    schedule_id=schedule_id,
+                    assigned_teacher=schedule.teacher or schedule.group.teacher,
                 )
 
     return {

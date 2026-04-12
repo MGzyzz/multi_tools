@@ -23,16 +23,15 @@ class ScheduleListAPI(APIView):
         cached_data = cache.get(cache_key)
 
         if cached_data is not None:
-            print("Returning cached schedule data")
+            logger.info("Returning cached schedule data for teacher %s", teacher.id)
             return Response(cached_data, status=status.HTTP_200_OK)
-        print("Fetching schedule data from database")
+        logger.info("Fetching schedule data from database for teacher %s", teacher.id)
 
         schedules = Schedule.objects.select_related("subject").filter(
             teacher=teacher, date=date.today()
         )
         # Не забудь добавить фильтрацию по дате, когда фронт будет готов к этому
         serializer = ScheduleSerializer(schedules, many=True)
-        print(serializer.data)
         cache.set(cache_key, serializer.data, timeout=10)  # Кэшируем на 5 минут
         # TODO: Поменяй потом на 300 секунд значения
         return Response(serializer.data)

@@ -1,9 +1,14 @@
+import logging
+
 import requests
+from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.views.generic import CreateView, DetailView, ListView
 
 from .models import Group, Schedule, Student
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -28,14 +33,14 @@ def send_telegram_message(request):
         "message": request.POST.get("message"),
         "urgent": request.POST.get("urgent", False),
     }
-    print(data)
+    logger.info("Sending telegram message: %s", data)
 
-    response = requests.post("http://localhost:8001/send_message_thread_bot", json=data)
+    response = requests.post(f"{settings.BOT_SERVICE_URL}/send_message_thread_bot", json=data)
 
     if response.status_code == 200:
-        print("Message sent successfully")
+        logger.info("Message sent successfully")
     else:
-        print("Failed to send message")
+        logger.warning("Failed to send message, status=%s", response.status_code)
 
     # return JsonResponse({'status': 'ok'})
     return redirect("home")
@@ -43,11 +48,11 @@ def send_telegram_message(request):
 
 def check_bot_status(request):
     try:
-        response = requests.get("http://localhost:8001/status", timeout=2)
+        response = requests.get(f"{settings.BOT_SERVICE_URL}/status", timeout=2)
         if response.status_code == 200:
             return JsonResponse({"active": True})
     except requests.exceptions.RequestException as e:
-        print(f"[check_bot_status] Ошибка подключения к боту: {e}")
+        logger.warning("Ошибка подключения к боту: %s", e)
 
     return JsonResponse({"active": False})
 

@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Count, Q
+from django.template.loader import render_to_string
 from django.utils import timezone
 
 from app.models._choices import NotificationDeliveryChoices, NotificationStatusChoices
@@ -136,11 +137,16 @@ def process_notification_delivery(delivery_id: int) -> dict:
             provider_message_id = f"in_app:{delivery.notification_id}:{delivery.id}"
         elif delivery.channel == NotificationDeliveryChoices.EMAIL:
             _send_delivery_email(
-                delivery.target, delivery.notification.title, delivery.notification.message
+                delivery.target,
+                delivery.notification.title,
+                delivery.notification.message,
+                delivery.notification,
             )
         elif delivery.channel == NotificationDeliveryChoices.TELEGRAM:
             provider_message_id = _send_delivery_telegram(
-                delivery.target, delivery.notification.message
+                delivery.target,
+                delivery.notification.title,
+                delivery.notification.message,
             )
         else:
             raise ValueError(f"Unsupported delivery channel: {delivery.channel}")
@@ -180,30 +186,37 @@ def enqueue_pending_notification_deliveries(limit: int = 200) -> dict:
     return {"enqueued": len(pending_ids), "limit": limit}
 
 
-def _send_delivery_email(target: str | None, subject: str, message: str) -> None:
+def _send_delivery_email(target: str | None, subject: str, message: str, notification) -> None:
     if not target:
         raise ValueError("Missing email target.")
 
     from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@example.com")
+    html_message = _build_email_html(notification=notification, fallback_subject=subject)
     send_mail(
         subject=subject,
         message=message,
         from_email=from_email,
         recipient_list=[target],
         fail_silently=False,
+        html_message=html_message,
     )
 
 
-def _send_delivery_telegram(target: str | None, message: str) -> str | None:
+def _send_delivery_telegram(target: str | None, subject: str, message: str) -> str | None:
     if not target:
         raise ValueError("Missing telegram target.")
 
     bot_service_url = getattr(
         settings, "BOT_SERVICE_URL", os.getenv("BOT_SERVICE_URL", "http://localhost:8001")
     )
+    normalized_target = _normalize_telegram_target(target)
     response = requests.post(
-        f"{bot_service_url}/send_message_thread_bot",
-        json={"chat_id": target, "message": message},
+        f"{bot_service_url}/send_message",
+        json={
+            "recipient": normalized_target,
+            "subject": subject or "Уведомление",
+            "message": message,
+        },
         timeout=5,
     )
     response.raise_for_status()
@@ -213,3 +226,59 @@ def _send_delivery_telegram(target: str | None, message: str) -> str | None:
         if isinstance(payload, dict) and payload.get("message_id")
         else None
     )
+
+
+def _normalize_telegram_target(target: str) -> int | str:
+    value = str(target).strip()
+    if value.lstrip("-").isdigit():
+        return int(value)
+    return value if value.startswith("@") else f"@{value}"
+
+
+def _build_email_html(notification, fallback_subject: str) -> str:
+    payload = notification.payload or {}
+    if notification.event_type == "RISK":
+        student_name = payload.get("student_name") or (
+            notification.recipient_student.first_name
+            if notification.recipient_student
+            else "студент"
+        )
+        return render_to_string(
+            "emails/student_risk_notification.html",
+            {
+                "title": notification.title or fallback_subject,
+                "student_name": student_name,
+                "subject_name": payload.get("subject_name") or "предмет не указан",
+                "group_name": payload.get("group_name") or "группа не указана",
+                "problem": payload.get("problem") or notification.title,
+                "reason": payload.get("reason") or notification.message,
+                "metric_name": payload.get("metric_name") or "",
+                "metric_value": _format_metric_value(
+                    payload.get("metric_value"), payload.get("metric_unit")
+                ),
+                "threshold_value": _format_metric_value(
+                    payload.get("threshold_value"), payload.get("metric_unit")
+                ),
+                "due_at_display": payload.get("due_at_display") or "Не указан",
+                "contact": payload.get("contact") or "ответственному преподавателю",
+            },
+        )
+
+    return render_to_string(
+        "emails/generic_notification.html",
+        {
+            "title": notification.title or fallback_subject,
+            "message": notification.message,
+        },
+    )
+
+
+def _format_metric_value(value, unit: str | None) -> str:
+    if value is None:
+        return "Не указано"
+    if unit:
+        numeric_value = float(value)
+        if numeric_value.is_integer():
+            return f"{int(numeric_value)}{unit}"
+        return f"{numeric_value:.1f}{unit}"
+    return str(value)
