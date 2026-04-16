@@ -9,7 +9,6 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
 
-
 class JWTAuthMiddleware:
     def __init__(self, inner):
         self.inner = inner
