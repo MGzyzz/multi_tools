@@ -32,6 +32,9 @@ from .scheduleAPI import (
     GetScheduleGroupId,
     GetScheduleWithAttendens,
     ScheduleListAPI,
+    SchedulePlannerAPI,
+    ScheduleSemesterApplyAPI,
+    ScheduleSemesterPreviewAPI,
 )
 from .studentAPI import (
     CreateStudentAPI,
@@ -68,7 +71,10 @@ __all__ = [
     "RiskIncidentEscalateAPI",
     "RiskIncidentListAPI",
     "RiskIncidentResolveAPI",
+    "SchedulePlannerAPI",
     "ScheduleListAPI",
+    "ScheduleSemesterApplyAPI",
+    "ScheduleSemesterPreviewAPI",
     "StudentNotificationListAPI",
     "StudentNotificationPreferenceAPI",
     "StudentRiskIncidentListAPI",

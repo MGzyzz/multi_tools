@@ -136,6 +136,102 @@ class ScheduleSerializer(ModelSerializer):
         fields = "__all__"
 
 
+class SchedulePlannerEntrySerializer(serializers.ModelSerializer):
+    subject = serializers.SerializerMethodField()
+    teacher = serializers.SerializerMethodField()
+    can_edit = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Schedule
+        fields = ("id", "date", "time", "subject", "teacher", "can_edit")
+
+    def get_subject(self, obj):
+        return {"id": obj.subject_id, "name": obj.subject.name}
+
+    def get_teacher(self, obj):
+        if obj.teacher and obj.teacher.user:
+            return {
+                "id": obj.teacher_id,
+                "name": obj.teacher.user.get_full_name() or obj.teacher.user.username,
+            }
+        return {"id": obj.teacher_id, "name": "Преподаватель не указан"}
+
+    def get_can_edit(self, obj):
+        current_teacher_id = self.context.get("current_teacher_id")
+        return obj.teacher_id == current_teacher_id
+
+
+class SchedulePlannerMutationItemSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    date = serializers.DateField()
+    time = serializers.TimeField(input_formats=["%H:%M", "%H:%M:%S"])
+    subject_id = serializers.IntegerField(min_value=1)
+
+
+class SchedulePlannerSaveSerializer(serializers.Serializer):
+    group_id = serializers.IntegerField(min_value=1)
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+    create = SchedulePlannerMutationItemSerializer(many=True, required=False)
+    update = SchedulePlannerMutationItemSerializer(many=True, required=False)
+    delete = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        required=False,
+        allow_empty=True,
+    )
+
+    def validate(self, attrs):
+        if attrs["end_date"] < attrs["start_date"]:
+            raise serializers.ValidationError("End date must not be earlier than start date.")
+
+        range_days = (attrs["end_date"] - attrs["start_date"]).days
+        if range_days > 45:
+            raise serializers.ValidationError("Planner save range is too large.")
+
+        if not attrs.get("create") and not attrs.get("update") and not attrs.get("delete"):
+            raise serializers.ValidationError("Nothing to save.")
+
+        return attrs
+
+
+class ScheduleSemesterPatternItemSerializer(serializers.Serializer):
+    weekday = serializers.IntegerField(min_value=0, max_value=6)
+    time = serializers.TimeField(input_formats=["%H:%M", "%H:%M:%S"])
+    subject_id = serializers.IntegerField(min_value=1)
+
+
+class ScheduleSemesterPlanSerializer(serializers.Serializer):
+    group_id = serializers.IntegerField(min_value=1)
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+    pattern = ScheduleSemesterPatternItemSerializer(many=True)
+
+    def validate(self, attrs):
+        if attrs["end_date"] < attrs["start_date"]:
+            raise serializers.ValidationError("End date must not be earlier than start date.")
+
+        range_days = (attrs["end_date"] - attrs["start_date"]).days
+        if range_days > 220:
+            raise serializers.ValidationError(
+                "Semester planning range is too large. Split it into smaller periods."
+            )
+
+        pattern = attrs.get("pattern") or []
+        if not pattern:
+            raise serializers.ValidationError("Pattern must contain at least one lesson.")
+
+        seen_slots = set()
+        for item in pattern:
+            slot = (item["weekday"], item["time"])
+            if slot in seen_slots:
+                raise serializers.ValidationError(
+                    "Pattern contains duplicate weekday/time slots."
+                )
+            seen_slots.add(slot)
+
+        return attrs
+
+
 class StudentAttendanceSerializer(ModelSerializer):
     """
     Serializer for the Student model with attendance details.

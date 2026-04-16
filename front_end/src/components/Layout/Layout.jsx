@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
-  Moon, Sun, Scan, Home, Users, BarChart3, Settings,
+  Moon, Sun, Scan, Home, Users, BarChart3, Settings, CalendarRange,
   LogOut, User, ChevronLeft, ChevronRight, Menu, X, Bell
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -35,6 +35,7 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
   }, [isSidebarOpen]);
 
   const menuItems = [
+    { id: 'schedule', icon: CalendarRange, label: 'Расписание', path: '/schedule-planner' },
     { id: 'home', icon: Home, label: 'Главная', path: '/' },
     { id: 'tools', icon: Users, label: 'Инструменты', path: '/tools' },
     { id: 'analytics', icon: BarChart3, label: 'Аналитика', path: '/analytics' },

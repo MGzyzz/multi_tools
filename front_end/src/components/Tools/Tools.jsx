@@ -1,4 +1,4 @@
-import { BarChart3, FileText, Settings, Users } from 'lucide-react';
+import { BarChart3, CalendarRange, FileText, Settings, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Tools = ({ isDark = true }) => {
@@ -16,6 +16,13 @@ const Tools = ({ isDark = true }) => {
       description: 'Управление списками студентов, быстрый переход к нужной группе и предмету.',
       color: 'from-emerald-500 to-green-600',
       path: '/groups',
+    },
+    {
+      icon: CalendarRange,
+      title: 'Планировщик расписания',
+      description: 'Сетка недели для добавления занятий, видимость занятых слотов и шаблон на семестр.',
+      color: 'from-fuchsia-500 to-rose-600',
+      path: '/schedule-planner',
     },
     {
       icon: BarChart3,

@@ -601,3 +601,67 @@ Add these rules explicitly for the next agent if they were only implicit before:
 - Always optimize DB access for teacher dashboards and journals so large groups do not degrade the page.
 - Use caching only where it is clearly needed and safe.
   If there is doubt, ask before introducing it broadly.
+
+## 2026-04-16 Schedule Planner / Cache Freshness Handoff
+
+This section documents the schedule-planning work completed on April 16, 2026.
+
+### What was implemented
+
+- Removed stale-data behavior for teacher schedule reads by making the schedule list and planner responses explicitly `no-store`.
+- Front-end schedule requests now also send a timestamp query param so changed schedules are fetched fresh immediately after edits.
+- Added a new teacher planner flow:
+  - `GET /api/schedule-planner/` without `group_id` returns groups available for schedule planning;
+  - `GET /api/schedule-planner/?group_id=...&start_date=...&end_date=...` returns week payload with:
+    - visible days;
+    - time slots;
+    - all occupied schedule entries for the group;
+    - only the current teacher's available subjects for placement.
+- Planner access is no longer limited only to `group.teacher`.
+  A teacher can plan for groups that are reachable through their subject-to-group assignment as well.
+- Added week save endpoint behavior on `POST /api/schedule-planner/`:
+  - create draft lessons;
+  - move existing editable lessons;
+  - delete editable lessons;
+  - reject duplicate slot assignments in one request;
+  - reject occupied time slots, including slots already taken by another teacher;
+  - intentionally reject changing the subject of an existing lesson in place.
+- Added semester planning support:
+  - `POST /api/schedule-planner/semester/preview/`
+  - `POST /api/schedule-planner/semester/apply/`
+- Semester apply uses bulk creation plus batched attendance/stat seeding through `app/utils/schedule_planner.py` so mass generation does not rely on per-row signals only.
+- Front-end now has a dedicated page for schedule planning:
+  - route: `/schedule-planner`
+  - group selector;
+  - week navigation;
+  - subject palette;
+  - drag-and-drop placement;
+  - tap-to-place fallback for touch/mobile behavior;
+  - locked display for slots owned by another teacher;
+  - save/reset draft controls;
+  - semester preview/apply panel.
+- Navigation and teacher tools were updated to expose the new planner page directly.
+
+### Safety / performance notes
+
+- The planner is intentionally draft-first:
+  no DB write happens until the teacher presses save.
+- Semester generation is intentionally preview-first:
+  the intended workflow is preview -> resolve conflicts -> apply.
+- Conflict checks are group-wide on `(group, date, time)`, so another teacher's slot blocks the cell.
+- Bulk semester creation manually seeds `Attendance` and `AttendanceStat` in batches to keep the operation bounded and avoid excessive per-object overhead.
+- Existing lessons cannot switch subject in place because attendance statistics are subject-scoped and that mutation would risk corrupting counters.
+
+### Verification in this session
+
+- `python -m py_compile api/serializer.py api/views/scheduleAPI.py api/tests/test_schedule_api.py app/utils/schedule_planner.py`
+  completed successfully from `back_end/.venv`.
+- `npm run build` for `front_end` completed successfully after running outside the sandbox.
+- `manage.py test api.tests.test_schedule_api` could not complete in this environment because PostgreSQL host `postgres` was not resolvable here.
+
+### Notes for the next agent
+
+- The explicit forbidden/do-not-touch rules already exist above and remain valid:
+  no automatic push, no manual/custom migrations, do not break DRY, do not add unsafe blanket caching.
+- The important engineering rules also already exist above and remain valid:
+  code cleanliness, DB query optimization, and cautious targeted caching only.

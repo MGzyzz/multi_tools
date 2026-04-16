@@ -27,7 +27,10 @@ from .views import (
     RiskIncidentEscalateAPI,
     RiskIncidentListAPI,
     RiskIncidentResolveAPI,
+    SchedulePlannerAPI,
     ScheduleListAPI,
+    ScheduleSemesterApplyAPI,
+    ScheduleSemesterPreviewAPI,
     StudentListAPI,
     StudentNotificationListAPI,
     StudentNotificationPreferenceAPI,
@@ -86,6 +89,17 @@ urlpatterns = [
     path("create_group/", GroupCreateAPI.as_view(), name="create_group"),
     # === SUBJECTS ===
     path("get_schedule_list/", ScheduleListAPI.as_view(), name="schedule_list"),
+    path("schedule-planner/", SchedulePlannerAPI.as_view(), name="schedule_planner"),
+    path(
+        "schedule-planner/semester/preview/",
+        ScheduleSemesterPreviewAPI.as_view(),
+        name="schedule_semester_preview",
+    ),
+    path(
+        "schedule-planner/semester/apply/",
+        ScheduleSemesterApplyAPI.as_view(),
+        name="schedule_semester_apply",
+    ),
     path(
         "get_excel_attendance_file/",
         create_excel_attendance_file,
