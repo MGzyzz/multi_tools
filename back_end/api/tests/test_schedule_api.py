@@ -92,7 +92,9 @@ class ScheduleAPITests(BaseJWTAPITestCase):
         )
         own_second_subject.groups.add(self.group)
 
-        other_user = User.objects.create_user(username="other_sched", password="pass_123")
+        other_user = User.objects.create_user(username="other_sched")
+        other_user.set_unusable_password()
+        other_user.save(update_fields=["password"])
         other_teacher = other_user.teacher_profile
         other_subject = Subject_study.objects.create(
             name="Physics",
@@ -132,7 +134,9 @@ class ScheduleAPITests(BaseJWTAPITestCase):
 
     def test_schedule_planner_without_group_returns_accessible_groups(self):
         """Return groups available for planning, including groups linked through teacher subjects."""
-        other_user = User.objects.create_user(username="group_owner", password="pass_123")
+        other_user = User.objects.create_user(username="group_owner")
+        other_user.set_unusable_password()
+        other_user.save(update_fields=["password"])
         other_teacher = other_user.teacher_profile
         foreign_group = Group.objects.create(
             name="CS-401",
