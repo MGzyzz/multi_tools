@@ -41,6 +41,7 @@ from .views import (
     StudentListAPI,
     StudentNotificationListAPI,
     StudentNotificationPreferenceAPI,
+    StudentJournalDetailAPI,
     StudentRiskIncidentListAPI,
     StudentSyncWebhookAPI,
     TeacherBroadcastAPI,
