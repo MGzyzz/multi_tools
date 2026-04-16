@@ -224,9 +224,7 @@ class ScheduleSemesterPlanSerializer(serializers.Serializer):
         for item in pattern:
             slot = (item["weekday"], item["time"])
             if slot in seen_slots:
-                raise serializers.ValidationError(
-                    "Pattern contains duplicate weekday/time slots."
-                )
+                raise serializers.ValidationError("Pattern contains duplicate weekday/time slots.")
             seen_slots.add(slot)
 
         return attrs

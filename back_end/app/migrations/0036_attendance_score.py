@@ -5,15 +5,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('app', '0035_alter_notificationmodels_event_type_riskincident_and_more'),
+        ("app", "0035_alter_notificationmodels_event_type_riskincident_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='attendance',
-            name='score',
-            field=models.DecimalField(blank=True, decimal_places=2, max_digits=5, null=True, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(100)], verbose_name='Оценка'),
+            model_name="attendance",
+            name="score",
+            field=models.DecimalField(
+                blank=True,
+                decimal_places=2,
+                max_digits=5,
+                null=True,
+                validators=[
+                    django.core.validators.MinValueValidator(0),
+                    django.core.validators.MaxValueValidator(100),
+                ],
+                verbose_name="Оценка",
+            ),
         ),
     ]

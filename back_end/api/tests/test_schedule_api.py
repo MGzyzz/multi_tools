@@ -3,7 +3,6 @@
 from datetime import date, time, timedelta
 
 from django.contrib.auth import get_user_model
-
 from django.urls import reverse
 
 from app.models import Attendance, Group, Schedule, Student, Subject_study
@@ -93,7 +92,9 @@ class ScheduleAPITests(BaseJWTAPITestCase):
         )
         own_second_subject.groups.add(self.group)
 
-        other_user = User.objects.create_user(username="other_sched", password="pass_123")
+        other_user = User.objects.create_user(username="other_sched")
+        other_user.set_unusable_password()
+        other_user.save(update_fields=["password"])
         other_teacher = other_user.teacher_profile
         other_subject = Subject_study.objects.create(
             name="Physics",
@@ -126,12 +127,16 @@ class ScheduleAPITests(BaseJWTAPITestCase):
         returned_ids = {item["id"] for item in response.data["entries"]}
         self.assertIn(self.schedule.id, returned_ids)
         self.assertIn(locked_schedule.id, returned_ids)
-        locked_entry = next(item for item in response.data["entries"] if item["id"] == locked_schedule.id)
+        locked_entry = next(
+            item for item in response.data["entries"] if item["id"] == locked_schedule.id
+        )
         self.assertFalse(locked_entry["can_edit"])
 
     def test_schedule_planner_without_group_returns_accessible_groups(self):
         """Return groups available for planning, including groups linked through teacher subjects."""
-        other_user = User.objects.create_user(username="group_owner", password="pass_123")
+        other_user = User.objects.create_user(username="group_owner")
+        other_user.set_unusable_password()
+        other_user.save(update_fields=["password"])
         other_teacher = other_user.teacher_profile
         foreign_group = Group.objects.create(
             name="CS-401",
@@ -153,7 +158,9 @@ class ScheduleAPITests(BaseJWTAPITestCase):
         returned_ids = {item["id"] for item in response.data["groups"]}
         self.assertIn(self.group.id, returned_ids)
         self.assertIn(foreign_group.id, returned_ids)
-        foreign_item = next(item for item in response.data["groups"] if item["id"] == foreign_group.id)
+        foreign_item = next(
+            item for item in response.data["groups"] if item["id"] == foreign_group.id
+        )
         self.assertFalse(foreign_item["is_owner"])
 
     def test_schedule_planner_save_creates_new_schedule(self):

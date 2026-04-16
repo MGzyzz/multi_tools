@@ -212,7 +212,9 @@ class AttendanceAPI(APIView):
             id=pk,
         )
 
-        if not _teacher_can_manage_attendance(attendance=attendance, teacher_id=request.user.teacher_profile.id):
+        if not _teacher_can_manage_attendance(
+            attendance=attendance, teacher_id=request.user.teacher_profile.id
+        ):
             return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = AttendanceUpdateSerializer(data=request.data)

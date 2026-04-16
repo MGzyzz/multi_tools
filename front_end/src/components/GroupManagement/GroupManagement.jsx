@@ -188,7 +188,6 @@ const GroupManagement = ({ isDark = false }) => {
       }
     );
   };
-
   const filteredStudents = useMemo(() => {
     const term = debouncedSearchTerm.trim().toLowerCase();
     if (!term) return students;

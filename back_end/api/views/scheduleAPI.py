@@ -35,8 +35,9 @@ class ScheduleListAPI(APIView):
 
     def get(self, request, *args, **kwargs):
         teacher = request.user.teacher_profile
-
-        start_date = _parse_date_param(request.query_params.get("date_from")) or timezone.localdate()
+        start_date = (
+            _parse_date_param(request.query_params.get("date_from")) or timezone.localdate()
+        )
         end_date = _parse_date_param(request.query_params.get("date_to")) or start_date
 
         schedules = Schedule.objects.select_related("subject").filter(
@@ -119,9 +120,7 @@ class SchedulePlannerAPI(APIView):
             subject_map = _get_subject_map(
                 teacher_id=teacher.id,
                 group=group,
-                subject_ids={
-                    item["subject_id"] for item in [*create_items, *update_items]
-                },
+                subject_ids={item["subject_id"] for item in [*create_items, *update_items]},
             )
         except ValueError as exc:
             return Response(exc.args[0], status=status.HTTP_400_BAD_REQUEST)
@@ -254,9 +253,7 @@ class ScheduleSemesterPreviewAPI(APIView):
         )
         conflict_map = {(schedule.date, schedule.time): schedule for schedule in conflict_schedules}
         creatable_count = sum(
-            1
-            for item in occurrences
-            if (item["date"], item["time"]) not in conflict_map
+            1 for item in occurrences if (item["date"], item["time"]) not in conflict_map
         )
 
         return _apply_no_store(
@@ -277,7 +274,9 @@ class ScheduleSemesterPreviewAPI(APIView):
                             "time": item["time"],
                             "subject_name": subject_map[item["subject_id"]].name,
                             "occupied_by": conflict_map[(item["date"], item["time"])].subject.name,
-                            "teacher_name": _get_teacher_name(conflict_map[(item["date"], item["time"])]),
+                            "teacher_name": _get_teacher_name(
+                                conflict_map[(item["date"], item["time"])]
+                            ),
                         }
                         for item in occurrences
                         if (item["date"], item["time"]) in conflict_map
@@ -428,7 +427,9 @@ class GetScheduleGroupId(APIView):
         return Response(serializer.data)
 
 
-def _serialize_planner_payload(*, group: Group, teacher_id: int, start_date: date, end_date: date) -> dict:
+def _serialize_planner_payload(
+    *, group: Group, teacher_id: int, start_date: date, end_date: date
+) -> dict:
     schedules = list(
         Schedule.objects.filter(group_id=group.id, date__range=(start_date, end_date))
         .select_related("subject", "teacher__user")
@@ -468,7 +469,9 @@ def _serialize_planner_payload(*, group: Group, teacher_id: int, start_date: dat
     }
 
 
-def _find_group_slot_conflicts(*, group_id: int, slot_pairs: list[tuple[date, object]], excluded_ids: set[int]) -> list[Schedule]:
+def _find_group_slot_conflicts(
+    *, group_id: int, slot_pairs: list[tuple[date, object]], excluded_ids: set[int]
+) -> list[Schedule]:
     if not slot_pairs:
         return []
 
@@ -503,7 +506,9 @@ def _get_group_for_teacher(*, group_id: int | str, teacher_id: int) -> Group:
     )
 
 
-def _get_subject_map(*, teacher_id: int, group: Group, subject_ids: set[int]) -> dict[int, Subject_study]:
+def _get_subject_map(
+    *, teacher_id: int, group: Group, subject_ids: set[int]
+) -> dict[int, Subject_study]:
     if not subject_ids:
         return {}
 
@@ -518,7 +523,10 @@ def _get_subject_map(*, teacher_id: int, group: Group, subject_ids: set[int]) ->
 
     missing_ids = subject_ids - set(subject_map)
     if missing_ids:
-        raise_subject_error = {"detail": "Some subjects are not available for this group.", "subject_ids": sorted(missing_ids)}
+        raise_subject_error = {
+            "detail": "Some subjects are not available for this group.",
+            "subject_ids": sorted(missing_ids),
+        }
         raise ValueError(raise_subject_error)
 
     return subject_map
