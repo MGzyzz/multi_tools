@@ -260,6 +260,20 @@
 - новый контракт Telegram-доставки;
 - допустимость email вида `12345@iitu.edu.kz`.
 
+### 11. Финальные правки после прогона
+
+Изменены:
+
+- `api/tests/test_risk_incident_service.py`
+- `app/utils/risk_incidents.py`
+
+Что сделано:
+
+- тест `test_attendance_incident_is_created_once_and_notification_is_sent_once` приведён к актуальному контракту student-notification;
+- старые ожидания по техническому тексту вида `Проблема: ...` заменены на проверки текущего пользовательского сообщения и заголовка;
+- после падения CI на `ruff format --check` отформатирован `app/utils/risk_incidents.py`;
+- итоговый форматтер-чек по `app/utils/risk_incidents.py` проходит.
+
 ## Поддержка email формата `12345@university-domain`
 
 Отдельной жёсткой валидации под этот формат не добавлялось, потому что текущий `EmailField` уже корректно принимает такой адрес.
