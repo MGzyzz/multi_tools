@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
@@ -17,6 +18,14 @@ class Attendance(models.Model):
     )
     presense = models.BooleanField("Присутствие", default=False)
     marked_at = models.DateTimeField("Отмечено в", null=True, blank=True)
+    score = models.DecimalField(
+        "Оценка",
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
 
     def __str__(self):
         return f"{self.student} - {self.schedule.subject} - {self.presense} - {self.schedule.time}"
