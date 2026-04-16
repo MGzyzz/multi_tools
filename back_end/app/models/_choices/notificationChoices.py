@@ -6,3 +6,4 @@ class NotificationTypeChoices(TextChoices):
     GROUP_CHANGED = "GROUP", "Группа"
     STUDENT_CHANGED = "STUDENT", "Студент"
     PERFOMANCE_DROP = "PERFORMANCE", "Успеваемость"
+    RISK_INCIDENT = "RISK", "Риск студента"

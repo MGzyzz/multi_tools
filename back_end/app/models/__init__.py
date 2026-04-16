@@ -3,6 +3,7 @@ from .groupModels import Group
 from .notificationDeliveryModels import NotificationDelivery
 from .notificationModels import NotificationModels
 from .notificationPreferenceModels import NotificationPreference
+from .riskIncidentModels import RiskIncident, TeacherRiskIncidentAction
 from .scheduleModels import Schedule
 from .studentModels import Student, StudentFaceImage
 from .subjectStudyModels import Subject_study
@@ -21,4 +22,6 @@ __all__ = [
     "NotificationModels",
     "NotificationPreference",
     "NotificationDelivery",
+    "RiskIncident",
+    "TeacherRiskIncidentAction",
 ]

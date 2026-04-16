@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class SendMessageRequest(BaseModel):
-    recipient: int = Field(..., description="Telegram chat id")
+    recipient: int | str = Field(..., description="Telegram chat id or username")
     subject: str = Field(..., min_length=1)
     message: str = Field(..., min_length=1)
     urgent: bool = False
@@ -19,6 +19,7 @@ class SendThreadMessageRequest(BaseModel):
 
 class MessageResponse(BaseModel):
     status: str
+    message_id: str | None = None
 
 
 class BotStatusResponse(BaseModel):

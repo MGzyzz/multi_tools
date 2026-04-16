@@ -85,6 +85,15 @@ class NotificationDeliveryTasksTests(TestCase):
         self.assertEqual(result["status"], "sent")
         self.assertEqual(delivery.status, NotificationStatusChoices.SENT)
         self.assertEqual(delivery.provider_message_id, "123")
+        mock_post.assert_called_once_with(
+            "http://localhost:8001/send_message",
+            json={
+                "recipient": 777000,
+                "subject": "Changes",
+                "message": "Schedule updated",
+            },
+            timeout=5,
+        )
 
     @patch("app.tasks.process_notification_delivery.delay")
     def test_enqueue_pending_deliveries_dispatches_tasks(self, mock_delay):
