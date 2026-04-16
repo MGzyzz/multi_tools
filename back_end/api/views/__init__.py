@@ -4,6 +4,7 @@ from .attendanceAPI import (
     AttendanceScheduleDetailAPI,
     IsTeacher,
     MarkAttendanceAPIView,
+    StudentJournalDetailAPI,
 )
 from .faceRecognitionAPI import RecognizeStudentByFace, UpdateStudentFaceEmbedding
 from .groupAPI import (
@@ -31,6 +32,9 @@ from .scheduleAPI import (
     GetScheduleGroupId,
     GetScheduleWithAttendens,
     ScheduleListAPI,
+    SchedulePlannerAPI,
+    ScheduleSemesterApplyAPI,
+    ScheduleSemesterPreviewAPI,
 )
 from .studentAPI import (
     CreateStudentAPI,
@@ -58,6 +62,7 @@ __all__ = [
     "GroupStudentAPI",
     "IsTeacher",
     "MarkAttendanceAPIView",
+    "StudentJournalDetailAPI",
     "NotificationListAPI",
     "NotificationMarkReadAPI",
     "ProfileAPI",
@@ -66,7 +71,10 @@ __all__ = [
     "RiskIncidentEscalateAPI",
     "RiskIncidentListAPI",
     "RiskIncidentResolveAPI",
+    "SchedulePlannerAPI",
     "ScheduleListAPI",
+    "ScheduleSemesterApplyAPI",
+    "ScheduleSemesterPreviewAPI",
     "StudentNotificationListAPI",
     "StudentNotificationPreferenceAPI",
     "StudentRiskIncidentListAPI",

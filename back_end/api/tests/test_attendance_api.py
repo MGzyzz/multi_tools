@@ -1,6 +1,7 @@
 """Tests for attendance-related API endpoints."""
 
-from datetime import date, time
+from datetime import date, time, timedelta
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -100,7 +101,7 @@ class AttendanceAPITests(BaseJWTAPITestCase):
         url = reverse("edit_attendance", args=[self.attendance.id])
         response = self.client.patch(
             url,
-            {"presense": True},
+            {"presense": True, "score": "91.50"},
             format="json",
             **self.auth_headers(),
         )
@@ -111,6 +112,8 @@ class AttendanceAPITests(BaseJWTAPITestCase):
         )
         self.attendance.refresh_from_db()
         self.assertTrue(self.attendance.presense)
+        self.assertEqual(self.attendance.score, Decimal("91.50"))
+        self.assertIn("attendance", response.data)
 
     def test_edit_attendance_not_found_returns_404(self):
         """Return 404 when editing a missing attendance."""
@@ -169,3 +172,37 @@ class AttendanceAPITests(BaseJWTAPITestCase):
             **self.auth_headers(),
         )
         self.assertEqual(response.status_code, 404)
+
+    def test_student_journal_returns_summary_and_creates_missing_rows(self):
+        """Return detailed journal data for a student in the selected group/subject."""
+        second_schedule = Schedule.objects.create(
+            group=self.group,
+            subject=self.subject,
+            teacher=self.teacher,
+            time=time(12, 0),
+            date=date.today() + timedelta(days=1),
+        )
+
+        self.attendance.presense = True
+        self.attendance.score = Decimal("88.00")
+        self.attendance.save(update_fields=["presense", "score"])
+
+        url = reverse(
+            "student_journal_detail",
+            args=[self.group.id, self.subject.id, self.student.id],
+        )
+        response = self.client.get(url, **self.auth_headers())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["student"]["id"], self.student.id)
+        self.assertEqual(response.data["group"]["id"], self.group.id)
+        self.assertEqual(response.data["subject"]["id"], self.subject.id)
+        self.assertEqual(response.data["summary"]["total_lessons"], 2)
+        self.assertEqual(response.data["summary"]["attended_lessons"], 1)
+        self.assertEqual(response.data["summary"]["missed_lessons"], 1)
+        self.assertEqual(response.data["summary"]["attendance_percent"], 50)
+        self.assertEqual(response.data["summary"]["graded_lessons"], 1)
+        self.assertEqual(len(response.data["journal"]), 2)
+        self.assertTrue(
+            Attendance.objects.filter(student=self.student, schedule=second_schedule).exists()
+        )
