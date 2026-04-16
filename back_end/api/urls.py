@@ -31,6 +31,7 @@ from .views import (
     StudentListAPI,
     StudentNotificationListAPI,
     StudentNotificationPreferenceAPI,
+    StudentJournalDetailAPI,
     StudentRiskIncidentListAPI,
     UpdateStudentFaceEmbedding,
     getStudentInformation,
@@ -98,6 +99,11 @@ urlpatterns = [
     ),
     path("attendance/mark/", MarkAttendanceAPIView.as_view(), name="attendance-mark"),
     path("edit_attendance/<int:pk>/", AttendanceAPI.as_view(), name="edit_attendance"),
+    path(
+        "get_group/<int:group_id>/subjects/<int:subject_id>/students/<int:student_id>/journal/",
+        StudentJournalDetailAPI.as_view(),
+        name="student_journal_detail",
+    ),
     path(
         "schedule_and_attendance/<int:pk>/",
         GetScheduleWithAttendens.as_view(),

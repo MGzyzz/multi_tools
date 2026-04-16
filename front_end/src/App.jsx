@@ -9,6 +9,7 @@ const Attendance = lazy(() => import('./components/Attendance/Attendance'))
 const Tools = lazy(() => import('./components/Tools/Tools'))
 const Auth = lazy(() => import('./components/Auth/Auth'))
 const GroupManagement = lazy(() => import('./components/GroupManagement/GroupManagement'))
+const StudentJournal = lazy(() => import('./components/StudentJournal/StudentJournal'))
 const TeacherProfile = lazy(() => import('./components/TeacherProfile/TeacherProfile'))
 const Analytics = lazy(() => import('./components/Analytics/Analytics'))
 
@@ -51,6 +52,7 @@ function App() {
   const getCurrentPage = () => {
     const path = location.pathname
     if (path === '/') return 'home'
+    if (path.startsWith('/groups')) return 'tools'
     if (path.startsWith('/attendance')) return 'attendance'
     if (path.startsWith('/tools')) return 'tools'
     if (path.startsWith('/analytics')) return 'analytics'
@@ -102,6 +104,23 @@ function App() {
                 onNavigate={(path) => navigate(path)}
               >
                 <GroupManagement isDark={theme === 'dark'}/>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/groups/:groupId/subjects/:subjectId/students/:studentId"
+          element={
+            <ProtectedRoute authenticated={authenticated}>
+              <Layout 
+                currentPage={getCurrentPage()} 
+                onLogout={handleLogout}
+                theme={theme}
+                setTheme={setTheme}
+                onNavigate={(path) => navigate(path)}
+              >
+                <StudentJournal isDark={theme === 'dark'} />
               </Layout>
             </ProtectedRoute>
           }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AddGroupModal from '../AddGroupModal/AddGroupModal';
 import AddStudentModal from '../AddStudentModal/AddStudentModal';
 import EditStudentModal from '../EditStudentModal/EditStudentModal';
@@ -8,6 +9,7 @@ import GroupsSidebar from './GroupsSidebar';
 import StudentsPanel from './StudentsPanel';
 
 const GroupManagement = ({ isDark = false }) => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [groupSearchTerm, setGroupSearchTerm] = useState('');
@@ -172,6 +174,21 @@ const GroupManagement = ({ isDark = false }) => {
     setActiveDropdown(activeDropdown === studentId ? null : studentId);
   };
 
+  const handleOpenStudentJournal = (student) => {
+    if (!selectedSubject?.id || selectedGroup === 'all') return;
+
+    navigate(
+      `/groups/${selectedGroup}/subjects/${selectedSubject.id}/students/${student.id}`,
+      {
+        state: {
+          studentName: student.name,
+          groupName: selectedGroupData?.name ?? '',
+          subjectName: selectedSubject?.name ?? '',
+        },
+      }
+    );
+  };
+
   const filteredStudents = useMemo(() => {
     const term = debouncedSearchTerm.trim().toLowerCase();
     if (!term) return students;
@@ -248,6 +265,7 @@ const GroupManagement = ({ isDark = false }) => {
               selectedGroupData={selectedGroupData}
               onAddStudent={() => setShowAddStudentModal(true)}
               onEditStudent={handleEditStudent}
+              onOpenStudentJournal={handleOpenStudentJournal}
               activeDropdown={activeDropdown}
               onToggleDropdown={handleToggleDropdown}
             />

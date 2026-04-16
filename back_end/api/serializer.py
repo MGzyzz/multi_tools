@@ -151,7 +151,33 @@ class AttendanceRowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attendance
-        fields = ("id", "presense", "marked_at", "student")
+        fields = ("id", "presense", "marked_at", "score", "student")
+
+
+class AttendanceUpdateSerializer(serializers.Serializer):
+    presense = serializers.BooleanField(required=False)
+    marked_at = serializers.DateTimeField(required=False)
+    score = serializers.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        required=False,
+        allow_null=True,
+    )
+
+    def validate(self, attrs):
+        if not attrs:
+            raise serializers.ValidationError("At least one field must be provided.")
+        return attrs
+
+
+class StudentJournalEntrySerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    schedule_id = serializers.IntegerField()
+    date = serializers.DateField()
+    time = serializers.TimeField()
+    presense = serializers.BooleanField()
+    marked_at = serializers.DateTimeField(allow_null=True)
+    score = serializers.DecimalField(max_digits=5, decimal_places=2, allow_null=True)
 
 
 class GroupMiniSerializer(serializers.Serializer):
