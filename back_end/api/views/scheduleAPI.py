@@ -248,7 +248,7 @@ class ScheduleSemesterPreviewAPI(APIView):
                 group=group,
                 subject_ids={item["subject_id"] for item in payload["pattern"]},
             )
-            auditorium_map = _get_auditorium_map(
+            _get_auditorium_map(
                 teacher_id=teacher.id,
                 auditorium_ids={
                     item["auditorium_id"] for item in payload["pattern"] if item.get("auditorium_id")
