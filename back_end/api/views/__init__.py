@@ -1,5 +1,4 @@
 from .analyticsAPI import get_period
-from .auditoriumAPI import AuditoriumListCreateAPI
 from .attendanceAPI import (
     AttendanceAPI,
     AttendanceScheduleDetailAPI,
@@ -7,6 +6,7 @@ from .attendanceAPI import (
     MarkAttendanceAPIView,
     StudentJournalDetailAPI,
 )
+from .auditoriumAPI import AuditoriumListCreateAPI
 from .faceRecognitionAPI import RecognizeStudentByFace, UpdateStudentFaceEmbedding
 from .groupAPI import (
     GetAllStudents,
