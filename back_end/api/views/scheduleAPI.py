@@ -251,7 +251,9 @@ class ScheduleSemesterPreviewAPI(APIView):
             _get_auditorium_map(
                 teacher_id=teacher.id,
                 auditorium_ids={
-                    item["auditorium_id"] for item in payload["pattern"] if item.get("auditorium_id")
+                    item["auditorium_id"]
+                    for item in payload["pattern"]
+                    if item.get("auditorium_id")
                 },
             )
         except ValueError as exc:
@@ -322,7 +324,9 @@ class ScheduleSemesterApplyAPI(APIView):
             auditorium_map = _get_auditorium_map(
                 teacher_id=teacher.id,
                 auditorium_ids={
-                    item["auditorium_id"] for item in payload["pattern"] if item.get("auditorium_id")
+                    item["auditorium_id"]
+                    for item in payload["pattern"]
+                    if item.get("auditorium_id")
                 },
             )
         except ValueError as exc:
