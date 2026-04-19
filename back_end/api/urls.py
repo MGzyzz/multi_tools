@@ -6,6 +6,7 @@ from app.utils import create_excel_attendance_file
 from .views import (
     AttendanceAPI,
     AttendanceScheduleDetailAPI,
+    AuditoriumListCreateAPI,
     CreateStudentAPI,
     EditProfileAPI,
     EditStudentAPI,
@@ -88,6 +89,7 @@ urlpatterns = [
     path("get_group/<int:pk>/", GroupDetailAPI.as_view(), name="group_detail"),
     path("create_group/", GroupCreateAPI.as_view(), name="create_group"),
     # === SUBJECTS ===
+    path("auditoriums/", AuditoriumListCreateAPI.as_view(), name="auditorium_list_create"),
     path("get_schedule_list/", ScheduleListAPI.as_view(), name="schedule_list"),
     path("schedule-planner/", SchedulePlannerAPI.as_view(), name="schedule_planner"),
     path(

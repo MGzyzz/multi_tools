@@ -6,6 +6,7 @@ from .attendanceAPI import (
     MarkAttendanceAPIView,
     StudentJournalDetailAPI,
 )
+from .auditoriumAPI import AuditoriumListCreateAPI
 from .faceRecognitionAPI import RecognizeStudentByFace, UpdateStudentFaceEmbedding
 from .groupAPI import (
     GetAllStudents,
@@ -48,6 +49,7 @@ from .subjectAPI import GetSubjectGroupListAPI
 __all__ = [
     "AttendanceAPI",
     "AttendanceScheduleDetailAPI",
+    "AuditoriumListCreateAPI",
     "CreateStudentAPI",
     "EditProfileAPI",
     "EditStudentAPI",

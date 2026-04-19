@@ -1,4 +1,6 @@
-# from .gradeModels import Grade
+from importlib import import_module
+
+from .auditoriumModels import Auditorium
 from .groupModels import Group
 from .notificationDeliveryModels import NotificationDelivery
 from .notificationModels import NotificationModels
@@ -7,21 +9,22 @@ from .riskIncidentModels import RiskIncident, TeacherRiskIncidentAction
 from .scheduleModels import Schedule
 from .studentModels import Student, StudentFaceImage
 from .subjectStudyModels import Subject_study
-from .аttendanceModels import Attendance
-from .аttendanceStatModels import AttendanceStat
+
+Attendance = import_module(".\u0430ttendanceModels", __name__).Attendance
+AttendanceStat = import_module(".\u0430ttendanceStatModels", __name__).AttendanceStat
 
 __all__ = [
     "Attendance",
     "AttendanceStat",
-    # "Grade",
+    "Auditorium",
     "Group",
+    "NotificationDelivery",
+    "NotificationModels",
+    "NotificationPreference",
+    "RiskIncident",
     "Schedule",
     "Student",
     "StudentFaceImage",
     "Subject_study",
-    "NotificationModels",
-    "NotificationPreference",
-    "NotificationDelivery",
-    "RiskIncident",
     "TeacherRiskIncidentAction",
 ]

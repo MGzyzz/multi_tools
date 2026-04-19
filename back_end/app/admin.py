@@ -5,6 +5,7 @@ from app.utils.face_embedding import trim_face_images
 from .models import (
     Attendance,
     AttendanceStat,
+    Auditorium,
     Group,
     NotificationDelivery,
     NotificationModels,
@@ -61,10 +62,17 @@ class GroupAdmin(admin.ModelAdmin):
 
 
 class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ("id", "group", "subject", "teacher", "time", "date")
-    search_fields = ("group__name", "subject__name")
-    list_filter = ("date",)
+    list_display = ("id", "group", "subject", "auditorium", "teacher", "time", "date")
+    search_fields = ("group__name", "subject__name", "auditorium__name")
+    list_filter = ("date", "auditorium__building")
     ordering = ("date",)
+
+
+class AuditoriumAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "building", "teacher")
+    search_fields = ("name", "teacher__user__username", "teacher__user__first_name")
+    list_filter = ("building",)
+    ordering = ("building", "name")
 
 
 class AttendanceAdmin(admin.ModelAdmin):
@@ -151,6 +159,7 @@ class RiskIncidentAdmin(admin.ModelAdmin):
 admin.site.register(Student, StudentAdmin)
 admin.site.register(StudentFaceImage)
 admin.site.register(Group, GroupAdmin)
+admin.site.register(Auditorium, AuditoriumAdmin)
 admin.site.register(Schedule, ScheduleAdmin)
 admin.site.register(Attendance, AttendanceAdmin)
 admin.site.register(AttendanceStat, AttendanceStatAdmin)

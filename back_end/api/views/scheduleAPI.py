@@ -18,7 +18,7 @@ from api.serializer import (
     ScheduleSerializer,
 )
 from api.views.attendanceAPI import IsTeacher
-from app.models import Attendance, Group, Schedule, Subject_study
+from app.models import Attendance, Auditorium, Group, Schedule, Subject_study
 from app.models._choices import NotificationTypeChoices
 from app.utils.notification import create_teacher_notifications
 from app.utils.schedule_planner import (
@@ -40,7 +40,7 @@ class ScheduleListAPI(APIView):
         )
         end_date = _parse_date_param(request.query_params.get("date_to")) or start_date
 
-        schedules = Schedule.objects.select_related("subject").filter(
+        schedules = Schedule.objects.select_related("subject", "auditorium").filter(
             teacher=teacher,
             date__range=(start_date, end_date),
         )
@@ -122,6 +122,14 @@ class SchedulePlannerAPI(APIView):
                 group=group,
                 subject_ids={item["subject_id"] for item in [*create_items, *update_items]},
             )
+            auditorium_map = _get_auditorium_map(
+                teacher_id=teacher.id,
+                auditorium_ids={
+                    item["auditorium_id"]
+                    for item in [*create_items, *update_items]
+                    if item.get("auditorium_id")
+                },
+            )
         except ValueError as exc:
             return Response(exc.args[0], status=status.HTTP_400_BAD_REQUEST)
 
@@ -202,12 +210,14 @@ class SchedulePlannerAPI(APIView):
                 schedule = editable_schedules[item["id"]]
                 schedule.date = item["date"]
                 schedule.time = item["time"]
-                schedule.save(update_fields=["date", "time"])
+                schedule.auditorium = auditorium_map.get(item.get("auditorium_id"))
+                schedule.save(update_fields=["date", "time", "auditorium"])
 
             for item in create_items:
                 Schedule.objects.create(
                     group=group,
                     subject=subject_map[item["subject_id"]],
+                    auditorium=auditorium_map.get(item.get("auditorium_id")),
                     teacher=teacher,
                     date=item["date"],
                     time=item["time"],
@@ -237,6 +247,14 @@ class ScheduleSemesterPreviewAPI(APIView):
                 teacher_id=teacher.id,
                 group=group,
                 subject_ids={item["subject_id"] for item in payload["pattern"]},
+            )
+            _get_auditorium_map(
+                teacher_id=teacher.id,
+                auditorium_ids={
+                    item["auditorium_id"]
+                    for item in payload["pattern"]
+                    if item.get("auditorium_id")
+                },
             )
         except ValueError as exc:
             return Response(exc.args[0], status=status.HTTP_400_BAD_REQUEST)
@@ -303,6 +321,14 @@ class ScheduleSemesterApplyAPI(APIView):
                 group=group,
                 subject_ids={item["subject_id"] for item in payload["pattern"]},
             )
+            auditorium_map = _get_auditorium_map(
+                teacher_id=teacher.id,
+                auditorium_ids={
+                    item["auditorium_id"]
+                    for item in payload["pattern"]
+                    if item.get("auditorium_id")
+                },
+            )
         except ValueError as exc:
             return Response(exc.args[0], status=status.HTTP_400_BAD_REQUEST)
         occurrences = expand_semester_pattern(
@@ -322,6 +348,7 @@ class ScheduleSemesterApplyAPI(APIView):
             Schedule(
                 group=group,
                 subject=subject_map[item["subject_id"]],
+                auditorium=auditorium_map.get(item.get("auditorium_id")),
                 teacher=teacher,
                 date=item["date"],
                 time=item["time"],
@@ -432,7 +459,7 @@ def _serialize_planner_payload(
 ) -> dict:
     schedules = list(
         Schedule.objects.filter(group_id=group.id, date__range=(start_date, end_date))
-        .select_related("subject", "teacher__user")
+        .select_related("subject", "teacher__user", "auditorium")
         .order_by("date", "time", "id")
     )
     subjects = list(
@@ -482,7 +509,7 @@ def _find_group_slot_conflicts(
     queryset = (
         Schedule.objects.filter(group_id=group_id)
         .filter(slot_query)
-        .select_related("subject", "teacher__user")
+        .select_related("subject", "teacher__user", "auditorium")
         .order_by("date", "time", "id")
     )
     if excluded_ids:
@@ -530,6 +557,27 @@ def _get_subject_map(
         raise ValueError(raise_subject_error)
 
     return subject_map
+
+
+def _get_auditorium_map(*, teacher_id: int, auditorium_ids: set[int]) -> dict[int, Auditorium]:
+    if not auditorium_ids:
+        return {}
+
+    auditorium_map = {
+        auditorium.id: auditorium
+        for auditorium in Auditorium.objects.filter(id__in=auditorium_ids, teacher_id=teacher_id)
+    }
+
+    missing_ids = auditorium_ids - set(auditorium_map)
+    if missing_ids:
+        raise ValueError(
+            {
+                "detail": "Some auditoriums are not available for this teacher.",
+                "auditorium_ids": sorted(missing_ids),
+            }
+        )
+
+    return auditorium_map
 
 
 def _get_teacher_name(schedule: Schedule) -> str:
