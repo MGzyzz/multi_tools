@@ -6,6 +6,7 @@ from accounts.models import TeacherProfile, User
 from accounts.models._choices import RoleChoices
 from app.models import (
     Attendance,
+    Auditorium,
     Group,
     NotificationDelivery,
     NotificationModels,
@@ -16,6 +17,30 @@ from app.models import (
     Subject_study,
     TeacherRiskIncidentAction,
 )
+
+
+class AuditoriumSerializer(ModelSerializer):
+    building_label = serializers.CharField(source="get_building_display", read_only=True)
+
+    class Meta:
+        model = Auditorium
+        fields = ["id", "name", "building", "building_label"]
+
+    def validate(self, attrs):
+        teacher = self.context["teacher"]
+        name = attrs.get("name", "").strip()
+        building = attrs.get("building")
+
+        if not name:
+            raise serializers.ValidationError({"name": "Auditorium name is required."})
+
+        if Auditorium.objects.filter(teacher=teacher, name=name, building=building).exists():
+            raise serializers.ValidationError(
+                {"name": "This auditorium already exists for the selected building."}
+            )
+
+        attrs["name"] = name
+        return attrs
 
 
 class GroupSerializer(ModelSerializer):
@@ -129,7 +154,20 @@ class ScheduleSerializer(ModelSerializer):
     subject_id = serializers.PrimaryKeyRelatedField(
         queryset=Subject_study.objects.all(), source="subject", write_only=True
     )
+    auditorium_id = serializers.PrimaryKeyRelatedField(
+        queryset=Auditorium.objects.all(),
+        source="auditorium",
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
     subject_name = serializers.CharField(source="subject.name", read_only=True)
+    auditorium_name = serializers.CharField(source="auditorium.name", read_only=True)
+    auditorium_building = serializers.CharField(source="auditorium.building", read_only=True)
+    auditorium_building_label = serializers.CharField(
+        source="auditorium.get_building_display",
+        read_only=True,
+    )
 
     class Meta:
         model = Schedule
@@ -139,11 +177,12 @@ class ScheduleSerializer(ModelSerializer):
 class SchedulePlannerEntrySerializer(serializers.ModelSerializer):
     subject = serializers.SerializerMethodField()
     teacher = serializers.SerializerMethodField()
+    auditorium = serializers.SerializerMethodField()
     can_edit = serializers.SerializerMethodField()
 
     class Meta:
         model = Schedule
-        fields = ("id", "date", "time", "subject", "teacher", "can_edit")
+        fields = ("id", "date", "time", "subject", "teacher", "auditorium", "can_edit")
 
     def get_subject(self, obj):
         return {"id": obj.subject_id, "name": obj.subject.name}
@@ -156,6 +195,17 @@ class SchedulePlannerEntrySerializer(serializers.ModelSerializer):
             }
         return {"id": obj.teacher_id, "name": "Преподаватель не указан"}
 
+    def get_auditorium(self, obj):
+        if not obj.auditorium_id:
+            return None
+
+        return {
+            "id": obj.auditorium_id,
+            "name": obj.auditorium.name,
+            "building": obj.auditorium.building,
+            "building_label": obj.auditorium.get_building_display(),
+        }
+
     def get_can_edit(self, obj):
         current_teacher_id = self.context.get("current_teacher_id")
         return obj.teacher_id == current_teacher_id
@@ -166,6 +216,7 @@ class SchedulePlannerMutationItemSerializer(serializers.Serializer):
     date = serializers.DateField()
     time = serializers.TimeField(input_formats=["%H:%M", "%H:%M:%S"])
     subject_id = serializers.IntegerField(min_value=1)
+    auditorium_id = serializers.IntegerField(min_value=1, required=False, allow_null=True)
 
 
 class SchedulePlannerSaveSerializer(serializers.Serializer):
@@ -198,6 +249,7 @@ class ScheduleSemesterPatternItemSerializer(serializers.Serializer):
     weekday = serializers.IntegerField(min_value=0, max_value=6)
     time = serializers.TimeField(input_formats=["%H:%M", "%H:%M:%S"])
     subject_id = serializers.IntegerField(min_value=1)
+    auditorium_id = serializers.IntegerField(min_value=1, required=False, allow_null=True)
 
 
 class ScheduleSemesterPlanSerializer(serializers.Serializer):

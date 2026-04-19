@@ -1,3 +1,4 @@
+from .auditoriumModels import Auditorium
 # from .gradeModels import Grade
 from .groupModels import Group
 from .notificationDeliveryModels import NotificationDelivery
@@ -13,6 +14,7 @@ from .аttendanceStatModels import AttendanceStat
 __all__ = [
     "Attendance",
     "AttendanceStat",
+    "Auditorium",
     # "Grade",
     "Group",
     "Schedule",

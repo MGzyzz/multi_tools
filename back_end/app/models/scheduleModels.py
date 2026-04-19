@@ -11,6 +11,14 @@ Schedule класс - отвечает за модель расписания и
 class Schedule(models.Model):
     group = models.ForeignKey("Group", on_delete=models.CASCADE, verbose_name="Группа")
     subject = models.ForeignKey("Subject_study", on_delete=models.CASCADE, verbose_name="Предмет")
+    auditorium = models.ForeignKey(
+        "Auditorium",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="schedules",
+        verbose_name="Аудитория",
+    )
     teacher = models.ForeignKey(
         TeacherProfile,
         on_delete=models.CASCADE,

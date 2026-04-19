@@ -1,4 +1,5 @@
 from .analyticsAPI import get_period
+from .auditoriumAPI import AuditoriumListCreateAPI
 from .attendanceAPI import (
     AttendanceAPI,
     AttendanceScheduleDetailAPI,
@@ -48,6 +49,7 @@ from .subjectAPI import GetSubjectGroupListAPI
 __all__ = [
     "AttendanceAPI",
     "AttendanceScheduleDetailAPI",
+    "AuditoriumListCreateAPI",
     "CreateStudentAPI",
     "EditProfileAPI",
     "EditStudentAPI",
