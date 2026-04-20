@@ -1,7 +1,7 @@
 import logging
 
 from django.core.cache import cache
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Prefetch, Q, Sum
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 
 from api.serializer import GroupSerializer
 from api.views.attendanceAPI import IsTeacher
-from app.models import AttendanceStat, Group, Subject_study
+from app.models import AttendanceStat, Group, Student, Subject_study
 
 from ..serializer import StudentSerializer
 
@@ -100,33 +100,44 @@ class GroupStudentAPI(APIView):
 
 class GetAllStudents(APIView):
     """
-    API view to retrive all students in all groups
-
+    API view to retrieve all students in teacher's groups, with optional ?group=name filter.
     """
 
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         teacher = request.user.teacher_profile
-        groups = Group.objects.filter(teacher=teacher).prefetch_related("students")
-        all_student = []
+        group_name = request.query_params.get("group", "").strip()
 
-        cache_key = f"students_by_teacher:{teacher.id}"
-        cached_data = cache.get(cache_key)
-
-        if cached_data is not None:
-            logger.info("Returning data from cache for teacher %s", teacher.id)
-            return Response(cached_data, status=status.HTTP_200_OK)
+        if not group_name:
+            cache_key = f"students_by_teacher:{teacher.id}"
+            cached_data = cache.get(cache_key)
+            if cached_data is not None:
+                logger.info("Returning data from cache for teacher %s", teacher.id)
+                return Response(cached_data, status=status.HTTP_200_OK)
 
         logger.info("Fetching data from DB for teacher %s", teacher.id)
 
-        for group in groups:
-            student = group.students.all()
-            serializer = StudentSerializer(student, many=True)
-            all_student.extend(serializer.data)
+        teacher_groups_qs = Group.objects.filter(teacher=teacher)
+        qs = Student.objects.filter(groups__teacher=teacher)
 
-        cache.set(cache_key, all_student, timeout=120)
-        return Response(all_student, status=status.HTTP_200_OK)
+        if group_name:
+            qs = qs.filter(groups__name__iexact=group_name, groups__teacher=teacher)
+
+        qs = qs.distinct().prefetch_related(
+            Prefetch("groups", queryset=teacher_groups_qs, to_attr="teacher_groups")
+        )
+
+        data = []
+        for student in qs:
+            s_data = StudentSerializer(student).data
+            s_data["groups"] = [{"id": g.id, "name": g.name} for g in student.teacher_groups]
+            data.append(s_data)
+
+        if not group_name:
+            cache.set(cache_key, data, timeout=120)
+
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class GroupDetailAPI(APIView):

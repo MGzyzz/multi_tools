@@ -4,6 +4,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from app.utils import create_excel_attendance_file
 
 from .views import (
+    AnalyticsGroupsAPI,
+    AnalyticsSummaryAPI,
     AttendanceAPI,
     AttendanceScheduleDetailAPI,
     AuditoriumListCreateAPI,
@@ -37,6 +39,7 @@ from .views import (
     StudentNotificationListAPI,
     StudentNotificationPreferenceAPI,
     StudentRiskIncidentListAPI,
+    StudentSyncWebhookAPI,
     UpdateStudentFaceEmbedding,
     getStudentInformation,
 )
@@ -169,6 +172,8 @@ urlpatterns = [
         name="risk_incident_escalate",
     ),
     # === ANALYTICS ===
-    # path('analytics/summary/', AnalyticsAPI.as_view(), name='analytics_data'),
-    # path('analytics/groups/', AnalyticsGroupListAPI.as_view(), name='analytics_groups'),
+    path("analytics/summary/", AnalyticsSummaryAPI.as_view(), name="analytics_summary"),
+    path("analytics/groups/", AnalyticsGroupsAPI.as_view(), name="analytics_groups"),
+    # === WEBHOOKS ===
+    path("webhooks/student-sync/", StudentSyncWebhookAPI.as_view(), name="webhook_student_sync"),
 ]

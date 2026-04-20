@@ -12,6 +12,8 @@ from django.utils import timezone
 
 from app.models._choices import NotificationDeliveryChoices, NotificationStatusChoices
 
+MAX_RETRY_ATTEMPTS = 3
+
 logger = logging.getLogger(__name__)
 
 
@@ -173,17 +175,19 @@ def process_notification_delivery(delivery_id: int) -> dict:
 def enqueue_pending_notification_deliveries(limit: int = 200) -> dict:
     from app.models import NotificationDelivery
 
-    with transaction.atomic():
-        pending_ids = list(
-            NotificationDelivery.objects.filter(status=NotificationStatusChoices.PENDING)
-            .order_by("id")
-            .values_list("id", flat=True)[:limit]
+    ids = list(
+        NotificationDelivery.objects.filter(
+            Q(status=NotificationStatusChoices.PENDING)
+            | Q(status=NotificationStatusChoices.FAILED, attempts__lt=MAX_RETRY_ATTEMPTS)
         )
+        .order_by("id")
+        .values_list("id", flat=True)[:limit]
+    )
 
-    for delivery_id in pending_ids:
+    for delivery_id in ids:
         process_notification_delivery.delay(delivery_id)
 
-    return {"enqueued": len(pending_ids), "limit": limit}
+    return {"enqueued": len(ids), "limit": limit}
 
 
 def _send_delivery_email(target: str | None, subject: str, message: str, notification) -> None:
