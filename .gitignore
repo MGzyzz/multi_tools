@@ -59,3 +59,5 @@ ai/ai/data/analytics
 back_end/media
 back_end/docs/
 CLAUDE.md
+test_folder/
+back_end/.claude/

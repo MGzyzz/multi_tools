@@ -451,11 +451,13 @@ def update_stat_on_attendance_save(sender, instance, created, **kwargs):
         group_id=group_id,
     ).update(attended=F("attended") + delta)
 
-    _notify_student_performance_if_needed(
-        student_id=student_id,
-        group_id=group_id,
-        subject_id=subject_id,
-        schedule_id=schedule.id,
+    transaction.on_commit(
+        lambda: _notify_student_performance_if_needed(
+            student_id=student_id,
+            group_id=group_id,
+            subject_id=subject_id,
+            schedule_id=schedule.id,
+        )
     )
 
 

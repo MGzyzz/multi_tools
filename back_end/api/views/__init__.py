@@ -1,4 +1,4 @@
-from .analyticsAPI import get_period
+from .analyticsAPI import AnalyticsGroupsAPI, AnalyticsSummaryAPI, get_period
 from .attendanceAPI import (
     AttendanceAPI,
     AttendanceScheduleDetailAPI,
@@ -45,6 +45,7 @@ from .studentAPI import (
     getStudentInformation,
 )
 from .subjectAPI import GetSubjectGroupListAPI
+from .webhookAPI import StudentSyncWebhookAPI
 
 __all__ = [
     "AttendanceAPI",
@@ -84,4 +85,7 @@ __all__ = [
     "UpdateStudentFaceEmbedding",
     "getStudentInformation",
     "get_period",
+    "AnalyticsSummaryAPI",
+    "AnalyticsGroupsAPI",
+    "StudentSyncWebhookAPI",
 ]

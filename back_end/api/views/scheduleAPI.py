@@ -39,18 +39,26 @@ class ScheduleListAPI(APIView):
             _parse_date_param(request.query_params.get("date_from")) or timezone.localdate()
         )
         end_date = _parse_date_param(request.query_params.get("date_to")) or start_date
+        show_all = request.query_params.get("show_all", "").lower() == "true"
 
-        schedules = Schedule.objects.select_related("subject", "auditorium").filter(
-            teacher=teacher,
-            date__range=(start_date, end_date),
-        )
+        if show_all:
+            accessible_groups = _get_accessible_groups_for_teacher(teacher_id=teacher.id)
+            schedules = Schedule.objects.select_related("subject", "auditorium").filter(
+                group__in=accessible_groups,
+                date__range=(start_date, end_date),
+            )
+        else:
+            schedules = Schedule.objects.select_related("subject", "auditorium").filter(
+                teacher=teacher,
+                date__range=(start_date, end_date),
+            )
 
         group_id = request.query_params.get("group_id")
         if group_id:
             schedules = schedules.filter(group_id=group_id)
 
         schedules = schedules.order_by("date", "time", "id")
-        serializer = ScheduleSerializer(schedules, many=True)
+        serializer = ScheduleSerializer(schedules, many=True, context={"teacher_id": teacher.id})
         return _apply_no_store(Response(serializer.data))
 
 
