@@ -7,6 +7,7 @@ from .attendanceAPI import (
     StudentJournalDetailAPI,
 )
 from .auditoriumAPI import AuditoriumListCreateAPI
+from .demoAPI import DemoNotificationAPI
 from .faceRecognitionAPI import RecognizeStudentByFace, UpdateStudentFaceEmbedding
 from .groupAPI import (
     GetAllStudents,
@@ -48,6 +49,7 @@ from .subjectAPI import GetSubjectGroupListAPI
 from .webhookAPI import StudentSyncWebhookAPI
 
 __all__ = [
+    "DemoNotificationAPI",
     "AttendanceAPI",
     "AttendanceScheduleDetailAPI",
     "AuditoriumListCreateAPI",
