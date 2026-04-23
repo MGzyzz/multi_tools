@@ -10,6 +10,7 @@ from .views import (
     AttendanceScheduleDetailAPI,
     AuditoriumListCreateAPI,
     CreateStudentAPI,
+    DemoNotificationAPI,
     EditProfileAPI,
     EditStudentAPI,
     GetAllStudents,
@@ -176,4 +177,6 @@ urlpatterns = [
     path("analytics/groups/", AnalyticsGroupsAPI.as_view(), name="analytics_groups"),
     # === WEBHOOKS ===
     path("webhooks/student-sync/", StudentSyncWebhookAPI.as_view(), name="webhook_student_sync"),
+    # === DEMO ===
+    path("demo/send-notification/", DemoNotificationAPI.as_view(), name="demo_send_notification"),
 ]

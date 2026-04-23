@@ -75,11 +75,89 @@ class AuditoriumAdmin(admin.ModelAdmin):
     ordering = ("building", "name")
 
 
+class StudentByGroupFilter(admin.SimpleListFilter):
+    title = "Студент"
+    parameter_name = "student_id"
+
+    def lookups(self, request, _model_admin):
+        group_id = request.GET.get("schedule__group__id__exact")
+        students = Student.objects.order_by("last_name", "first_name")
+        if group_id:
+            students = students.filter(groups__id=group_id)
+        return [(s.id, f"{s.last_name} {s.first_name}") for s in students]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(student_id=self.value())
+        return queryset
+
+
+@admin.action(description="Отметить присутствие")
+def mark_present(modeladmin, request, queryset):
+    count = 0
+    for attendance in queryset.select_related("schedule"):
+        if not attendance.presense:
+            attendance.presense = True
+            attendance.save(update_fields=["presense"])
+            count += 1
+    modeladmin.message_user(request, f"Отмечено присутствие: {count} записей.")
+
+
+@admin.action(description="Отметить отсутствие")
+def mark_absent(modeladmin, request, queryset):
+    count = 0
+    for attendance in queryset.select_related("schedule"):
+        if attendance.presense:
+            attendance.presense = False
+            attendance.save(update_fields=["presense"])
+            count += 1
+    modeladmin.message_user(request, f"Отмечено отсутствие: {count} записей.")
+
+
 class AttendanceAdmin(admin.ModelAdmin):
-    list_display = ("id", "student", "presense")
-    search_fields = ("student__first_name", "presense")
-    list_filter = ("presense",)
-    ordering = ("student",)
+    actions = [mark_present, mark_absent]
+    list_display = (
+        "id",
+        "student",
+        "get_group",
+        "get_subject",
+        "get_date",
+        "get_time",
+        "presense",
+        "marked_at",
+    )
+    search_fields = (
+        "student__first_name",
+        "student__last_name",
+        "schedule__group__name",
+        "schedule__subject__name",
+    )
+    list_filter = (
+        "presense",
+        "schedule__group",
+        StudentByGroupFilter,
+        "schedule__subject",
+        "schedule__date",
+    )
+    ordering = ("-schedule__date", "student__last_name")
+    date_hierarchy = "schedule__date"
+    list_select_related = ("student", "schedule__group", "schedule__subject")
+
+    @admin.display(description="Группа", ordering="schedule__group__name")
+    def get_group(self, obj):
+        return obj.schedule.group.name
+
+    @admin.display(description="Предмет", ordering="schedule__subject__name")
+    def get_subject(self, obj):
+        return obj.schedule.subject.name
+
+    @admin.display(description="Дата", ordering="schedule__date")
+    def get_date(self, obj):
+        return obj.schedule.date
+
+    @admin.display(description="Время", ordering="schedule__time")
+    def get_time(self, obj):
+        return obj.schedule.time
 
 
 class AttendanceStatAdmin(admin.ModelAdmin):
