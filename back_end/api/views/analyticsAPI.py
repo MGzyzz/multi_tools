@@ -150,3 +150,46 @@ class AnalyticsGroupsAPI(APIView):
             )
 
         return Response(result)
+
+
+class AnalyticsGroupStudentsAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, group_id):
+        teacher = request.user.teacher_profile
+        try:
+            group = Group.objects.get(id=group_id, teacher=teacher)
+        except Group.DoesNotExist:
+            return Response([])
+
+        group_stats = list(
+            AttendanceStat.objects.filter(group=group, total__gt=0)
+            .values("student_id")
+            .annotate(total=Sum("total"), attended=Sum("attended"))
+        )
+
+        high_ids = set(
+            RiskIncident.objects.filter(
+                group=group,
+                status__in=[RiskIncidentStatusChoices.OPEN, RiskIncidentStatusChoices.ESCALATED],
+            ).values_list("student_id", flat=True)
+        )
+
+        result = []
+        for s in group_stats:
+            pct = min(100.0, s["attended"] / s["total"] * 100)
+            if s["student_id"] in high_ids:
+                risk = "high"
+            elif pct < 80:
+                risk = "medium"
+            else:
+                risk = "low"
+            result.append(
+                {
+                    "student_id": s["student_id"],
+                    "risk": risk,
+                    "attendance_pct": round(pct),
+                }
+            )
+
+        return Response(result)

@@ -24,6 +24,9 @@ class TeacherProfile(models.Model):
     )
     avatar = models.ImageField(upload_to="avatar", null=True, blank=True)
     description = models.TextField(max_length=250, blank=True)
+    telegram_chat_id = models.CharField(
+        "Telegram Chat ID", max_length=50, unique=True, blank=True, null=True
+    )
 
     def __str__(self):
         return f"{self.user.username} ({self.role})"

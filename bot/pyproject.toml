@@ -12,6 +12,7 @@ uvicorn = "^0.34.1"
 aiogram = "^3.20.0"
 python-dotenv = "^1.1.0"
 pydantic-settings = "^2.10.1"
+httpx = "^0.28.0"
 
 [build-system]
 requires = ["poetry-core"]
