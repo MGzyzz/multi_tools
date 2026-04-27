@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
     token_bot: str = Field(..., alias="TOKEN_BOT")
     enable_polling: bool = Field(default=True, alias="ENABLE_POLLING")
+    django_api_url: str = Field(
+        default="http://localhost:8000/api", alias="DJANGO_API_URL"
+    )
+    bot_service_secret: str = Field(default="", alias="BOT_SERVICE_SECRET")
 
     model_config = SettingsConfigDict(extra="ignore")
 

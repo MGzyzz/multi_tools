@@ -8,6 +8,7 @@ from app.models import (
     Attendance,
     Auditorium,
     Group,
+    GroupLeadership,
     NotificationDelivery,
     NotificationModels,
     NotificationPreference,
@@ -15,6 +16,7 @@ from app.models import (
     Schedule,
     Student,
     Subject_study,
+    TeacherNotificationSettings,
     TeacherRiskIncidentAction,
 )
 
@@ -74,7 +76,7 @@ class GroupSerializer(ModelSerializer):
 
 class StudentSerializer(serializers.ModelSerializer):
     group_id = serializers.IntegerField(write_only=True)
-    # groups = GroupSerializer(many=True, read_only=True)
+    groups = serializers.SerializerMethodField()
     attendance = serializers.SerializerMethodField()
 
     class Meta:
@@ -90,8 +92,12 @@ class StudentSerializer(serializers.ModelSerializer):
             "platonus_id",
             "face_image",
             "group_id",
+            "groups",
             "attendance",
         )
+
+    def get_groups(self, obj):
+        return [{"id": g.id, "name": g.name} for g in obj.groups.all()]
 
     def validate_group_id(self, value):
         request = self.context.get("request")
@@ -560,3 +566,28 @@ class MarkAttendanceSerializer(serializers.Serializer):
     present_student_ids = serializers.ListField(
         child=serializers.IntegerField(min_value=1), allow_empty=True
     )
+
+
+class TeacherNotificationSettingsSerializer(ModelSerializer):
+    class Meta:
+        model = TeacherNotificationSettings
+        fields = ["lesson_reminder_enabled", "reminder_minutes_before"]
+
+
+class GroupLeadershipSerializer(ModelSerializer):
+    student_id = serializers.IntegerField(source="student.id", read_only=True)
+    first_name = serializers.CharField(source="student.first_name", read_only=True)
+    last_name = serializers.CharField(source="student.last_name", read_only=True)
+    telegram_connected = serializers.SerializerMethodField()
+
+    class Meta:
+        model = GroupLeadership
+        fields = ["id", "student_id", "first_name", "last_name", "telegram_connected"]
+
+    def get_telegram_connected(self, obj) -> bool:
+        return bool(obj.student.telegram_id)
+
+
+class TeacherBroadcastSerializer(serializers.Serializer):
+    group_ids = serializers.ListField(child=serializers.IntegerField(min_value=1), min_length=1)
+    message = serializers.CharField(min_length=1, max_length=4096)

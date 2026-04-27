@@ -5,6 +5,7 @@ from app.utils import create_excel_attendance_file
 
 from .views import (
     AnalyticsGroupsAPI,
+    AnalyticsGroupStudentsAPI,
     AnalyticsSummaryAPI,
     AttendanceAPI,
     AttendanceScheduleDetailAPI,
@@ -20,6 +21,7 @@ from .views import (
     GetSubjectGroupListAPI,
     GroupCreateAPI,
     GroupDetailAPI,
+    GroupLeadershipAPI,
     GroupListAPI,
     GroupStudentAPI,
     MarkAttendanceAPIView,
@@ -41,6 +43,11 @@ from .views import (
     StudentNotificationPreferenceAPI,
     StudentRiskIncidentListAPI,
     StudentSyncWebhookAPI,
+    TeacherBroadcastAPI,
+    TeacherNotificationSettingsAPI,
+    TeacherTelegramLinkCallbackAPI,
+    TeacherTelegramLinkTokenAPI,
+    TeacherTelegramStatusAPI,
     UpdateStudentFaceEmbedding,
     getStudentInformation,
 )
@@ -175,6 +182,44 @@ urlpatterns = [
     # === ANALYTICS ===
     path("analytics/summary/", AnalyticsSummaryAPI.as_view(), name="analytics_summary"),
     path("analytics/groups/", AnalyticsGroupsAPI.as_view(), name="analytics_groups"),
+    path(
+        "analytics/groups/<int:group_id>/students/",
+        AnalyticsGroupStudentsAPI.as_view(),
+        name="analytics_group_students",
+    ),
+    # === TELEGRAM & NOTIFICATION SETTINGS ===
+    path(
+        "teacher/notification-settings/",
+        TeacherNotificationSettingsAPI.as_view(),
+        name="teacher_notification_settings",
+    ),
+    path(
+        "teacher/telegram/link-token/",
+        TeacherTelegramLinkTokenAPI.as_view(),
+        name="teacher_telegram_link_token",
+    ),
+    path(
+        "teacher/telegram/link-callback/",
+        TeacherTelegramLinkCallbackAPI.as_view(),
+        name="teacher_telegram_link_callback",
+    ),
+    path(
+        "teacher/telegram/status/",
+        TeacherTelegramStatusAPI.as_view(),
+        name="teacher_telegram_status",
+    ),
+    # === GROUP LEADERSHIP ===
+    path(
+        "groups/<int:group_id>/leaders/",
+        GroupLeadershipAPI.as_view(),
+        name="group_leaders",
+    ),
+    # === BROADCAST ===
+    path(
+        "teacher/broadcast/",
+        TeacherBroadcastAPI.as_view(),
+        name="teacher_broadcast",
+    ),
     # === WEBHOOKS ===
     path("webhooks/student-sync/", StudentSyncWebhookAPI.as_view(), name="webhook_student_sync"),
     # === DEMO ===

@@ -1,4 +1,9 @@
-from .analyticsAPI import AnalyticsGroupsAPI, AnalyticsSummaryAPI, get_period
+from .analyticsAPI import (
+    AnalyticsGroupsAPI,
+    AnalyticsGroupStudentsAPI,
+    AnalyticsSummaryAPI,
+    get_period,
+)
 from .attendanceAPI import (
     AttendanceAPI,
     AttendanceScheduleDetailAPI,
@@ -46,6 +51,14 @@ from .studentAPI import (
     getStudentInformation,
 )
 from .subjectAPI import GetSubjectGroupListAPI
+from .telegramSettingsAPI import (
+    GroupLeadershipAPI,
+    TeacherBroadcastAPI,
+    TeacherNotificationSettingsAPI,
+    TeacherTelegramLinkCallbackAPI,
+    TeacherTelegramLinkTokenAPI,
+    TeacherTelegramStatusAPI,
+)
 from .webhookAPI import StudentSyncWebhookAPI
 
 __all__ = [
@@ -89,5 +102,12 @@ __all__ = [
     "get_period",
     "AnalyticsSummaryAPI",
     "AnalyticsGroupsAPI",
+    "AnalyticsGroupStudentsAPI",
     "StudentSyncWebhookAPI",
+    "GroupLeadershipAPI",
+    "TeacherBroadcastAPI",
+    "TeacherNotificationSettingsAPI",
+    "TeacherTelegramLinkCallbackAPI",
+    "TeacherTelegramLinkTokenAPI",
+    "TeacherTelegramStatusAPI",
 ]
