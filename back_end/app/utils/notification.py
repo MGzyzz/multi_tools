@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterable
 from typing import Any
+
+from django.core.cache import cache
 
 from accounts.models import TeacherProfile
 from app.models import (
@@ -16,6 +19,10 @@ from app.models._choices import (
     NotificationTypeChoices,
 )
 from app.utils.realtime_notifications import publish_notification_created
+
+logger = logging.getLogger(__name__)
+
+_RATE_LIMIT_SECONDS = 3600
 
 
 def create_teacher_notifications(
@@ -68,6 +75,11 @@ def create_student_notification(
     """
     Creates a notification for student if student has enabled preferences.
     """
+    rate_key = f"notif_rate:{student.id}:{event_type}"
+    if cache.get(rate_key):
+        logger.debug("Rate limited: student_id=%s event_type=%s", student.id, event_type)
+        return None
+
     allowed_channels = _allowed_student_channels(student=student, requested_channels=channels)
     if not allowed_channels:
         return None
@@ -87,6 +99,7 @@ def create_student_notification(
         student=student,
     )
     publish_notification_created(notification)
+    cache.set(rate_key, 1, timeout=_RATE_LIMIT_SECONDS)
     return notification
 
 
@@ -202,13 +215,10 @@ def _create_delivery_records(
         target = _resolve_delivery_target(channel=channel, teacher=teacher, student=student)
 
         if channel != NotificationDeliveryChoices.IN_APP and not target:
-            NotificationDelivery.objects.create(
-                notification=notification,
-                channel=channel,
-                status=NotificationStatusChoices.FAILED,
-                target=target,
-                attempts=1,
-                last_error="Target is missing for selected channel.",
+            logger.warning(
+                "Skipping delivery: no target for channel=%s notification_id=%s",
+                channel,
+                notification.id,
             )
             continue
 

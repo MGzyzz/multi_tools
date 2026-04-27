@@ -1,4 +1,9 @@
-from .analyticsAPI import get_period
+from .analyticsAPI import (
+    AnalyticsGroupsAPI,
+    AnalyticsGroupStudentsAPI,
+    AnalyticsSummaryAPI,
+    get_period,
+)
 from .attendanceAPI import (
     AttendanceAPI,
     AttendanceScheduleDetailAPI,
@@ -7,6 +12,7 @@ from .attendanceAPI import (
     StudentJournalDetailAPI,
 )
 from .auditoriumAPI import AuditoriumListCreateAPI
+from .demoAPI import DemoNotificationAPI
 from .faceRecognitionAPI import RecognizeStudentByFace, UpdateStudentFaceEmbedding
 from .groupAPI import (
     GetAllStudents,
@@ -45,8 +51,18 @@ from .studentAPI import (
     getStudentInformation,
 )
 from .subjectAPI import GetSubjectGroupListAPI
+from .telegramSettingsAPI import (
+    GroupLeadershipAPI,
+    TeacherBroadcastAPI,
+    TeacherNotificationSettingsAPI,
+    TeacherTelegramLinkCallbackAPI,
+    TeacherTelegramLinkTokenAPI,
+    TeacherTelegramStatusAPI,
+)
+from .webhookAPI import StudentSyncWebhookAPI
 
 __all__ = [
+    "DemoNotificationAPI",
     "AttendanceAPI",
     "AttendanceScheduleDetailAPI",
     "AuditoriumListCreateAPI",
@@ -84,4 +100,14 @@ __all__ = [
     "UpdateStudentFaceEmbedding",
     "getStudentInformation",
     "get_period",
+    "AnalyticsSummaryAPI",
+    "AnalyticsGroupsAPI",
+    "AnalyticsGroupStudentsAPI",
+    "StudentSyncWebhookAPI",
+    "GroupLeadershipAPI",
+    "TeacherBroadcastAPI",
+    "TeacherNotificationSettingsAPI",
+    "TeacherTelegramLinkCallbackAPI",
+    "TeacherTelegramLinkTokenAPI",
+    "TeacherTelegramStatusAPI",
 ]

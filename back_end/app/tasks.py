@@ -1,9 +1,11 @@
+import datetime
 import logging
 import os
 
 import requests
 from celery import shared_task
 from django.conf import settings
+from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Count, Q
@@ -11,6 +13,8 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 
 from app.models._choices import NotificationDeliveryChoices, NotificationStatusChoices
+
+MAX_RETRY_ATTEMPTS = 3
 
 logger = logging.getLogger(__name__)
 
@@ -173,17 +177,19 @@ def process_notification_delivery(delivery_id: int) -> dict:
 def enqueue_pending_notification_deliveries(limit: int = 200) -> dict:
     from app.models import NotificationDelivery
 
-    with transaction.atomic():
-        pending_ids = list(
-            NotificationDelivery.objects.filter(status=NotificationStatusChoices.PENDING)
-            .order_by("id")
-            .values_list("id", flat=True)[:limit]
+    ids = list(
+        NotificationDelivery.objects.filter(
+            Q(status=NotificationStatusChoices.PENDING)
+            | Q(status=NotificationStatusChoices.FAILED, attempts__lt=MAX_RETRY_ATTEMPTS)
         )
+        .order_by("id")
+        .values_list("id", flat=True)[:limit]
+    )
 
-    for delivery_id in pending_ids:
+    for delivery_id in ids:
         process_notification_delivery.delay(delivery_id)
 
-    return {"enqueued": len(pending_ids), "limit": limit}
+    return {"enqueued": len(ids), "limit": limit}
 
 
 def _send_delivery_email(target: str | None, subject: str, message: str, notification) -> None:
@@ -233,6 +239,79 @@ def _normalize_telegram_target(target: str) -> int | str:
     if value.lstrip("-").isdigit():
         return int(value)
     return value if value.startswith("@") else f"@{value}"
+
+
+@shared_task(name="send_lesson_reminders")
+def send_lesson_reminders() -> dict:
+    """
+    Runs every 5 minutes. Sends Telegram reminders to teachers whose lessons
+    start within their configured reminder window.
+    """
+    from app.models import Schedule, TeacherNotificationSettings
+
+    now = timezone.localtime(timezone.now())
+    today = now.date()
+
+    schedules_today = (
+        Schedule.objects.filter(date=today)
+        .select_related("teacher__notification_settings", "group", "subject")
+        .exclude(teacher__isnull=True)
+        .exclude(teacher__telegram_chat_id__isnull=True)
+        .exclude(teacher__telegram_chat_id="")
+    )
+
+    sent = 0
+    skipped = 0
+
+    for schedule in schedules_today:
+        teacher = schedule.teacher
+        try:
+            ns = teacher.notification_settings
+        except TeacherNotificationSettings.DoesNotExist:
+            continue
+
+        if not ns.lesson_reminder_enabled:
+            continue
+
+        lesson_dt = datetime.datetime.combine(today, schedule.time)
+        lesson_dt = timezone.make_aware(lesson_dt)
+        remind_dt = lesson_dt - datetime.timedelta(minutes=ns.reminder_minutes_before)
+
+        # Only send if we are within the 5-minute window starting at remind_dt
+        window_end = remind_dt + datetime.timedelta(minutes=5)
+        if not (remind_dt <= now < window_end):
+            skipped += 1
+            continue
+
+        dedup_key = f"lesson_reminder:{schedule.id}:{teacher.id}"
+        if cache.get(dedup_key):
+            skipped += 1
+            continue
+
+        text = (
+            f"⏰ Напоминание об уроке\n\n"
+            f"Группа: {schedule.group.name}\n"
+            f"Предмет: {schedule.subject.name}\n"
+            f"Время: {schedule.time.strftime('%H:%M')}\n"
+            f"Через {ns.reminder_minutes_before} мин."
+        )
+
+        try:
+            _send_delivery_telegram(
+                target=teacher.telegram_chat_id,
+                subject="Напоминание об уроке",
+                message=text,
+            )
+            cache.set(dedup_key, 1, timeout=60 * 60)
+            sent += 1
+        except Exception:
+            logger.exception(
+                "Failed to send lesson reminder: schedule_id=%s teacher_id=%s",
+                schedule.id,
+                teacher.id,
+            )
+
+    return {"sent": sent, "skipped": skipped}
 
 
 def _build_email_html(notification, fallback_subject: str) -> str:

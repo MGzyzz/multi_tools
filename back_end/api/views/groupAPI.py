@@ -108,10 +108,8 @@ class GetAllStudents(APIView):
 
     def get(self, request, *args, **kwargs):
         teacher = request.user.teacher_profile
-        groups = Group.objects.filter(teacher=teacher).prefetch_related("students")
-        all_student = []
 
-        cache_key = f"students_by_teacher:{teacher.id}"
+        cache_key = f"students_by_teacher_v2:{teacher.id}"
         cached_data = cache.get(cache_key)
 
         if cached_data is not None:
@@ -120,13 +118,21 @@ class GetAllStudents(APIView):
 
         logger.info("Fetching data from DB for teacher %s", teacher.id)
 
-        for group in groups:
-            student = group.students.all()
-            serializer = StudentSerializer(student, many=True)
-            all_student.extend(serializer.data)
+        groups = Group.objects.filter(teacher=teacher).prefetch_related("students__groups")
+        seen_ids: set[int] = set()
+        all_student = []
 
-        cache.set(cache_key, all_student, timeout=120)
-        return Response(all_student, status=status.HTTP_200_OK)
+        for group in groups:
+            for student in group.students.all():
+                if student.id not in seen_ids:
+                    seen_ids.add(student.id)
+                    all_student.append(student)
+
+        serializer = StudentSerializer(all_student, many=True)
+        data = serializer.data
+
+        cache.set(cache_key, data, timeout=120)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class GroupDetailAPI(APIView):
