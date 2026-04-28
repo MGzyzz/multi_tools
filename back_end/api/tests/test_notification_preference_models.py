@@ -24,7 +24,7 @@ class NotificationPreferenceTests(TestCase):
 
         self.assertTrue(preference.enabled)
         self.assertTrue(preference.allow_email)
-        self.assertFalse(preference.allow_telegram)
+        self.assertTrue(preference.allow_telegram)
         self.assertEqual(preference.threshold_percent, 60)
         self.assertEqual(preference.drop_delta_percent, 10)
         self.assertIsNotNone(preference.updated_at)
