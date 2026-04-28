@@ -323,7 +323,7 @@ def ensure_notification_preference_exists(sender, instance, created, **kwargs):
         defaults={
             "enabled": True,
             "allow_email": bool(instance.email),
-            "allow_telegram": bool(instance.telegram_id or instance.telegram_username),
+            "allow_telegram": True,
         },
     )
 
