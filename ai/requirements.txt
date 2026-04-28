@@ -7,4 +7,5 @@ scikit-learn
 matplotlib
 umap-learn
 ultralytics>=8.0.20
+wandb>=0.25.0
 requests
