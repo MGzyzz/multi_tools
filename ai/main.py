@@ -25,14 +25,6 @@ from utils.wandb_logger import wandb_logger
 
 DJANGO_API_URL = os.getenv("DJANGO_API_URL", "http://localhost:8000/api")
 
-# Добавляем корень в PYTHONPATH
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-from detection.yolo_detector import YoloDetector  # noqa: E402
-from recognition.facenet_model import FaceEmbedder  # noqa: E402
-from utils.compare_faces import find_best_match  # noqa: E402
-from utils.log_similarity import log_similarity  # noqa: E402
-
 app = FastAPI()
 
 app.add_middleware(
@@ -43,15 +35,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 EMBEDDINGS_PATH = "ai/data/embeddings.npy"
 CAMERA_INDEX = 1
 SCAN_DURATION = 15
 SIMILARITY_THRESHOLD = 0.75
 HIGHER_SIMILARITY_THRESHOLD = 0.7
 CONFIDENCE_SAMPLES = 8
-STUDENT_INFO_URL = "http://localhost:8000/api/get_student_information"
-
 
 camera_running = False
 stop_camera = threading.Event()
@@ -97,10 +86,8 @@ def log_request_metrics(
         f"latency/{request_name}_ms": round(latency_ms, 2),
         f"{request_name}/status_{normalize_metric_key(status)}": 1,
     }
-
     if extra_metrics:
         metrics.update(extra_metrics)
-
     wandb_logger.log_metrics(metrics, summary_updates=summary_updates)
 
 
@@ -114,15 +101,23 @@ async def shutdown_event():
     wandb_logger.finish()
 
 
-def init_models():
-    global yolo, embedder, embeddings_db
-
+# Инициализация детектора и embedder (не требует базы эмбеддингов)
+def init_detector():
+    global yolo, embedder
     if yolo is None:
-        init_wandb_service()
-        print("[INFO] Загружаем модели...")
+        print("[INFO] Загружаем модели YOLO и FaceNet...")
         yolo = YoloDetector()
         embedder = FaceEmbedder()
+    return True
 
+
+# Инициализация моделей + загрузка базы эмбеддингов (нужна только для распознавания)
+def init_models():
+    global embeddings_db
+
+    init_detector()
+
+    if embeddings_db is None:
         if not os.path.exists(EMBEDDINGS_PATH):
             wandb_logger.log_metrics(
                 {
@@ -310,7 +305,7 @@ def recognize_faces():
                             consecutive_matches = {}
                             last_matched_user = None
                         else:
-                            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0,255), 2)
                             cv2.putText(
                                 frame,
                                 f"Unknown ({similarity:.2f})",
@@ -409,11 +404,8 @@ async def get_recognition_result():
         return {"user_id": None, "status": "not_recognized"}
 
     try:
-        response = requests.get(f"{STUDENT_INFO_URL}/{username}")
-        response.raise_for_status()
-        # Запрашиваем данные студента
         response = requests.get(f"{DJANGO_API_URL}/get_student_information/{username}")
-        response.raise_for_status()  # Бросит исключение при 4XX/5XX
+        response.raise_for_status()
 
         student_data = response.json()
         user_id = student_data["data"]["id"]
@@ -483,7 +475,7 @@ def extract_face_embedding(img):
 @app.post("/embedding")
 async def embedding_from_image(file: UploadFile = File(...)):
     started_at = time.perf_counter()
-    init_models()
+    init_detector()
 
     content = await file.read()
     np_arr = np.frombuffer(content, np.uint8)

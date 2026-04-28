@@ -190,12 +190,11 @@ class ScheduleSerializer(ModelSerializer):
 class SchedulePlannerEntrySerializer(serializers.ModelSerializer):
     subject = serializers.SerializerMethodField()
     teacher = serializers.SerializerMethodField()
-    auditorium = serializers.SerializerMethodField()
     can_edit = serializers.SerializerMethodField()
 
     class Meta:
         model = Schedule
-        fields = ("id", "date", "time", "subject", "teacher", "auditorium", "can_edit")
+        fields = ("id", "date", "time", "subject", "teacher", "can_edit")
 
     def get_subject(self, obj):
         return {"id": obj.subject_id, "name": obj.subject.name}
@@ -208,17 +207,6 @@ class SchedulePlannerEntrySerializer(serializers.ModelSerializer):
             }
         return {"id": obj.teacher_id, "name": "Преподаватель не указан"}
 
-    def get_auditorium(self, obj):
-        if not obj.auditorium_id:
-            return None
-
-        return {
-            "id": obj.auditorium_id,
-            "name": obj.auditorium.name,
-            "building": obj.auditorium.building,
-            "building_label": obj.auditorium.get_building_display(),
-        }
-
     def get_can_edit(self, obj):
         current_teacher_id = self.context.get("current_teacher_id")
         return obj.teacher_id == current_teacher_id
@@ -229,7 +217,6 @@ class SchedulePlannerMutationItemSerializer(serializers.Serializer):
     date = serializers.DateField()
     time = serializers.TimeField(input_formats=["%H:%M", "%H:%M:%S"])
     subject_id = serializers.IntegerField(min_value=1)
-    auditorium_id = serializers.IntegerField(min_value=1, required=False, allow_null=True)
 
 
 class SchedulePlannerSaveSerializer(serializers.Serializer):
@@ -262,7 +249,6 @@ class ScheduleSemesterPatternItemSerializer(serializers.Serializer):
     weekday = serializers.IntegerField(min_value=0, max_value=6)
     time = serializers.TimeField(input_formats=["%H:%M", "%H:%M:%S"])
     subject_id = serializers.IntegerField(min_value=1)
-    auditorium_id = serializers.IntegerField(min_value=1, required=False, allow_null=True)
 
 
 class ScheduleSemesterPlanSerializer(serializers.Serializer):
