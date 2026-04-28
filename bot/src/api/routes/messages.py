@@ -16,9 +16,9 @@ router = APIRouter()
 def build_message(subject: str, message: str, urgent: bool) -> str:
     subject_text = escape(subject)
     message_text = escape(message)
-    result = f"Subject: {subject_text}\\nMessage: {message_text}"
+    result = f"<b>{subject_text}</b>\n\n{message_text}"
     if urgent:
-        return f"<b>Urgent!</b>\\n{result}"
+        return f"🔴 <b>Срочно!</b>\n\n{result}"
     return result
 
 

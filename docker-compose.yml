@@ -49,6 +49,8 @@ services:
       CELERY_RESULT_BACKEND: "redis://redis:6379/0"
       CHANNEL_LAYER_BACKEND: "redis"
       CHANNEL_REDIS_URL: "redis://redis:6379/0"
+      AI_SERVICE_URL: "http://ai:8002"
+      BOT_SERVICE_URL: "http://bot:8001"
     command: >
       sh -c "python manage.py migrate --noinput &&
              python manage.py collectstatic --noinput &&
@@ -73,6 +75,7 @@ services:
       TZ: Asia/Almaty
       CELERY_BROKER_URL: "redis://redis:6379/0"
       CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      BOT_SERVICE_URL: "http://bot:8001"
 
   celery-beat:
     container_name: celery-beat
@@ -101,7 +104,7 @@ services:
     build:
       context: ./teacher-s-hub
     ports:
-      - "5173:5173"
+      - "8080:8080"
     depends_on:
       - app
 
@@ -132,6 +135,7 @@ services:
       - "8001:8001"
     env_file:
       - ./back_end/.env
+      - ./bot/.env
     environment:
       DJANGO_API_URL: "http://app:8000/api"
     depends_on:
