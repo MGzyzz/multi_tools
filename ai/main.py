@@ -56,24 +56,29 @@ embedder = None
 embeddings_db = None
 
 
-# Инициализация моделей
-def init_models():
-    global yolo, embedder, embeddings_db
-
+# Инициализация детектора и embedder (не требует базы эмбеддингов)
+def init_detector():
+    global yolo, embedder
     if yolo is None:
-        print("[INFO] Загружаем модели...")
+        print("[INFO] Загружаем модели YOLO и FaceNet...")
         yolo = YoloDetector()
         embedder = FaceEmbedder()
+    return True
 
-        # Проверка наличия файла эмбеддингов
+
+# Инициализация моделей + загрузка базы эмбеддингов (нужна только для распознавания)
+def init_models():
+    global embeddings_db
+
+    init_detector()
+
+    if embeddings_db is None:
         if not os.path.exists(EMBEDDINGS_PATH):
             raise FileNotFoundError(
                 f"[ERROR] Файл эмбеддингов не найден: {EMBEDDINGS_PATH}"
             )
         embeddings_db = np.load(EMBEDDINGS_PATH, allow_pickle=True).item()
         print(f"[INFO] Загружено эмбеддингов: {len(embeddings_db)}")
-
-        # Вывести все доступные ID для отладки
         print(f"[INFO] Доступные ID в базе: {list(embeddings_db.keys())}")
     return True
 
@@ -410,7 +415,7 @@ def extract_face_embedding(img):
 
 @app.post("/embedding")
 async def embedding_from_image(file: UploadFile = File(...)):
-    init_models()
+    init_detector()
 
     content = await file.read()
     np_arr = np.frombuffer(content, np.uint8)
