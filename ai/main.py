@@ -1,89 +1,158 @@
-import cv2
-import numpy as np
-import sys
 import os
+import sys
 import threading
 import time
+
+import cv2
+import matplotlib
+import numpy as np
+import requests
 import uvicorn
-from fastapi import FastAPI, BackgroundTasks, File, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
-import requests
-import matplotlib
 
-matplotlib.use("Agg")  # Используем аггре-режим для избегания GUI
+matplotlib.use("Agg")
 
-# Добавляем корень в PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from detection.yolo_detector import YoloDetector
 from recognition.facenet_model import FaceEmbedder
 from utils.compare_faces import find_best_match
 from utils.log_similarity import log_similarity
+from utils.wandb_logger import wandb_logger
 
-# Создаем FastAPI приложение
+
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Разрешаем запросы с Vite (или React)
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Пути
-EMBEDDINGS_PATH = "ai/data/embeddings.npy"
-SCAN_DURATION = 15  # Увеличиваем время сканирования до 15 секунд
-SIMILARITY_THRESHOLD = 0.75  # Базовый порог для распознавания
-HIGHER_SIMILARITY_THRESHOLD = 0.7  # Повышенный порог для надежного распознавания
-CONFIDENCE_SAMPLES = (
-    8  # Увеличенное количество положительных образцов для подтверждения
-)
 
-# Глобальные переменные для управления камерой
+EMBEDDINGS_PATH = "ai/data/embeddings.npy"
+CAMERA_INDEX = 1
+SCAN_DURATION = 15
+SIMILARITY_THRESHOLD = 0.75
+HIGHER_SIMILARITY_THRESHOLD = 0.7
+CONFIDENCE_SAMPLES = 8
+STUDENT_INFO_URL = "http://localhost:8000/api/get_student_information"
+
+
 camera_running = False
 stop_camera = threading.Event()
 recognition_result = {"username": "Unknown"}
-face_detected = threading.Event()  # Флаг для сигнализации об успешном распознавании
+face_detected = threading.Event()
 
-# Модели
 yolo = None
 embedder = None
 embeddings_db = None
 
 
-# Инициализация моделей
+def init_wandb_service():
+    wandb_logger.ensure_run(
+        job_type="service",
+        name=os.getenv("WANDB_NAME", "ai-service"),
+        tags=["ai", "fastapi", "face-recognition"],
+        config={
+            "embeddings_path": EMBEDDINGS_PATH,
+            "camera_index": CAMERA_INDEX,
+            "scan_duration_sec": SCAN_DURATION,
+            "similarity_threshold": SIMILARITY_THRESHOLD,
+            "higher_similarity_threshold": HIGHER_SIMILARITY_THRESHOLD,
+            "confidence_samples": CONFIDENCE_SAMPLES,
+        },
+    )
+
+
+def normalize_metric_key(value: str) -> str:
+    normalized = "".join(char if char.isalnum() else "_" for char in value.lower())
+    return normalized.strip("_") or "unknown"
+
+
+def log_request_metrics(
+    request_name: str,
+    status: str,
+    latency_ms: float,
+    *,
+    extra_metrics=None,
+    summary_updates=None,
+):
+    metrics = {
+        f"requests/{request_name}": 1,
+        f"latency/{request_name}_ms": round(latency_ms, 2),
+        f"{request_name}/status_{normalize_metric_key(status)}": 1,
+    }
+
+    if extra_metrics:
+        metrics.update(extra_metrics)
+
+    wandb_logger.log_metrics(metrics, summary_updates=summary_updates)
+
+
+@app.on_event("startup")
+async def startup_event():
+    init_wandb_service()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    wandb_logger.finish()
+
+
 def init_models():
     global yolo, embedder, embeddings_db
 
     if yolo is None:
+        init_wandb_service()
         print("[INFO] Загружаем модели...")
         yolo = YoloDetector()
         embedder = FaceEmbedder()
 
-        # Проверка наличия файла эмбеддингов
         if not os.path.exists(EMBEDDINGS_PATH):
+            wandb_logger.log_metrics(
+                {
+                    "service/model_init_failed": 1,
+                    "service/missing_embeddings_file": 1,
+                },
+                summary_updates={"last_model_init_status": "missing_embeddings"},
+            )
             raise FileNotFoundError(
                 f"[ERROR] Файл эмбеддингов не найден: {EMBEDDINGS_PATH}"
             )
+
         embeddings_db = np.load(EMBEDDINGS_PATH, allow_pickle=True).item()
         print(f"[INFO] Загружено эмбеддингов: {len(embeddings_db)}")
-
-        # Вывести все доступные ID для отладки
         print(f"[INFO] Доступные ID в базе: {list(embeddings_db.keys())}")
+
+        wandb_logger.update_config(
+            {
+                "device": embedder.device,
+                "embeddings_db_size": len(embeddings_db),
+            }
+        )
+        wandb_logger.log_metrics(
+            {
+                "service/model_init": 1,
+                "service/embeddings_db_size": len(embeddings_db),
+            },
+            summary_updates={"last_model_init_status": "ok"},
+        )
+
     return True
 
 
 USERNAME_MAPPING = {
     "user_1": "dmitriy",
     "user_2": "admin",
-    # Добавьте другие соответствия по мере необходимости
 }
 
 
-# Сброс состояния распознавания
 def reset_recognition_state():
     global recognition_result, face_detected
     recognition_result = {"username": "Unknown"}
@@ -91,21 +160,30 @@ def reset_recognition_state():
     print("[INFO] Состояние распознавания сброшено")
 
 
-# Модифицированная функция recognize_faces() с улучшенной точностью
 def recognize_faces():
     global camera_running, recognition_result, face_detected
 
-    # Сброс состояния при каждом новом запуске
     reset_recognition_state()
-
-    # Инициализация моделей, если они еще не загружены
     init_models()
 
-    # Запуск камеры
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(CAMERA_INDEX)
+    session_started_at = time.time()
+    processed_frames = 0
+    frames_with_face = 0
+    max_similarity = 0.0
+    session_status = "timeout"
+    recognized_username = "Unknown"
+
     if not cap.isOpened():
         print("[ERROR] Не удалось открыть камеру")
         camera_running = False
+        wandb_logger.log_metrics(
+            {
+                "camera/sessions": 1,
+                "camera/status_camera_unavailable": 1,
+            },
+            summary_updates={"last_camera_status": "camera_unavailable"},
+        )
         return {"error": "Не удалось открыть камеру"}
 
     print(
@@ -116,198 +194,170 @@ def recognize_faces():
     camera_running = True
     start_scan_time = time.time()
 
-    # Словарь для подсчета совпадений по каждому пользователю
-    user_match_counts = {}
-    consecutive_matches = {}  # Для отслеживания последовательных совпадений
-    last_matched_user = None  # Для отслеживания последнего распознанного пользователя
+    consecutive_matches = {}
+    last_matched_user = None
 
     try:
         while (
             time.time() - start_scan_time < SCAN_DURATION and not stop_camera.is_set()
         ):
-            start_time = time.time()
-
+            started_frame_at = time.time()
             ret, frame = cap.read()
             if not ret:
                 print("[WARNING] Кадр не получен. Пропуск...")
                 continue
 
-            # Проверка качества изображения
             if frame.size == 0 or frame.shape[0] == 0 or frame.shape[1] == 0:
                 print("[WARNING] Получен некорректный кадр. Пропуск...")
                 continue
 
-            # Детекция лиц
+            processed_frames += 1
             bboxes = yolo.detect_faces(frame)
 
-            # Если обнаружены лица
             if len(bboxes) > 0:
-                # Выбираем самое большое лицо (предположительно самое близкое к камере)
-                largest_area = 0
-                largest_face_idx = -1
+                frames_with_face += 1
+                largest_face_idx = max(
+                    range(len(bboxes)),
+                    key=lambda idx: (bboxes[idx][2] - bboxes[idx][0])
+                    * (bboxes[idx][3] - bboxes[idx][1]),
+                )
 
-                for idx, (x1, y1, x2, y2) in enumerate(bboxes):
-                    area = (x2 - x1) * (y2 - y1)
-                    if area > largest_area:
-                        largest_area = area
-                        largest_face_idx = idx
+                x1, y1, x2, y2 = bboxes[largest_face_idx]
+                min_face_size = 100
 
-                # Обрабатываем только самое большое лицо
-                if largest_face_idx >= 0:
-                    x1, y1, x2, y2 = bboxes[largest_face_idx]
+                if (x2 - x1) >= min_face_size and (y2 - y1) >= min_face_size:
+                    face_img = frame[y1:y2, x1:x2]
 
-                    # Проверка минимального размера лица (для отфильтровки слишком маленьких)
-                    min_face_size = 100  # минимальный размер в пикселях
-                    if (x2 - x1) >= min_face_size and (y2 - y1) >= min_face_size:
-                        face_img = frame[y1:y2, x1:x2]
+                    try:
+                        face_img = cv2.resize(face_img, (160, 160))
+                        face_img = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
+                        embedding = embedder.get_embedding(face_img)
 
-                        try:
-                            # Применяем предобработку для улучшения качества
-                            face_img = cv2.resize(
-                                face_img, (160, 160)
-                            )  # Размер, который ожидает FaceNet
-                            face_img = cv2.cvtColor(
-                                face_img, cv2.COLOR_BGR2RGB
-                            )  # Перевод в RGB
-
-                            # Получаем эмбеддинг
-                            embedding = embedder.get_embedding(face_img)
-
-                            # Проверяем, что эмбеддинг не пустой
-                            if embedding is None:
-                                print(
-                                    "[WARNING] Не удалось получить эмбеддинг для обнаруженного лица"
-                                )
-                                continue
-
-                            # Находим наилучшее совпадение
-                            user_id, similarity = find_best_match(
-                                embedding, embeddings_db
-                            )
-
-                            # Для отладки - более подробная информация
+                        if embedding is None:
                             print(
-                                f"[DEBUG] Обнаружено лицо: размер={x2-x1}x{y2-y1}, best match: {user_id}, similarity: {similarity:.4f}"
+                                "[WARNING] Не удалось получить эмбеддинг для обнаруженного лица"
+                            )
+                            continue
+
+                        user_id, similarity = find_best_match(embedding, embeddings_db)
+                        max_similarity = max(max_similarity, float(similarity))
+
+                        print(
+                            f"[DEBUG] Обнаружено лицо: размер={x2-x1}x{y2-y1}, "
+                            f"best match: {user_id}, similarity: {similarity:.4f}"
+                        )
+
+                        if similarity > HIGHER_SIMILARITY_THRESHOLD:
+                            if last_matched_user != user_id:
+                                consecutive_matches = {user_id: 1}
+                                last_matched_user = user_id
+                            else:
+                                consecutive_matches[user_id] = (
+                                    consecutive_matches.get(user_id, 0) + 1
+                                )
+
+                            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                            real_username = USERNAME_MAPPING.get(user_id, "Unknown")
+                            label = f"{real_username} ({similarity:.2f})"
+                            cv2.putText(
+                                frame,
+                                label,
+                                (x1, y1 - 10),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                0.7,
+                                (0, 255, 0),
+                                2,
                             )
 
-                            # Если найдено лицо с высокой схожестью
-                            if similarity > HIGHER_SIMILARITY_THRESHOLD:
-                                # Если это новый пользователь или другой пользователь, сбрасываем счетчик последовательных совпадений
-                                if last_matched_user != user_id:
-                                    consecutive_matches = {user_id: 1}
-                                    last_matched_user = user_id
-                                else:
-                                    consecutive_matches[user_id] = (
-                                        consecutive_matches.get(user_id, 0) + 1
+                            if consecutive_matches.get(user_id, 0) >= CONFIDENCE_SAMPLES:
+                                if real_username != "Unknown":
+                                    recognition_result = {"username": real_username}
+                                    session_status = "recognized"
+                                    recognized_username = real_username
+                                    log_similarity(user_id, similarity)
+                                    print(
+                                        "[INFO] Лицо уверенно распознано: "
+                                        f"{real_username} с коэффициентом {similarity:.2f}"
                                     )
+                                    face_detected.set()
+                                    break
+                        elif similarity > SIMILARITY_THRESHOLD:
+                            cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 165, 0), 2)
+                            real_username = USERNAME_MAPPING.get(user_id, "Unknown")
+                            label = f"{real_username}? ({similarity:.2f})"
+                            cv2.putText(
+                                frame,
+                                label,
+                                (x1, y1 - 10),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                0.7,
+                                (255, 165, 0),
+                                2,
+                            )
+                            print(
+                                f"[INFO] Возможное совпадение: {real_username} "
+                                f"с коэффициентом {similarity:.2f}"
+                            )
+                            consecutive_matches = {}
+                            last_matched_user = None
+                        else:
+                            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                            cv2.putText(
+                                frame,
+                                f"Unknown ({similarity:.2f})",
+                                (x1, y1 - 10),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                0.7,
+                                (0, 0, 255),
+                                2,
+                            )
+                            consecutive_matches = {}
+                            last_matched_user = None
 
-                                # Увеличиваем счетчик совпадений для данного пользователя
-                                if user_id not in user_match_counts:
-                                    user_match_counts[user_id] = 0
-                                user_match_counts[user_id] += 1
+                    except Exception as exc:
+                        print(f"[ERROR] Ошибка при обработке лица: {exc}")
 
-                                # Отрисовка результата
-                                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                                real_username = USERNAME_MAPPING.get(user_id, "Unknown")
-                                label = f"{real_username} ({similarity:.2f})"
-                                cv2.putText(
-                                    frame,
-                                    label,
-                                    (x1, y1 - 10),
-                                    cv2.FONT_HERSHEY_SIMPLEX,
-                                    0.7,
-                                    (0, 255, 0),
-                                    2,
-                                )
-
-                                # Проверяем, достигли ли мы порога уверенности для этого пользователя
-                                if (
-                                    consecutive_matches.get(user_id, 0)
-                                    >= CONFIDENCE_SAMPLES
-                                ):
-                                    real_username = USERNAME_MAPPING.get(
-                                        user_id, "Unknown"
-                                    )
-                                    if real_username != "Unknown":
-                                        # Сохраняем результат распознавания
-                                        recognition_result = {"username": real_username}
-                                        log_similarity(user_id, similarity)  # Логгируем
-                                        print(
-                                            f"[INFO] Лицо уверенно распознано: {real_username} с коэффициентом {similarity:.2f}"
-                                        )
-
-                                        # Сигнализируем об успешном распознавании и прекращаем сканирование
-                                        face_detected.set()
-                                        break
-                            elif similarity > SIMILARITY_THRESHOLD:
-                                # Если схожесть средняя - отображаем, но не засчитываем
-                                cv2.rectangle(
-                                    frame, (x1, y1), (x2, y2), (255, 165, 0), 2
-                                )  # Оранжевая рамка для средней уверенности
-                                real_username = USERNAME_MAPPING.get(user_id, "Unknown")
-                                label = f"{real_username}? ({similarity:.2f})"
-                                cv2.putText(
-                                    frame,
-                                    label,
-                                    (x1, y1 - 10),
-                                    cv2.FONT_HERSHEY_SIMPLEX,
-                                    0.7,
-                                    (255, 165, 0),
-                                    2,
-                                )
-                                print(
-                                    f"[INFO] Возможное совпадение: {real_username} с коэффициентом {similarity:.2f}"
-                                )
-
-                                # Сбрасываем счетчик последовательных совпадений
-                                consecutive_matches = {}
-                                last_matched_user = None
-                            else:
-                                # Если схожесть ниже порога - отображаем как неизвестного
-                                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
-                                cv2.putText(
-                                    frame,
-                                    f"Unknown ({similarity:.2f})",
-                                    (x1, y1 - 10),
-                                    cv2.FONT_HERSHEY_SIMPLEX,
-                                    0.7,
-                                    (0, 0, 255),
-                                    2,
-                                )
-
-                                # Сбрасываем счетчик последовательных совпадений
-                                consecutive_matches = {}
-                                last_matched_user = None
-
-                        except Exception as e:
-                            print(f"[ERROR] Ошибка при обработке лица: {e}")
-
-            # Производительность
-            fps = 1.0 / (time.time() - start_time)
+            fps = 1.0 / max(time.time() - started_frame_at, 1e-6)
             print(f"[INFO] FPS: {fps:.2f}")
 
-            # Проверка на выход или успешное распознавание
             if cv2.waitKey(1) & 0xFF == ord("q") or face_detected.is_set():
                 break
 
     finally:
-        # Остановка камеры и завершение всех процессов
+        if session_status != "recognized" and stop_camera.is_set():
+            session_status = "stopped"
+
         stop_camera.set()
         cap.release()
         camera_running = False
         print("[INFO] Распознавание завершено")
 
+        wandb_logger.log_metrics(
+            {
+                "camera/sessions": 1,
+                f"camera/status_{normalize_metric_key(session_status)}": 1,
+                "camera/session_duration_sec": time.time() - session_started_at,
+                "camera/frames_processed": processed_frames,
+                "camera/frames_with_face": frames_with_face,
+                "camera/max_similarity": max_similarity,
+                "camera/recognized": 1 if session_status == "recognized" else 0,
+            },
+            summary_updates={
+                "last_camera_status": session_status,
+                "last_recognized_user": recognized_username,
+                "last_max_similarity": max_similarity,
+            },
+        )
+
     return recognition_result
 
 
-# Модель для ответа API
 class AiResponse(BaseModel):
     username: str
 
 
 @app.get("/status")
 async def status():
-    """Возвращает информацию о состоянии системы распознавания"""
     return {
         "status": "online",
         "camera_status": "running" if camera_running else "idle",
@@ -317,68 +367,79 @@ async def status():
 
 @app.post("/check_attendance_use_ai")
 async def check_attendance_use_ai(background_tasks: BackgroundTasks):
-    """Запускает процесс распознавания лиц"""
     global camera_running, stop_camera, face_detected
 
     if camera_running:
+        wandb_logger.log_metrics(
+            {"camera/start_requests": 1, "camera/status_already_running": 1}
+        )
         return JSONResponse(
             status_code=400, content={"error": "Распознавание уже запущено"}
         )
 
-    # Полный сброс состояния перед новым запуском
     stop_camera.clear()
     reset_recognition_state()
-
-    # Запуск распознавания в фоновом режиме
     background_tasks.add_task(recognize_faces)
+    wandb_logger.log_metrics({"camera/start_requests": 1, "camera/status_started": 1})
 
     return {"message": "Запущен процесс распознавания лиц"}
 
 
 @app.get("/get_recognition_result")
 async def get_recognition_result():
-    """Возвращает ID студента из внешнего API"""
+    started_at = time.perf_counter()
     username = recognition_result.get("username", "Unknown")
 
     if username == "Unknown":
+        log_request_metrics(
+            "recognition_result",
+            "not_recognized",
+            (time.perf_counter() - started_at) * 1000,
+            extra_metrics={"recognition_result/has_user": 0},
+        )
         return {"user_id": None, "status": "not_recognized"}
 
     try:
-        # Запрашиваем данные студента
-        response = requests.get(
-            f"http://localhost:8000/api/get_student_information/{username}"
-        )
-        response.raise_for_status()  # Бросит исключение при 4XX/5XX
+        response = requests.get(f"{STUDENT_INFO_URL}/{username}")
+        response.raise_for_status()
 
-        # Достаем ID из ответа
         student_data = response.json()
         user_id = student_data["data"]["id"]
-
-        # После получения результата сбрасываем состояние
         reset_recognition_state()
 
+        log_request_metrics(
+            "recognition_result",
+            "recognized",
+            (time.perf_counter() - started_at) * 1000,
+            extra_metrics={"recognition_result/has_user": 1},
+            summary_updates={"last_result_user_id": user_id},
+        )
         return {"user_id": user_id, "status": "recognized"}
 
-    except Exception as e:
-        print(f"[ERROR] Ошибка при запросе данных студента: {e}")
-        return {"user_id": None, "error": str(e)}
+    except Exception as exc:
+        print(f"[ERROR] Ошибка при запросе данных студента: {exc}")
+        log_request_metrics(
+            "recognition_result",
+            "backend_error",
+            (time.perf_counter() - started_at) * 1000,
+            extra_metrics={"recognition_result/has_user": 0},
+            summary_updates={"last_backend_error": str(exc)},
+        )
+        return {"user_id": None, "error": str(exc)}
 
 
-# Добавляем новый endpoint для принудительного сброса состояния
 @app.post("/reset_recognition")
 async def reset_recognition():
-    """Принудительно сбрасывает состояние распознавания"""
     global camera_running, stop_camera
 
-    # Остановка работающей камеры
     if camera_running:
         stop_camera.set()
-        time.sleep(1)  # Даем время на завершение потоков
+        time.sleep(1)
 
-    # Сброс состояния
     reset_recognition_state()
     camera_running = False
     stop_camera.clear()
+    wandb_logger.log_metrics({"camera/reset_requests": 1, "camera/status_reset": 1})
 
     return {"message": "Состояние распознавания сброшено"}
 
@@ -388,7 +449,6 @@ def extract_face_embedding(img):
     if not bboxes:
         return None, "no_face"
 
-    # берём самое большое лицо
     x1, y1, x2, y2 = max(bboxes, key=lambda b: (b[2] - b[0]) * (b[3] - b[1]))
     if x2 <= x1 or y2 <= y1:
         return None, "invalid_bbox"
@@ -404,12 +464,13 @@ def extract_face_embedding(img):
         if embedding is None:
             return None, "embedding_failed"
         return embedding, "ok"
-    except Exception as e:
-        return None, str(e)
+    except Exception as exc:
+        return None, str(exc)
 
 
 @app.post("/embedding")
 async def embedding_from_image(file: UploadFile = File(...)):
+    started_at = time.perf_counter()
     init_models()
 
     content = await file.read()
@@ -417,19 +478,36 @@ async def embedding_from_image(file: UploadFile = File(...)):
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
     if img is None:
+        log_request_metrics(
+            "embedding",
+            "invalid_image",
+            (time.perf_counter() - started_at) * 1000,
+        )
         return JSONResponse(
             status_code=400, content={"error": "Некорректное изображение"}
         )
 
     embedding, status = extract_face_embedding(img)
     if embedding is None:
+        log_request_metrics(
+            "embedding",
+            status,
+            (time.perf_counter() - started_at) * 1000,
+        )
         return {"status": status, "embedding": None}
 
+    log_request_metrics(
+        "embedding",
+        "ok",
+        (time.perf_counter() - started_at) * 1000,
+        extra_metrics={"embedding/vector_size": int(len(embedding))},
+    )
     return {"status": "ok", "embedding": embedding.tolist()}
 
 
 @app.post("/recognize_from_image")
 async def recognize_from_image(file: UploadFile = File(...)):
+    started_at = time.perf_counter()
     init_models()
 
     content = await file.read()
@@ -437,35 +515,73 @@ async def recognize_from_image(file: UploadFile = File(...)):
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
     if img is None:
+        log_request_metrics(
+            "recognize",
+            "invalid_image",
+            (time.perf_counter() - started_at) * 1000,
+        )
         return JSONResponse(
             status_code=400, content={"error": "Некорректное изображение"}
         )
 
     embedding, status = extract_face_embedding(img)
     if embedding is None:
+        log_request_metrics(
+            "recognize",
+            status,
+            (time.perf_counter() - started_at) * 1000,
+        )
         return {"username": "Unknown", "status": status}
 
     try:
         user_id, similarity = find_best_match(embedding, embeddings_db)
         if similarity > HIGHER_SIMILARITY_THRESHOLD:
             real_username = USERNAME_MAPPING.get(user_id, "Unknown")
+            log_request_metrics(
+                "recognize",
+                "recognized",
+                (time.perf_counter() - started_at) * 1000,
+                extra_metrics={
+                    "recognize/similarity": float(similarity),
+                    "recognize/recognized": 1,
+                },
+                summary_updates={
+                    "last_recognize_status": "recognized",
+                    "last_recognize_user": real_username,
+                },
+            )
             return {
                 "username": real_username,
                 "similarity": float(similarity),
                 "status": "recognized",
             }
 
+        log_request_metrics(
+            "recognize",
+            "not_recognized",
+            (time.perf_counter() - started_at) * 1000,
+            extra_metrics={
+                "recognize/similarity": float(similarity),
+                "recognize/recognized": 0,
+            },
+            summary_updates={"last_recognize_status": "not_recognized"},
+        )
         return {
             "username": "Unknown",
             "similarity": float(similarity),
             "status": "not_recognized",
         }
 
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+    except Exception as exc:
+        log_request_metrics(
+            "recognize",
+            "error",
+            (time.perf_counter() - started_at) * 1000,
+            summary_updates={"last_recognize_error": str(exc)},
+        )
+        return JSONResponse(status_code=500, content={"error": str(exc)})
 
 
 if __name__ == "__main__":
-    # Запуск FastAPI на порту 8002
     print("[INFO] Запуск FastAPI сервера на порту 8002...")
     uvicorn.run(app, host="0.0.0.0", port=8002)
