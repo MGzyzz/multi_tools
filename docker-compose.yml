@@ -1,0 +1,141 @@
+services:
+
+  # ── Infrastructure ────────────────────────────────────────────────────────
+
+  postgres:
+    container_name: postgres
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: ai_bot_diplom
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: "123"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d ai_bot_diplom"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    container_name: redis
+    image: redis:7.4-alpine
+    ports:
+      - "6379:6379"
+
+  # ── Backend ───────────────────────────────────────────────────────────────
+
+  app:
+    container_name: app
+    build:
+      context: ./back_end
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./back_end:/app
+    env_file:
+      - ./back_end/.env
+    environment:
+      TZ: Asia/Almaty
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      CHANNEL_LAYER_BACKEND: "redis"
+      CHANNEL_REDIS_URL: "redis://redis:6379/0"
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             uvicorn core.asgi:application --host 0.0.0.0 --port 8000"
+
+  celery:
+    container_name: celery
+    build:
+      context: ./back_end
+      dockerfile: docker/Dockerfile
+    command: celery -A core.celery worker -l info
+    volumes:
+      - ./back_end:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file:
+      - ./back_end/.env
+    environment:
+      TZ: Asia/Almaty
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+
+  celery-beat:
+    container_name: celery-beat
+    build:
+      context: ./back_end
+      dockerfile: docker/Dockerfile
+    command: celery -A core.celery beat -l info
+    volumes:
+      - ./back_end:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file:
+      - ./back_end/.env
+    environment:
+      TZ: Asia/Almaty
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+
+  # ── Frontend ──────────────────────────────────────────────────────────────
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./teacher-s-hub
+    ports:
+      - "5173:5173"
+    depends_on:
+      - app
+
+  # ── AI / Face Recognition ─────────────────────────────────────────────────
+
+  ai:
+    container_name: ai
+    build:
+      context: ./ai
+    ports:
+      - "8002:8002"
+    volumes:
+      # Mount embeddings so they persist outside the container
+      - ./ai/data:/app/ai/data
+    environment:
+      DJANGO_API_URL: "http://app:8000/api"
+    # Camera access: add `devices: ["/dev/video0:/dev/video0"]` if needed
+    depends_on:
+      - app
+
+  # ── Telegram Bot ──────────────────────────────────────────────────────────
+
+  bot:
+    container_name: bot
+    build:
+      context: ./bot
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./back_end/.env
+    environment:
+      DJANGO_API_URL: "http://app:8000/api"
+    depends_on:
+      - app
+
+volumes:
+  pgdata:

@@ -45,6 +45,8 @@ NGROK_URL = f"{STANDART_URL}{NGROK_DOMAIN}.ngrok-free.app" if NGROK_DOMAIN else 
 
 AI_SERVICE_URL = os.getenv("AI_SERVICE_URL", "http://localhost:8002")
 BOT_SERVICE_URL = os.getenv("BOT_SERVICE_URL", "http://localhost:8001")
+WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "")
+BOT_SERVICE_SECRET = os.getenv("BOT_SERVICE_SECRET", "")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@example.com")
 FACE_RECOGNITION_THRESHOLD = float(os.getenv("FACE_RECOGNITION_THRESHOLD", "0.7"))
 FACE_IMAGE_LIMIT = int(os.getenv("FACE_IMAGE_LIMIT", "5"))
@@ -259,6 +261,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "enqueue_pending_notification_deliveries",
         "schedule": 60.0,
         "kwargs": {"limit": 200},
+    },
+    "send-lesson-reminders": {
+        "task": "send_lesson_reminders",
+        "schedule": 300.0,  # каждые 5 минут
     },
 }
 

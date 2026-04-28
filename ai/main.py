@@ -23,6 +23,15 @@ from utils.compare_faces import find_best_match
 from utils.log_similarity import log_similarity
 from utils.wandb_logger import wandb_logger
 
+DJANGO_API_URL = os.getenv("DJANGO_API_URL", "http://localhost:8000/api")
+
+# Добавляем корень в PYTHONPATH
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from detection.yolo_detector import YoloDetector  # noqa: E402
+from recognition.facenet_model import FaceEmbedder  # noqa: E402
+from utils.compare_faces import find_best_match  # noqa: E402
+from utils.log_similarity import log_similarity  # noqa: E402
 
 app = FastAPI()
 
@@ -402,6 +411,9 @@ async def get_recognition_result():
     try:
         response = requests.get(f"{STUDENT_INFO_URL}/{username}")
         response.raise_for_status()
+        # Запрашиваем данные студента
+        response = requests.get(f"{DJANGO_API_URL}/get_student_information/{username}")
+        response.raise_for_status()  # Бросит исключение при 4XX/5XX
 
         student_data = response.json()
         user_id = student_data["data"]["id"]
