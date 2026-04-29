@@ -63,21 +63,17 @@ def reconcile_attendance_stats():
     keys = list(aggregated.keys())
 
     with transaction.atomic():
-        # 2) Забираем существующие AttendanceStat только по тем ключам, которые реально есть
-        existing = {
+        # 2) Забираем ВСЕ существующие AttendanceStat — нужно для корректного удаления orphans
+        all_existing = {
             (s.student_id, s.subject_id, s.group_id): s
-            for s in AttendanceStat.objects.filter(
-                student_id__in={k[0] for k in keys},
-                subject_id__in={k[1] for k in keys},
-                group_id__in={k[2] for k in keys},
-            )
+            for s in AttendanceStat.objects.all()
         }
 
         to_update = []
         to_create = []
 
         for (student_id, subject_id, group_id), (total, attended) in aggregated.items():
-            stat = existing.get((student_id, subject_id, group_id))
+            stat = all_existing.get((student_id, subject_id, group_id))
             if stat is None:
                 to_create.append(
                     AttendanceStat(
@@ -100,21 +96,14 @@ def reconcile_attendance_stats():
         if to_update:
             AttendanceStat.objects.bulk_update(to_update, ["total", "attended"], batch_size=1000)
 
-        # 3) Опционально: “осиротевшие” stats, которых уже нет в Attendance
-        # Это бывает если удалили Attendance/Schedule/студента переместили и т.п.
-        # Решение: либо удалить, либо обнулить. Я бы удалял.
-        # Но удалять ВСЕ не из keys может быть тяжело; поэтому можно делать безопасно через exclude по id списка.
-        # Ниже — вариант "удалить stats с total=0" мы не можем, так что удаляем действительно отсутствующие ключи:
-        existing_keys = set(existing.keys())
+        # 3) Удаляем orphan stats — те, для которых нет ни одной отмеченной записи Attendance
         aggregated_keys = set(aggregated.keys())
-        orphan_keys = existing_keys - aggregated_keys
-
-        if orphan_keys:
-            # удаляем пачками
-            # (делаем по фильтрам, иначе по тройному IN сложнее)
-            # Для простоты: сначала соберем ids
-            orphan_ids = [existing[k].id for k in orphan_keys if k in existing]
-            AttendanceStat.objects.filter(id__in=orphan_ids).delete()
+        orphan_ids = [
+            s.id for key, s in all_existing.items() if key not in aggregated_keys
+        ]
+        deleted = 0
+        if orphan_ids:
+            deleted, _ = AttendanceStat.objects.filter(id__in=orphan_ids).delete()
 
     finished_at = timezone.now()
     return {
@@ -123,7 +112,7 @@ def reconcile_attendance_stats():
         "aggregated_rows": len(aggregated),
         "created": len(to_create),
         "updated": len(to_update),
-        "deleted_orphans": len(orphan_keys) if keys else 0,
+        "deleted_orphans": deleted,
     }
 
 
