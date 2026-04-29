@@ -60,8 +60,6 @@ def reconcile_attendance_stats():
         key = (r["student_id"], r["schedule__subject_id"], r["schedule__group_id"])
         aggregated[key] = (r["total"], r["attended"])
 
-    keys = list(aggregated.keys())
-
     with transaction.atomic():
         # 2) Забираем ВСЕ существующие AttendanceStat — нужно для корректного удаления orphans
         all_existing = {
