@@ -10,6 +10,7 @@ AI-модуль поддерживает опциональное логиров
 ## Что логируется
 
 - `generate_embeddings.py`: число пользователей и изображений, пропуски, длительность генерации.
+- `evaluate_embeddings.py`: accuracy, precision, recall, F1, FAR, FRR, ROC-AUC, EER и sweep по threshold.
 - `POST /embedding`: статус обработки, latency, размер эмбеддинга.
 - `POST /recognize_from_image`: similarity, статус распознавания, latency.
 - Сессии распознавания через камеру: длительность, число кадров, число кадров с лицом, максимальная similarity.
@@ -17,11 +18,14 @@ AI-модуль поддерживает опциональное логиров
 
 ## Переменные окружения
 
+AI-модуль автоматически читает переменные W&B из `ai/.env`.
+
 - `WANDB_API_KEY`: API-ключ W&B.
 - `WANDB_PROJECT`: имя проекта, например `multi-tools-ai`.
 - `WANDB_ENTITY`: команда или аккаунт W&B.
 - `WANDB_MODE`: `online`, `offline` или `disabled`.
 - `WANDB_NAME`: имя запуска.
+- `WANDB_EVAL_NAME`: имя запуска для `evaluate_embeddings.py`.
 - `WANDB_NOTES`: заметки к запуску.
 - `WANDB_TAGS`: теги через запятую, например `fastapi,face-recognition`.
 
@@ -53,6 +57,13 @@ poetry run python main.py
 ```powershell
 cd ai
 poetry run python generate_embeddings.py
+```
+
+Для сравнения качества распознавания и подбора порога:
+
+```powershell
+cd ai
+poetry run python evaluate_embeddings.py --threshold 0.7
 ```
 
 Если хотите авторизовать окружение заранее, используйте официальный CLI:
