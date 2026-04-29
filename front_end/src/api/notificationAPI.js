@@ -10,6 +10,11 @@ export const markTeacherNotificationRead = async (notificationId) => {
   return response.data;
 };
 
+export const sendDemoNotification = async () => {
+  const response = await api.post('/api/demo/send-notification/');
+  return response.data;
+};
+
 const toBoolean = (value) => String(value).toLowerCase() === 'true';
 const DEBUG = toBoolean(import.meta.env.VITE_DEBUG);
 const BACKEND_URL = import.meta.env.VITE_NGROK_PATH;

@@ -9,6 +9,7 @@ import {
   connectTeacherNotificationsWS,
   getTeacherNotifications,
   markTeacherNotificationRead,
+  sendDemoNotification,
 } from '../../api/notificationAPI';
 
 
@@ -22,6 +23,8 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [isNotificationsLoading, setIsNotificationsLoading] = useState(false);
+  const [isDemoSending, setIsDemoSending] = useState(false);
+  const [demoStatus, setDemoStatus] = useState(null);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
 
@@ -66,6 +69,20 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
   const handleLogout = () => {
     setIsProfileOpen(false);
     if (onLogout) onLogout();
+  };
+
+  const handleSendDemo = async () => {
+    setIsDemoSending(true);
+    setDemoStatus(null);
+    try {
+      await sendDemoNotification();
+      setDemoStatus('ok');
+    } catch {
+      setDemoStatus('error');
+    } finally {
+      setIsDemoSending(false);
+      setTimeout(() => setDemoStatus(null), 4000);
+    }
   };
 
   const normalizeNotification = useCallback((rawNotification) => {
@@ -438,12 +455,36 @@ const Layout = ({ children, currentPage = 'home', onLogout, theme, setTheme, onN
                         isDark ? 'border-gray-700/50' : 'border-gray-200'
                       }`}
                     >
-                      <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        Уведомления
-                      </h3>
-                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Изменения расписания
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            Уведомления
+                          </h3>
+                          <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            Изменения расписания
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleSendDemo}
+                          disabled={isDemoSending}
+                          className={`text-xs px-3 py-1.5 rounded-lg border transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                            demoStatus === 'ok'
+                              ? isDark ? 'border-green-500/40 text-green-300 bg-green-500/10' : 'border-green-300 text-green-700 bg-green-50'
+                              : demoStatus === 'error'
+                                ? isDark ? 'border-red-500/40 text-red-300 bg-red-500/10' : 'border-red-300 text-red-700 bg-red-50'
+                                : isDark ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                          }`}
+                        >
+                          {isDemoSending
+                            ? 'Отправка...'
+                            : demoStatus === 'ok'
+                              ? 'Отправлено ✓'
+                              : demoStatus === 'error'
+                                ? 'Ошибка!'
+                                : 'Send test email'}
+                        </button>
+                      </div>
                     </div>
                     <div className="max-h-80 overflow-y-auto p-4 space-y-3">
                       {isNotificationsLoading && (

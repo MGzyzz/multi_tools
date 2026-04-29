@@ -72,7 +72,7 @@ const rowsEqual = (currentRow, baselineRow) => {
   const currentScore = normalizeScoreInput(currentRow.scoreInput).replace(',', '.');
   const baselineScore = normalizeScoreInput(baselineRow.scoreInput).replace(',', '.');
 
-  return currentRow.presense === baselineRow.presense && currentScore === baselineScore;
+  return currentRow.status === baselineRow.status && currentScore === baselineScore;
 };
 
 const getRiskStatusMeta = (status, isDark) => {
@@ -176,7 +176,7 @@ const StudentJournal = ({ isDark = true }) => {
 
   const summary = useMemo(() => {
     const totalLessons = journalRows.length;
-    const attendedLessons = journalRows.filter((row) => row.presense).length;
+    const attendedLessons = journalRows.filter((row) => row.status === 'present' || row.status === 'late').length;
     const missedLessons = totalLessons - attendedLessons;
 
     const scoreValues = journalRows
@@ -207,9 +207,9 @@ const StudentJournal = ({ isDark = true }) => {
     };
   }, [journalRows, pageData]);
 
-  const handlePresenceChange = (rowId, nextPresence) => {
+  const handlePresenceChange = (rowId, nextStatus) => {
     setJournalRows((prev) =>
-      prev.map((row) => (row.id === rowId ? { ...row, presense: nextPresence } : row))
+      prev.map((row) => (row.id === rowId ? { ...row, status: nextStatus } : row))
     );
     setRowErrors((prev) => ({ ...prev, [rowId]: '' }));
   };
@@ -245,8 +245,8 @@ const StudentJournal = ({ isDark = true }) => {
 
     const payload = {};
 
-    if (currentRow.presense !== baselineRow.presense) {
-      payload.presense = currentRow.presense;
+    if (currentRow.status !== baselineRow.status) {
+      payload.status = currentRow.status;
     }
 
     const baselineScore = parseScoreValue(baselineRow.scoreInput);
@@ -267,10 +267,10 @@ const StudentJournal = ({ isDark = true }) => {
 
       const nextRow = {
         ...currentRow,
-        presense: updatedAttendance?.presense ?? currentRow.presense,
+        status: updatedAttendance?.status ?? currentRow.status,
         marked_at:
           updatedAttendance?.marked_at ??
-          (Object.prototype.hasOwnProperty.call(payload, 'presense')
+          (Object.prototype.hasOwnProperty.call(payload, 'status')
             ? new Date().toISOString()
             : currentRow.marked_at),
         scoreInput: normalizeScoreInput(
@@ -457,17 +457,19 @@ const StudentJournal = ({ isDark = true }) => {
                             </span>
                             <span
                               className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs border ${
-                                row.presense
-                                  ? isDark
-                                    ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
-                                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                  : isDark
-                                    ? 'bg-red-500/10 text-red-300 border-red-500/20'
-                                    : 'bg-red-50 text-red-700 border-red-200'
+                                row.status === 'present'
+                                  ? isDark ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : row.status === 'late'
+                                    ? isDark ? 'bg-amber-500/10 text-amber-300 border-amber-500/20' : 'bg-amber-50 text-amber-700 border-amber-200'
+                                    : row.status === 'absent'
+                                      ? isDark ? 'bg-red-500/10 text-red-300 border-red-500/20' : 'bg-red-50 text-red-700 border-red-200'
+                                      : isDark ? 'bg-gray-700/50 text-gray-400 border-gray-600' : 'bg-gray-100 text-gray-500 border-gray-200'
                               }`}
                             >
-                              {row.presense ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
-                              {row.presense ? 'Был на занятии' : 'Не был на занятии'}
+                              {row.status === 'present' && <CheckCircle2 className="w-3.5 h-3.5" />}
+                              {row.status === 'late' && <CheckCircle2 className="w-3.5 h-3.5" />}
+                              {row.status === 'absent' && <XCircle className="w-3.5 h-3.5" />}
+                              {row.status === 'present' ? 'Был' : row.status === 'late' ? 'Опоздал' : row.status === 'absent' ? 'Не был' : 'Не отмечено'}
                             </span>
                           </div>
                           <p className={`mt-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -483,26 +485,33 @@ const StudentJournal = ({ isDark = true }) => {
                             <div className={`inline-flex rounded-xl border ${isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'} p-1`}>
                               <button
                                 type="button"
-                                onClick={() => handlePresenceChange(row.id, true)}
+                                onClick={() => handlePresenceChange(row.id, 'present')}
                                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                                  row.presense
+                                  row.status === 'present'
                                     ? 'bg-emerald-600 text-white'
-                                    : isDark
-                                      ? 'text-gray-300 hover:bg-gray-700'
-                                      : 'text-gray-700 hover:bg-white'
+                                    : isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-white'
                                 }`}
                               >
                                 Был
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handlePresenceChange(row.id, false)}
+                                onClick={() => handlePresenceChange(row.id, 'late')}
                                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                                  !row.presense
+                                  row.status === 'late'
+                                    ? 'bg-amber-500 text-white'
+                                    : isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-white'
+                                }`}
+                              >
+                                Опоздал
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handlePresenceChange(row.id, 'absent')}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                                  row.status === 'absent'
                                     ? 'bg-red-600 text-white'
-                                    : isDark
-                                      ? 'text-gray-300 hover:bg-gray-700'
-                                      : 'text-gray-700 hover:bg-white'
+                                    : isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-white'
                                 }`}
                               >
                                 Не был

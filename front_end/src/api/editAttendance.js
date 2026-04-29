@@ -1,11 +1,11 @@
 import api from "./api";
 
-export const editAttendance = async (attendanceId, payloadOrPresence, markedAt) => {
+export const editAttendance = async (attendanceId, payloadOrStatus, markedAt) => {
   const payload =
-    typeof payloadOrPresence === 'object' && payloadOrPresence !== null
-      ? payloadOrPresence
+    typeof payloadOrStatus === 'object' && payloadOrStatus !== null
+      ? payloadOrStatus
       : {
-          presense: payloadOrPresence,
+          status: payloadOrStatus,
           marked_at: markedAt,
         };
 

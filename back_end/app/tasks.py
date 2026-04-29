@@ -41,11 +41,17 @@ def reconcile_attendance_stats():
 
     # 1) Агрегируем по (student, group, subject)
     # subject и group берем через schedule
-    rows = Attendance.objects.values(
+    from app.models._choices.attendanceChoices import AttendanceStatusChoices
+
+    _attended = (AttendanceStatusChoices.PRESENT, AttendanceStatusChoices.LATE)
+
+    rows = Attendance.objects.exclude(
+        status=AttendanceStatusChoices.NOT_MARKED
+    ).values(
         "student_id", "schedule__group_id", "schedule__subject_id"
     ).annotate(
         total=Count("id"),
-        attended=Count("id", filter=Q(presense=True)),
+        attended=Count("id", filter=Q(status__in=_attended)),
     )
 
     # Преобразуем в удобный dict для сравнения/обновления

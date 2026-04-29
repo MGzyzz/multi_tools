@@ -94,24 +94,22 @@ class StudentByGroupFilter(admin.SimpleListFilter):
 
 @admin.action(description="Отметить присутствие")
 def mark_present(modeladmin, request, queryset):
-    count = 0
-    for attendance in queryset.select_related("schedule"):
-        if not attendance.presense:
-            attendance.presense = True
-            attendance.save(update_fields=["presense"])
-            count += 1
-    modeladmin.message_user(request, f"Отмечено присутствие: {count} записей.")
+    from app.models._choices.attendanceChoices import AttendanceStatusChoices
+
+    updated = queryset.exclude(status=AttendanceStatusChoices.PRESENT).update(
+        status=AttendanceStatusChoices.PRESENT
+    )
+    modeladmin.message_user(request, f"Отмечено присутствие: {updated} записей.")
 
 
 @admin.action(description="Отметить отсутствие")
 def mark_absent(modeladmin, request, queryset):
-    count = 0
-    for attendance in queryset.select_related("schedule"):
-        if attendance.presense:
-            attendance.presense = False
-            attendance.save(update_fields=["presense"])
-            count += 1
-    modeladmin.message_user(request, f"Отмечено отсутствие: {count} записей.")
+    from app.models._choices.attendanceChoices import AttendanceStatusChoices
+
+    updated = queryset.exclude(status=AttendanceStatusChoices.ABSENT).update(
+        status=AttendanceStatusChoices.ABSENT
+    )
+    modeladmin.message_user(request, f"Отмечено отсутствие: {updated} записей.")
 
 
 class AttendanceAdmin(admin.ModelAdmin):
@@ -123,7 +121,7 @@ class AttendanceAdmin(admin.ModelAdmin):
         "get_subject",
         "get_date",
         "get_time",
-        "presense",
+        "status",
         "marked_at",
     )
     search_fields = (
@@ -133,7 +131,7 @@ class AttendanceAdmin(admin.ModelAdmin):
         "schedule__subject__name",
     )
     list_filter = (
-        "presense",
+        "status",
         "schedule__group",
         StudentByGroupFilter,
         "schedule__subject",
