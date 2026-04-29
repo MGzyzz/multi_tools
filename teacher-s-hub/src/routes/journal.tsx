@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, AlertCircle, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { PageBody, PageHeader } from "@/components/app-shell";
@@ -48,7 +48,16 @@ function formatMonthLabel(ym: string) {
   );
 }
 
-type StatusFilter = "all" | "present" | "absent";
+type StatusFilter = "all" | "present" | "late" | "absent";
+
+const STATUS_FILTERS: StatusFilter[] = ["all", "present", "late", "absent"];
+
+function getStatusFilterLabel(status: StatusFilter, t: (key: string) => string) {
+  if (status === "all") return t("journal.filterStatusAll");
+  if (status === "present") return t("journal.filterStatusPresent");
+  if (status === "late") return t("journal.filterStatusLate");
+  return t("journal.filterStatusAbsent");
+}
 
 function PaginationBar({
   page,
@@ -178,7 +187,12 @@ function JournalPage() {
       setJournalLoading(true);
       setError("");
       try {
-        const data = await getStudentJournal(groupId, selectedSubjectId, studentId, controller.signal);
+        const data = await getStudentJournal(
+          groupId,
+          selectedSubjectId,
+          studentId,
+          controller.signal,
+        );
         if (controller.signal.aborted) return;
         setJournalData(data);
       } catch (err) {
@@ -219,28 +233,27 @@ function JournalPage() {
       )
     : [];
 
-  const availableMonths = useMemo(() => {
-    const months = new Set(sortedJournal.map((e) => e.date.slice(0, 7)));
-    return [...months].sort().reverse();
-  }, [sortedJournal]);
+  const availableMonths = [...new Set(sortedJournal.map((e) => e.date.slice(0, 7)))]
+    .sort()
+    .reverse();
 
-  const filteredJournal = useMemo(() => {
-    return sortedJournal.filter((entry) => {
-      if (statusFilter === "present" && !entry.presense) return false;
-      if (statusFilter === "absent" && entry.presense) return false;
-      if (monthFilter && !entry.date.startsWith(monthFilter)) return false;
-      if (dateFrom && entry.date < dateFrom) return false;
-      if (dateTo && entry.date > dateTo) return false;
-      return true;
-    });
-  }, [sortedJournal, statusFilter, monthFilter, dateFrom, dateTo]);
+  const filteredJournal = sortedJournal.filter((entry) => {
+    if (statusFilter === "present" && entry.status !== "present") return false;
+    if (statusFilter === "late" && entry.status !== "late") return false;
+    if (statusFilter === "absent" && entry.status !== "absent") return false;
+    if (monthFilter && !entry.date.startsWith(monthFilter)) return false;
+    if (dateFrom && entry.date < dateFrom) return false;
+    if (dateTo && entry.date > dateTo) return false;
+    return true;
+  });
 
   const totalPages = Math.max(1, Math.ceil(filteredJournal.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pageStart = (safePage - 1) * PAGE_SIZE;
   const pageRows = filteredJournal.slice(pageStart, pageStart + PAGE_SIZE);
 
-  const anyFilterActive = statusFilter !== "all" || monthFilter !== "" || dateFrom !== "" || dateTo !== "";
+  const anyFilterActive =
+    statusFilter !== "all" || monthFilter !== "" || dateFrom !== "" || dateTo !== "";
 
   const resetFilters = () => {
     setStatusFilter("all");
@@ -334,13 +347,17 @@ function JournalPage() {
               )}
             </div>
 
-            <SectionCard padded={false} title={t("journal.sectionTitle")} description={t("journal.sectionDesc")}>
+            <SectionCard
+              padded={false}
+              title={t("journal.sectionTitle")}
+              description={t("journal.sectionDesc")}
+            >
               {/* Filter bar */}
               {!journalLoading && journalData && (
                 <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2.5">
                   {/* Status filter */}
                   <div className="inline-flex rounded-md border border-border bg-background p-0.5 text-[12px]">
-                    {(["all", "present", "absent"] as StatusFilter[]).map((s) => (
+                    {STATUS_FILTERS.map((s) => (
                       <button
                         key={s}
                         type="button"
@@ -352,7 +369,7 @@ function JournalPage() {
                             : "text-muted-foreground hover:text-foreground",
                         )}
                       >
-                        {s === "all" ? t("journal.filterStatusAll") : s === "present" ? t("journal.filterStatusPresent") : t("journal.filterStatusAbsent")}
+                        {getStatusFilterLabel(s, t)}
                       </button>
                     ))}
                   </div>
@@ -445,19 +462,27 @@ function JournalPage() {
                             <td className="px-4 py-2.5 tabular-nums text-muted-foreground">
                               {entry.date}
                             </td>
-                            <td className="px-4 py-2.5 tabular-nums">
-                              {entry.time.slice(0, 5)}
-                            </td>
+                            <td className="px-4 py-2.5 tabular-nums">{entry.time.slice(0, 5)}</td>
                             <td className="px-4 py-2.5">
                               <span
                                 className={cn(
                                   "inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium",
-                                  entry.presense
+                                  entry.status === "present"
                                     ? "border-success/30 bg-success/10 text-success"
-                                    : "border-destructive/30 bg-destructive/10 text-destructive",
+                                    : entry.status === "late"
+                                      ? "border-warning/40 bg-warning/15 text-warning-foreground"
+                                      : entry.status === "absent"
+                                        ? "border-destructive/30 bg-destructive/10 text-destructive"
+                                        : "border-border bg-muted text-muted-foreground",
                                 )}
                               >
-                                {entry.presense ? t("journal.statusPresent") : t("journal.statusAbsent")}
+                                {entry.status === "present"
+                                  ? t("journal.statusPresent")
+                                  : entry.status === "late"
+                                    ? t("journal.statusLate")
+                                    : entry.status === "absent"
+                                      ? t("journal.statusAbsent")
+                                      : t("journal.statusNotMarked")}
                               </span>
                             </td>
                             <td className="px-4 py-2.5 tabular-nums text-muted-foreground">

@@ -8,6 +8,7 @@ import {
   CameraOff,
   CheckCircle2,
   Clock,
+  Eye,
   RefreshCcw,
   ScanFace,
   ShieldCheck,
@@ -28,6 +29,7 @@ import { ApiError } from "@/lib/auth";
 import { requireAuth } from "@/lib/route-auth";
 import { recognizeStudentFace, type FaceRecognitionResult } from "@/lib/scan";
 import { getScheduleList, getTimeLabel, type ApiScheduleEntry } from "@/lib/schedule";
+import { useBlinkDetector } from "@/lib/use-blink-detector";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/scan")({
@@ -52,6 +54,7 @@ type ScanState =
   | "idle"
   | "permission"
   | "ready"
+  | "liveness"
   | "scanning"
   | "matched"
   | "unknown"
@@ -72,6 +75,7 @@ type ScanEventStatus =
   | "recognized"
   | "outside-session"
   | "not-recognized"
+  | "liveness-failed"
   | "no-face"
   | "empty-embeddings"
   | "error";
@@ -89,6 +93,7 @@ const STATE_TONES: Record<ScanState, "info" | "success" | "warning" | "destructi
   idle: "muted",
   permission: "warning",
   ready: "info",
+  liveness: "info",
   scanning: "info",
   matched: "success",
   unknown: "warning",
@@ -99,6 +104,7 @@ const STATE_LABEL_KEYS: Record<ScanState, string> = {
   idle: "scan.stateLabelIdle",
   permission: "scan.stateLabelPermission",
   ready: "scan.stateLabelReady",
+  liveness: "scan.stateLabelLiveness",
   scanning: "scan.stateLabelScanning",
   matched: "scan.stateLabelMatched",
   unknown: "scan.stateLabelUnknown",
@@ -117,6 +123,7 @@ const eventToneClass: Record<ScanEventStatus, string> = {
   recognized: toneClass.success,
   "outside-session": toneClass.warning,
   "not-recognized": toneClass.warning,
+  "liveness-failed": toneClass.warning,
   "no-face": toneClass.warning,
   "empty-embeddings": toneClass.destructive,
   error: toneClass.destructive,
@@ -152,7 +159,7 @@ function mapAttendanceRow(row: ApiAttendanceRow): ScanStudent {
     studentId: row.student.id,
     name: getAttendanceStudentName(row),
     telegram: row.student.telegram_username,
-    status: row.marked_at ? (row.presense ? "present" : "absent") : "unmarked",
+    status: row.status === "present" ? "present" : row.status === "absent" ? "absent" : row.marked_at ? "absent" : "unmarked",
     markedAt: formatMarkedAtTime(row.marked_at),
   };
 }
@@ -219,6 +226,7 @@ function ScanPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const { waitForBlink } = useBlinkDetector();
 
   const [now, setNow] = useState(() => new Date());
   const [scanState, setScanState] = useState<ScanState>("idle");
@@ -256,7 +264,7 @@ function ScanPage() {
   }, []);
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30_000);
+    const id = setInterval(() => setNow(new Date()), 10_000);
     return () => clearInterval(id);
   }, []);
 
@@ -275,13 +283,19 @@ function ScanPage() {
         if (controller.signal.aborted) return;
         setScheduleOptions(response);
 
+        const todayEntries = response
+          .filter((entry) => entry.date === weekRange.todayDate)
+          .sort((a, b) => getTimeLabel(a.time).localeCompare(getTimeLabel(b.time)));
+        const liveEntry = todayEntries.find(
+          (entry) => getScheduleSessionStatus(entry) === "live",
+        );
+        const nextUpcomingEntry = todayEntries.find(
+          (entry) => getScheduleSessionStatus(entry) === "upcoming",
+        );
         const nextSelectedId =
           scheduleIdParam && response.some((entry) => entry.id === scheduleIdParam)
             ? scheduleIdParam
-            : (response.find((entry) => getScheduleSessionStatus(entry) === "live")?.id ??
-              response.find((entry) => entry.date === weekRange.todayDate)?.id ??
-              response[0]?.id ??
-              null);
+            : (liveEntry?.id ?? nextUpcomingEntry?.id ?? todayEntries[0]?.id ?? response[0]?.id ?? null);
 
         setSelectedScheduleId(nextSelectedId);
       } catch (error) {
@@ -492,7 +506,7 @@ function ScanPage() {
 
       try {
         const response = await updateAttendance(matchedStudent.attendanceId, {
-          presense: true,
+          status: "present",
           marked_at: new Date().toISOString(),
         });
         const updated = mapAttendanceRow(response.attendance);
@@ -583,6 +597,24 @@ function ScanPage() {
       return;
     }
 
+    setScanState("liveness");
+    const blinked = await waitForBlink(videoRef.current!, 8000);
+
+    if (!isCameraActive) return;
+
+    if (!blinked) {
+      appendEvent(
+        "liveness-failed",
+        t("scan.livenessTitle"),
+        t("scan.livenessFailedDetails"),
+      );
+      setScanState("unknown");
+      toast.error(t("scan.livenessTitle"), {
+        description: t("scan.livenessFailedDetails"),
+      });
+      return;
+    }
+
     setScanLoading(true);
     setScanState("scanning");
 
@@ -650,6 +682,7 @@ function ScanPage() {
                 !sessionInfo ||
                 !isCameraActive ||
                 scanLoading ||
+                scanState === "liveness" ||
                 attendanceLoading ||
                 sessionTimeStatus !== "live"
               }
@@ -684,7 +717,7 @@ function ScanPage() {
               </button>
             </div>
 
-            <div className="mb-4 flex flex-col gap-3 rounded-md border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-4 flex flex-col gap-3 overflow-hidden rounded-md border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
                   <ScanFace className="h-4.5 w-4.5" />
@@ -702,7 +735,7 @@ function ScanPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <div className="hidden h-1.5 w-48 overflow-hidden rounded-full bg-muted sm:block">
                   <div
                     className="h-full bg-primary transition-all"
@@ -849,11 +882,11 @@ function ScanPage() {
                           className="h-7"
                           onClick={() => void handleCaptureScan()}
                           disabled={
-                            !isCameraActive || scanLoading || attendanceLoading || !sessionInfo || sessionTimeStatus !== "live"
+                            !isCameraActive || scanLoading || scanState === "liveness" || attendanceLoading || !sessionInfo || sessionTimeStatus !== "live"
                           }
                         >
                           <ScanFace className="h-3.5 w-3.5" />{" "}
-                          {scanLoading ? t("scan.scanning") : t("scan.scan")}
+                          {scanState === "liveness" ? t("scan.stateLabelLiveness") : scanLoading ? t("scan.scanning") : t("scan.scan")}
                         </Button>
                       </div>
                     }
@@ -941,7 +974,17 @@ function ScanPage() {
                         </div>
                       )}
 
-                      {scanLoading && (
+                      {scanState === "liveness" && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/45 backdrop-blur-[2px]">
+                          <div className="flex flex-col items-center gap-3 rounded-lg border border-white/10 bg-black/70 px-6 py-5 text-center text-white">
+                            <Eye className="h-7 w-7 animate-pulse text-info" />
+                            <div className="text-sm font-semibold">{t("scan.livenessTitle")}</div>
+                            <p className="max-w-[200px] text-xs text-white/65">{t("scan.livenessDesc")}</p>
+                          </div>
+                        </div>
+                      )}
+
+                    {scanLoading && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
                           <div className="rounded-md border border-white/10 bg-black/70 px-3 py-2 text-sm font-medium text-white">
                             {t("scan.scanningFrame")}
@@ -956,7 +999,7 @@ function ScanPage() {
                       <Button
                         size="sm"
                         onClick={() => void handleCaptureScan()}
-                        disabled={!sessionInfo || !isCameraActive || scanLoading}
+                        disabled={!sessionInfo || !isCameraActive || scanLoading || scanState === "liveness"}
                       >
                         <CheckCircle2 className="h-4 w-4" /> {t("scan.captureAndScan")}
                       </Button>

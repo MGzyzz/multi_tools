@@ -114,8 +114,14 @@ class StudentJournalDetailAPI(APIView):
             id=student_id,
         )
 
+        today = timezone.localdate()
         schedules = list(
-            Schedule.objects.filter(group_id=group.id, subject_id=subject.id, teacher_id=teacher.id)
+            Schedule.objects.filter(
+                group_id=group.id,
+                subject_id=subject.id,
+                teacher_id=teacher.id,
+                date__lte=today,
+            )
             .only("id", "date", "time")
             .order_by("-date", "-time", "-id")
         )

@@ -1,10 +1,11 @@
 """Tests for attendance-related API endpoints."""
 
-from datetime import date, time, timedelta
+from datetime import time, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
 
 from app.models import Attendance, Group, Schedule, Student, Subject_study
 
@@ -47,7 +48,7 @@ class AttendanceAPITests(BaseJWTAPITestCase):
             subject=self.subject,
             teacher=self.teacher,
             time=time(10, 0),
-            date=date.today(),
+            date=timezone.localdate(),
         )
 
         self.attendance = Attendance.objects.create(
@@ -89,7 +90,7 @@ class AttendanceAPITests(BaseJWTAPITestCase):
             subject=other_subject,
             teacher=other_teacher,
             time=time(11, 0),
-            date=date.today(),
+            date=timezone.localdate(),
         )
 
         url = reverse("attendance_list", args=[other_schedule.id])
@@ -151,7 +152,7 @@ class AttendanceAPITests(BaseJWTAPITestCase):
             subject=self.subject,
             teacher=None,
             time=time(12, 0),
-            date=date.today(),
+            date=timezone.localdate(),
         )
         url = reverse("attendance-mark")
         response = self.client.post(
@@ -180,7 +181,7 @@ class AttendanceAPITests(BaseJWTAPITestCase):
             subject=self.subject,
             teacher=self.teacher,
             time=time(12, 0),
-            date=date.today() + timedelta(days=1),
+            date=timezone.localdate() - timedelta(days=1),
         )
 
         self.attendance.status = "present"
@@ -205,4 +206,31 @@ class AttendanceAPITests(BaseJWTAPITestCase):
         self.assertEqual(len(response.data["journal"]), 2)
         self.assertTrue(
             Attendance.objects.filter(student=self.student, schedule=second_schedule).exists()
+        )
+
+    def test_student_journal_excludes_future_lessons_without_creating_attendance(self):
+        """Do not show future lessons or create placeholder attendance for them."""
+        future_schedule = Schedule.objects.create(
+            group=self.group,
+            subject=self.subject,
+            teacher=self.teacher,
+            time=time(12, 0),
+            date=timezone.localdate() + timedelta(days=1),
+        )
+
+        url = reverse(
+            "student_journal_detail",
+            args=[self.group.id, self.subject.id, self.student.id],
+        )
+        response = self.client.get(url, **self.auth_headers())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["summary"]["total_lessons"], 1)
+        self.assertEqual(len(response.data["journal"]), 1)
+        self.assertNotIn(
+            future_schedule.id,
+            [row["schedule_id"] for row in response.data["journal"]],
+        )
+        self.assertFalse(
+            Attendance.objects.filter(student=self.student, schedule=future_schedule).exists()
         )

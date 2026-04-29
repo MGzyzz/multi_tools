@@ -1,8 +1,10 @@
 import { apiRequest } from "@/lib/auth";
 
+export type AttendanceRowStatus = "present" | "absent" | "late" | "not_marked";
+
 export type ApiAttendanceRow = {
   id: number;
-  presense: boolean;
+  status: AttendanceRowStatus;
   marked_at: string | null;
   score: string | null;
   student: {
@@ -49,7 +51,7 @@ export const getAttendanceScheduleDetail = async (scheduleId: number, signal?: A
 export const updateAttendance = async (
   attendanceId: number,
   payload: {
-    presense?: boolean;
+    status?: AttendanceRowStatus;
     marked_at?: string;
     score?: string | null;
   },

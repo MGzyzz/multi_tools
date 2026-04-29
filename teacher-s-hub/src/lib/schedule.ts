@@ -3,6 +3,7 @@ import { apiRequest } from "@/lib/auth";
 export type ApiScheduleEntry = {
   id: number;
   group: number;
+  group_name: string;
   subject: number;
   auditorium: number | null;
   teacher: number | null;

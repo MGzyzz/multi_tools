@@ -48,7 +48,7 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-type LessonStatus = "earlier" | "next" | "scheduled";
+type LessonStatus = "earlier" | "live" | "next" | "scheduled";
 
 type TodayLesson = ApiScheduleEntry & {
   groupName: string;
@@ -59,6 +59,7 @@ type TodayLesson = ApiScheduleEntry & {
 
 const lessonStatusClasses: Record<LessonStatus, string> = {
   earlier: "bg-muted text-muted-foreground",
+  live: "bg-success/10 text-success",
   next: "bg-primary/10 text-primary",
   scheduled: "bg-accent text-accent-foreground",
 };
@@ -71,6 +72,7 @@ function StatusBadge({ status, label }: { status: LessonStatus; label: string })
         lessonStatusClasses[status],
       )}
     >
+      {status === "live" && <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />}
       {status === "next" && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
       {label}
     </span>
@@ -189,24 +191,22 @@ function Dashboard() {
     });
 
     return entries.map((entry, index) => {
-      let status: LessonStatus = "scheduled";
-
-      if (nextIndex === -1 || index < nextIndex) {
-        status = "earlier";
-      } else if (index === nextIndex) {
-        status = "next";
-      }
-
       const startLabel = getTimeLabel(entry.time);
       const endTime = addMinutesToTimeString(startLabel, 50);
-
       const lessonStart = new Date(`${entry.date}T${startLabel}:00`);
       const closeAt = new Date(lessonStart.getTime() + 90 * 60 * 1000);
       const isActionable = now >= lessonStart && now <= closeAt;
 
+      let status: LessonStatus = "scheduled";
+      if (nextIndex === -1 || index < nextIndex) {
+        status = "earlier";
+      } else if (index === nextIndex) {
+        status = now >= lessonStart ? "live" : "next";
+      }
+
       return {
         ...entry,
-        groupName: groupNameById.get(entry.group) ?? `Group #${entry.group}`,
+        groupName: entry.group_name || groupNameById.get(entry.group) || `Group #${entry.group}`,
         status,
         endTime,
         isActionable,
@@ -225,7 +225,7 @@ function Dashboard() {
           accumulator[lesson.status] += 1;
           return accumulator;
         },
-        { earlier: 0, next: 0, scheduled: 0 },
+        { earlier: 0, live: 0, next: 0, scheduled: 0 },
       ),
     [todayLessons],
   );
