@@ -167,6 +167,7 @@ class ScheduleSerializer(ModelSerializer):
         required=False,
         allow_null=True,
     )
+    group_name = serializers.CharField(source="group.name", read_only=True)
     subject_name = serializers.CharField(source="subject.name", read_only=True)
     auditorium_name = serializers.CharField(source="auditorium.name", read_only=True)
     auditorium_building = serializers.CharField(source="auditorium.building", read_only=True)
