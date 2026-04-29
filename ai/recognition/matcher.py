@@ -1,4 +1,3 @@
-import numpy as np
 from scipy.spatial.distance import cosine
 
 class FaceMatcher:

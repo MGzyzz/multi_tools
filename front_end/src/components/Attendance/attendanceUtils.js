@@ -23,8 +23,8 @@ const mapApiToState = (data) => {
     name: `${a.student?.last_name ?? ''} ${a.student?.first_name ?? ''}`.trim(),
     telegram: a.student?.telegram_username ?? null,
 
-    // status: present | absent | null
-    status: a.presense === true ? 'present' : 'absent',
+    // status: present | late | absent | not_marked
+    status: a.status ?? 'not_marked',
     scanTime: formatMarkedAtHHMM(a.marked_at)
   }));
 

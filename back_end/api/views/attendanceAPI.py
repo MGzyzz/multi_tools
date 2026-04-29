@@ -50,9 +50,15 @@ class AttendanceScheduleDetailAPI(APIView):
             )
             missing_ids = [sid for sid in group_student_ids if sid not in existing_ids]
             if missing_ids:
+                from app.models._choices.attendanceChoices import AttendanceStatusChoices
+
                 Attendance.objects.bulk_create(
                     [
-                        Attendance(student_id=sid, schedule_id=schedule_id, presense=False)
+                        Attendance(
+                            student_id=sid,
+                            schedule_id=schedule_id,
+                            status=AttendanceStatusChoices.NOT_MARKED,
+                        )
                         for sid in missing_ids
                     ],
                     ignore_conflicts=True,
@@ -121,20 +127,24 @@ class StudentJournalDetailAPI(APIView):
         )
         attendance_map = {item.schedule_id: item for item in attendance_rows}
 
+        from app.models._choices.attendanceChoices import AttendanceStatusChoices
+
+        _attended = (AttendanceStatusChoices.PRESENT, AttendanceStatusChoices.LATE)
+
         journal_rows = [
             {
                 "id": attendance_map[schedule.id].id,
                 "schedule_id": schedule.id,
                 "date": schedule.date,
                 "time": schedule.time,
-                "presense": attendance_map[schedule.id].presense,
+                "status": attendance_map[schedule.id].status,
                 "marked_at": attendance_map[schedule.id].marked_at,
                 "score": attendance_map[schedule.id].score,
             }
             for schedule in schedules
         ]
 
-        attended_lessons = sum(1 for row in journal_rows if row["presense"])
+        attended_lessons = sum(1 for row in journal_rows if row["status"] in _attended)
         total_lessons = len(journal_rows)
         missed_lessons = total_lessons - attended_lessons
         attendance_percent = round((attended_lessons / total_lessons) * 100) if total_lessons else 0
@@ -223,9 +233,9 @@ class AttendanceAPI(APIView):
 
         update_fields = []
 
-        if "presense" in validated:
-            attendance.presense = validated["presense"]
-            update_fields.append("presense")
+        if "status" in validated:
+            attendance.status = validated["status"]
+            update_fields.append("status")
             if "marked_at" not in validated:
                 attendance.marked_at = timezone.now()
                 update_fields.append("marked_at")
@@ -285,10 +295,12 @@ def _sync_student_attendance_rows(*, student_id: int, schedule_ids: list[int]) -
     if not schedule_ids:
         return []
 
+    from app.models._choices.attendanceChoices import AttendanceStatusChoices
+
     attendance_qs = Attendance.objects.filter(
         student_id=student_id,
         schedule_id__in=schedule_ids,
-    ).only("id", "student_id", "schedule_id", "presense", "marked_at", "score")
+    ).only("id", "student_id", "schedule_id", "status", "marked_at", "score")
 
     attendance_map = {item.schedule_id: item for item in attendance_qs}
     missing_ids = [schedule_id for schedule_id in schedule_ids if schedule_id not in attendance_map]
@@ -296,7 +308,11 @@ def _sync_student_attendance_rows(*, student_id: int, schedule_ids: list[int]) -
     if missing_ids:
         Attendance.objects.bulk_create(
             [
-                Attendance(student_id=student_id, schedule_id=schedule_id, presense=False)
+                Attendance(
+                    student_id=student_id,
+                    schedule_id=schedule_id,
+                    status=AttendanceStatusChoices.NOT_MARKED,
+                )
                 for schedule_id in missing_ids
             ],
             ignore_conflicts=True,
@@ -305,7 +321,7 @@ def _sync_student_attendance_rows(*, student_id: int, schedule_ids: list[int]) -
         attendance_qs = Attendance.objects.filter(
             student_id=student_id,
             schedule_id__in=schedule_ids,
-        ).only("id", "student_id", "schedule_id", "presense", "marked_at", "score")
+        ).only("id", "student_id", "schedule_id", "status", "marked_at", "score")
 
     return list(attendance_qs)
 

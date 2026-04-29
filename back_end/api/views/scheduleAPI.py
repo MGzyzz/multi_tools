@@ -425,10 +425,12 @@ class GetScheduleWithAttendens(APIView):
             attendance = student.attendance.filter(schedule=schedule).first()
 
             if not attendance:
+                from app.models._choices.attendanceChoices import AttendanceStatusChoices
+
                 attendance = Attendance.objects.create(
                     student=student,
                     schedule=schedule,
-                    presense=False,
+                    status=AttendanceStatusChoices.NOT_MARKED,
                 )
 
             data.append(
@@ -437,7 +439,7 @@ class GetScheduleWithAttendens(APIView):
                     "student_id": student.id,
                     "first_name": student.first_name,
                     "last_name": student.last_name,
-                    "presense": attendance.presense,
+                    "status": attendance.status,
                     "marked_at": attendance.marked_at,
                 }
             )

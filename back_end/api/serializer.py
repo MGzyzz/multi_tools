@@ -296,11 +296,13 @@ class AttendanceRowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attendance
-        fields = ("id", "presense", "marked_at", "score", "student")
+        fields = ("id", "status", "marked_at", "score", "student")
 
 
 class AttendanceUpdateSerializer(serializers.Serializer):
-    presense = serializers.BooleanField(required=False)
+    from app.models._choices.attendanceChoices import AttendanceStatusChoices
+
+    status = serializers.ChoiceField(choices=AttendanceStatusChoices.choices, required=False)
     marked_at = serializers.DateTimeField(required=False)
     score = serializers.DecimalField(
         max_digits=5,
@@ -320,7 +322,7 @@ class StudentJournalEntrySerializer(serializers.Serializer):
     schedule_id = serializers.IntegerField()
     date = serializers.DateField()
     time = serializers.TimeField()
-    presense = serializers.BooleanField()
+    status = serializers.CharField()
     marked_at = serializers.DateTimeField(allow_null=True)
     score = serializers.DecimalField(max_digits=5, decimal_places=2, allow_null=True)
 

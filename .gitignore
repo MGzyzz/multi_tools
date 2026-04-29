@@ -1,3 +1,5 @@
+ngrok.yml
+
 # Node.js dependencies
 node_modules/
 npm-debug.log*
@@ -62,4 +64,8 @@ back_end/docs/
 CLAUDE.md
 test_folder/
 back_end/.claude/
+<<<<<<< HEAD
 .vs/
+=======
+front_end/.claude/
+>>>>>>> b50e8e8d064d937b5de4dc1ce45b7dc3a502ca5d

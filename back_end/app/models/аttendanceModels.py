@@ -1,6 +1,8 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from app.models._choices.attendanceChoices import AttendanceStatusChoices
+
 
 class Attendance(models.Model):
     student = models.ForeignKey(
@@ -16,7 +18,12 @@ class Attendance(models.Model):
         related_name="attendances",
         verbose_name="Занятие",
     )
-    presense = models.BooleanField("Присутствие", default=False)
+    status = models.CharField(
+        "Статус",
+        max_length=20,
+        choices=AttendanceStatusChoices.choices,
+        default=AttendanceStatusChoices.NOT_MARKED,
+    )
     marked_at = models.DateTimeField("Отмечено в", null=True, blank=True)
     score = models.DecimalField(
         "Оценка",
@@ -28,7 +35,7 @@ class Attendance(models.Model):
     )
 
     def __str__(self):
-        return f"{self.student} - {self.schedule.subject} - {self.presense} - {self.schedule.time}"
+        return f"{self.student} - {self.schedule.subject} - {self.status} - {self.schedule.time}"
 
     class Meta:
         verbose_name = "Посещаемость"
