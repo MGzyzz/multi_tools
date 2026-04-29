@@ -38,9 +38,9 @@ def mark_attendance(schedule_id: int, present_student_ids: list[int]) -> dict:
 
         # 2) Присутствующим ставим PRESENT
         if present_set:
-            Attendance.objects.filter(
-                schedule_id=schedule_id, student_id__in=present_set
-            ).update(status=AttendanceStatusChoices.PRESENT, marked_at=now)
+            Attendance.objects.filter(schedule_id=schedule_id, student_id__in=present_set).update(
+                status=AttendanceStatusChoices.PRESENT, marked_at=now
+            )
 
         # 3) Считаем дельту attended (not_marked/absent → present/late = +1; present/late → absent = -1)
         delta_plus = []
@@ -82,9 +82,7 @@ def mark_attendance(schedule_id: int, present_student_ids: list[int]) -> dict:
                 total__gt=0,
             )
 
-            student_map = {
-                s.id: s for s in Student.objects.filter(id__in=affected_student_ids)
-            }
+            student_map = {s.id: s for s in Student.objects.filter(id__in=affected_student_ids)}
 
             for stat in stats:
                 student = student_map.get(stat.student_id)

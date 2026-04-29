@@ -302,9 +302,7 @@ class AttendanceRowSerializer(serializers.ModelSerializer):
 class AttendanceUpdateSerializer(serializers.Serializer):
     from app.models._choices.attendanceChoices import AttendanceStatusChoices
 
-    status = serializers.ChoiceField(
-        choices=AttendanceStatusChoices.choices, required=False
-    )
+    status = serializers.ChoiceField(choices=AttendanceStatusChoices.choices, required=False)
     marked_at = serializers.DateTimeField(required=False)
     score = serializers.DecimalField(
         max_digits=5,

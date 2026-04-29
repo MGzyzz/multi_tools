@@ -45,13 +45,13 @@ def reconcile_attendance_stats():
 
     _attended = (AttendanceStatusChoices.PRESENT, AttendanceStatusChoices.LATE)
 
-    rows = Attendance.objects.exclude(
-        status=AttendanceStatusChoices.NOT_MARKED
-    ).values(
-        "student_id", "schedule__group_id", "schedule__subject_id"
-    ).annotate(
-        total=Count("id"),
-        attended=Count("id", filter=Q(status__in=_attended)),
+    rows = (
+        Attendance.objects.exclude(status=AttendanceStatusChoices.NOT_MARKED)
+        .values("student_id", "schedule__group_id", "schedule__subject_id")
+        .annotate(
+            total=Count("id"),
+            attended=Count("id", filter=Q(status__in=_attended)),
+        )
     )
 
     # Преобразуем в удобный dict для сравнения/обновления
@@ -63,8 +63,7 @@ def reconcile_attendance_stats():
     with transaction.atomic():
         # 2) Забираем ВСЕ существующие AttendanceStat — нужно для корректного удаления orphans
         all_existing = {
-            (s.student_id, s.subject_id, s.group_id): s
-            for s in AttendanceStat.objects.all()
+            (s.student_id, s.subject_id, s.group_id): s for s in AttendanceStat.objects.all()
         }
 
         to_update = []
@@ -96,9 +95,7 @@ def reconcile_attendance_stats():
 
         # 3) Удаляем orphan stats — те, для которых нет ни одной отмеченной записи Attendance
         aggregated_keys = set(aggregated.keys())
-        orphan_ids = [
-            s.id for key, s in all_existing.items() if key not in aggregated_keys
-        ]
+        orphan_ids = [s.id for key, s in all_existing.items() if key not in aggregated_keys]
         deleted = 0
         if orphan_ids:
             deleted, _ = AttendanceStat.objects.filter(id__in=orphan_ids).delete()
