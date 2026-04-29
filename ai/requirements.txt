@@ -9,3 +9,4 @@ umap-learn
 ultralytics>=8.0.20
 wandb>=0.25.0
 requests
+mediapipe>=0.10.0

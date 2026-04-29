@@ -8,6 +8,7 @@ import {
   CameraOff,
   CheckCircle2,
   Clock,
+  Eye,
   RefreshCcw,
   ScanFace,
   ShieldCheck,
@@ -52,6 +53,7 @@ type ScanState =
   | "idle"
   | "permission"
   | "ready"
+  | "liveness"
   | "scanning"
   | "matched"
   | "unknown"
@@ -72,6 +74,7 @@ type ScanEventStatus =
   | "recognized"
   | "outside-session"
   | "not-recognized"
+  | "liveness-failed"
   | "no-face"
   | "empty-embeddings"
   | "error";
@@ -89,6 +92,7 @@ const STATE_TONES: Record<ScanState, "info" | "success" | "warning" | "destructi
   idle: "muted",
   permission: "warning",
   ready: "info",
+  liveness: "info",
   scanning: "info",
   matched: "success",
   unknown: "warning",
@@ -99,6 +103,7 @@ const STATE_LABEL_KEYS: Record<ScanState, string> = {
   idle: "scan.stateLabelIdle",
   permission: "scan.stateLabelPermission",
   ready: "scan.stateLabelReady",
+  liveness: "scan.stateLabelLiveness",
   scanning: "scan.stateLabelScanning",
   matched: "scan.stateLabelMatched",
   unknown: "scan.stateLabelUnknown",
@@ -117,6 +122,7 @@ const eventToneClass: Record<ScanEventStatus, string> = {
   recognized: toneClass.success,
   "outside-session": toneClass.warning,
   "not-recognized": toneClass.warning,
+  "liveness-failed": toneClass.warning,
   "no-face": toneClass.warning,
   "empty-embeddings": toneClass.destructive,
   error: toneClass.destructive,
@@ -583,6 +589,11 @@ function ScanPage() {
       return;
     }
 
+    setScanState("liveness");
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+
+    if (!isCameraActive) return;
+
     setScanLoading(true);
     setScanState("scanning");
 
@@ -941,7 +952,17 @@ function ScanPage() {
                         </div>
                       )}
 
-                      {scanLoading && (
+                      {scanState === "liveness" && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/45 backdrop-blur-[2px]">
+                          <div className="flex flex-col items-center gap-3 rounded-lg border border-white/10 bg-black/70 px-6 py-5 text-center text-white">
+                            <Eye className="h-7 w-7 animate-pulse text-info" />
+                            <div className="text-sm font-semibold">{t("scan.livenessTitle")}</div>
+                            <p className="max-w-[200px] text-xs text-white/65">{t("scan.livenessDesc")}</p>
+                          </div>
+                        </div>
+                      )}
+
+                    {scanLoading && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
                           <div className="rounded-md border border-white/10 bg-black/70 px-3 py-2 text-sm font-medium text-white">
                             {t("scan.scanningFrame")}

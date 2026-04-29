@@ -18,6 +18,7 @@ matplotlib.use("Agg")
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from detection.yolo_detector import YoloDetector
+from liveness.blink_detector import BlinkDetector
 from recognition.facenet_model import FaceEmbedder
 from utils.compare_faces import find_best_match
 from utils.log_similarity import log_similarity
@@ -37,12 +38,14 @@ app.add_middleware(
 
 EMBEDDINGS_PATH = "ai/data/embeddings.npy"
 CAMERA_INDEX = 1
+LIVENESS_TIMEOUT = 8
 SCAN_DURATION = 15
 SIMILARITY_THRESHOLD = 0.75
 HIGHER_SIMILARITY_THRESHOLD = 0.7
 CONFIDENCE_SAMPLES = 8
 
 camera_running = False
+current_phase = "idle"  # "idle" | "liveness" | "recognition"
 stop_camera = threading.Event()
 recognition_result = {"username": "Unknown"}
 face_detected = threading.Event()
@@ -158,14 +161,15 @@ USERNAME_MAPPING = {
 
 
 def reset_recognition_state():
-    global recognition_result, face_detected
+    global recognition_result, face_detected, current_phase
     recognition_result = {"username": "Unknown"}
     face_detected.clear()
+    current_phase = "idle"
     print("[INFO] Состояние распознавания сброшено")
 
 
 def recognize_faces():
-    global camera_running, recognition_result, face_detected
+    global camera_running, recognition_result, face_detected, current_phase
 
     reset_recognition_state()
     init_models()
@@ -177,6 +181,7 @@ def recognize_faces():
     max_similarity = 0.0
     session_status = "timeout"
     recognized_username = "Unknown"
+    blink_detector = BlinkDetector()
 
     if not cap.isOpened():
         print("[ERROR] Не удалось открыть камеру")
@@ -190,20 +195,45 @@ def recognize_faces():
         )
         return {"error": "Не удалось открыть камеру"}
 
-    print(
-        "[INFO] Запущено распознавание. Ожидаем обнаружения лица или максимум",
-        SCAN_DURATION,
-        "секунд",
-    )
     camera_running = True
-    start_scan_time = time.time()
-
-    consecutive_matches = {}
-    last_matched_user = None
 
     try:
+        # --- Фаза 1: Проверка живости (моргание) ---
+        current_phase = "liveness"
+        print(f"[INFO] Фаза 1: ожидаем моргания ({LIVENESS_TIMEOUT} сек)...")
+        liveness_start = time.time()
+
         while (
-            time.time() - start_scan_time < SCAN_DURATION and not stop_camera.is_set()
+            time.time() - liveness_start < LIVENESS_TIMEOUT and not stop_camera.is_set()
+        ):
+            ret, frame = cap.read()
+            if not ret or frame.size == 0:
+                continue
+
+            processed_frames += 1
+
+            if blink_detector.process(frame):
+                print("[INFO] Моргание зафиксировано — переходим к распознаванию")
+                break
+        else:
+            session_status = "liveness_failed"
+            recognition_result["liveness_status"] = "liveness_failed"
+            print("[WARNING] Моргание не зафиксировано — проверка живости не пройдена")
+            return recognition_result
+
+        if stop_camera.is_set():
+            session_status = "stopped"
+            return recognition_result
+
+        # --- Фаза 2: Распознавание лица ---
+        current_phase = "recognition"
+        print(f"[INFO] Фаза 2: распознавание лица ({SCAN_DURATION} сек)...")
+        recognition_start = time.time()
+        consecutive_matches = {}
+        last_matched_user = None
+
+        while (
+            time.time() - recognition_start < SCAN_DURATION and not stop_camera.is_set()
         ):
             started_frame_at = time.time()
             ret, frame = cap.read()
@@ -273,7 +303,10 @@ def recognize_faces():
                                 2,
                             )
 
-                            if consecutive_matches.get(user_id, 0) >= CONFIDENCE_SAMPLES:
+                            if (
+                                consecutive_matches.get(user_id, 0)
+                                >= CONFIDENCE_SAMPLES
+                            ):
                                 if real_username != "Unknown":
                                     recognition_result = {"username": real_username}
                                     session_status = "recognized"
@@ -305,7 +338,7 @@ def recognize_faces():
                             consecutive_matches = {}
                             last_matched_user = None
                         else:
-                            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0,255), 2)
+                            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
                             cv2.putText(
                                 frame,
                                 f"Unknown ({similarity:.2f})",
@@ -328,12 +361,18 @@ def recognize_faces():
                 break
 
     finally:
-        if session_status != "recognized" and stop_camera.is_set():
+        blink_detector.close()
+
+        if (
+            session_status not in ("recognized", "liveness_failed")
+            and stop_camera.is_set()
+        ):
             session_status = "stopped"
 
         stop_camera.set()
         cap.release()
         camera_running = False
+        current_phase = "idle"
         print("[INFO] Распознавание завершено")
 
         wandb_logger.log_metrics(
@@ -365,6 +404,7 @@ async def status():
     return {
         "status": "online",
         "camera_status": "running" if camera_running else "idle",
+        "phase": current_phase,
         "face_detected": face_detected.is_set(),
     }
 
@@ -394,14 +434,16 @@ async def get_recognition_result():
     started_at = time.perf_counter()
     username = recognition_result.get("username", "Unknown")
 
+    liveness_status = recognition_result.get("liveness_status")
     if username == "Unknown":
+        status_key = liveness_status if liveness_status else "not_recognized"
         log_request_metrics(
             "recognition_result",
-            "not_recognized",
+            status_key,
             (time.perf_counter() - started_at) * 1000,
             extra_metrics={"recognition_result/has_user": 0},
         )
-        return {"user_id": None, "status": "not_recognized"}
+        return {"user_id": None, "status": status_key}
 
     try:
         response = requests.get(f"{DJANGO_API_URL}/get_student_information/{username}")
@@ -589,4 +631,3 @@ async def recognize_from_image(file: UploadFile = File(...)):
 if __name__ == "__main__":
     print("[INFO] Запуск FastAPI сервера на порту 8002...")
     uvicorn.run(app, host="0.0.0.0", port=8002)
-
