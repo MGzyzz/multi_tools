@@ -72,7 +72,7 @@ function mapAttendanceRow(row: ApiAttendanceRow): AttendanceStudent {
     name: getAttendanceStudentName(row),
     telegram: row.student.telegram_username,
     score: row.score,
-    status: row.marked_at ? (row.presense ? "present" : "absent") : "unmarked",
+    status: row.status === "present" ? "present" : row.status === "absent" || row.status === "late" ? "absent" : "unmarked",
     markedAt: formatMarkedAtTime(row.marked_at),
   };
 }
@@ -276,7 +276,7 @@ function AttendancePage() {
     [students],
   );
 
-  const handleMarkStudent = async (studentId: number, presense: boolean) => {
+  const handleMarkStudent = async (studentId: number, markAsPresent: boolean) => {
     const current = students.find((student) => student.id === studentId);
     if (!current) return;
 
@@ -291,7 +291,7 @@ function AttendancePage() {
         student.id === studentId
           ? {
               ...student,
-              status: presense ? "present" : "absent",
+              status: markAsPresent ? "present" : "absent",
               markedAt: optimisticMarkedAt,
             }
           : student,
@@ -299,7 +299,9 @@ function AttendancePage() {
     );
 
     try {
-      const response = await updateAttendance(current.attendanceId, { presense });
+      const response = await updateAttendance(current.attendanceId, {
+        status: markAsPresent ? "present" : "absent",
+      });
 
       setStudents((previous) =>
         previous.map((student) =>

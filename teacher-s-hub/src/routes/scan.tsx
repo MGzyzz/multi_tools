@@ -159,7 +159,7 @@ function mapAttendanceRow(row: ApiAttendanceRow): ScanStudent {
     studentId: row.student.id,
     name: getAttendanceStudentName(row),
     telegram: row.student.telegram_username,
-    status: row.marked_at ? (row.presense ? "present" : "absent") : "unmarked",
+    status: row.status === "present" ? "present" : row.status === "absent" ? "absent" : row.marked_at ? "absent" : "unmarked",
     markedAt: formatMarkedAtTime(row.marked_at),
   };
 }
@@ -506,7 +506,7 @@ function ScanPage() {
 
       try {
         const response = await updateAttendance(matchedStudent.attendanceId, {
-          presense: true,
+          status: "present",
           marked_at: new Date().toISOString(),
         });
         const updated = mapAttendanceRow(response.attendance);
