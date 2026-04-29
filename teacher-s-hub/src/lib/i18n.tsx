@@ -218,6 +218,7 @@ const dictionaries: Record<Lang, Dict> = {
     "journal.filterAllMonths": "All months",
     "journal.filterStatusAll": "All",
     "journal.filterStatusPresent": "Present",
+    "journal.filterStatusLate": "Late",
     "journal.filterStatusAbsent": "Absent",
     "journal.filterReset": "Reset",
     "journal.entries": "entries",
@@ -227,6 +228,7 @@ const dictionaries: Record<Lang, Dict> = {
     "journal.colStatus": "Status",
     "journal.colMarkedAt": "Marked at",
     "journal.statusPresent": "Present",
+    "journal.statusLate": "Late",
     "journal.statusAbsent": "Absent",
     "journal.statusNotMarked": "Not marked",
 
@@ -526,8 +528,7 @@ const dictionaries: Record<Lang, Dict> = {
     "settings.telegram.disconnecting": "Disconnecting...",
     "settings.telegram.getCode": "Get link code",
     "settings.telegram.generating": "Generating...",
-    "settings.telegram.instruction":
-      "Open the bot and send the command: /start YOUR_CODE",
+    "settings.telegram.instruction": "Open the bot and send the command: /start YOUR_CODE",
     "settings.telegram.codeLabel": "Your one-time code (valid 10 min):",
     "settings.telegram.codeCopied": "Code copied!",
     "settings.telegram.disconnected": "Telegram disconnected.",
@@ -798,6 +799,7 @@ const dictionaries: Record<Lang, Dict> = {
     "journal.filterAllMonths": "Все месяцы",
     "journal.filterStatusAll": "Все",
     "journal.filterStatusPresent": "Присутствовал",
+    "journal.filterStatusLate": "Опоздал",
     "journal.filterStatusAbsent": "Отсутствовал",
     "journal.filterReset": "Сбросить",
     "journal.entries": "записей",
@@ -807,6 +809,7 @@ const dictionaries: Record<Lang, Dict> = {
     "journal.colStatus": "Статус",
     "journal.colMarkedAt": "Отмечено в",
     "journal.statusPresent": "Присутствовал",
+    "journal.statusLate": "Опоздал",
     "journal.statusAbsent": "Отсутствовал",
     "journal.statusNotMarked": "Не отмечено",
 
@@ -1097,8 +1100,7 @@ const dictionaries: Record<Lang, Dict> = {
     "settings.telegram.disconnecting": "Отключение...",
     "settings.telegram.getCode": "Получить код привязки",
     "settings.telegram.generating": "Генерация...",
-    "settings.telegram.instruction":
-      "Откройте бота и отправьте команду: /start ВАШ_КОД",
+    "settings.telegram.instruction": "Откройте бота и отправьте команду: /start ВАШ_КОД",
     "settings.telegram.codeLabel": "Ваш одноразовый код (действует 10 мин):",
     "settings.telegram.codeCopied": "Код скопирован!",
     "settings.telegram.disconnected": "Telegram отключён.",
@@ -1369,6 +1371,7 @@ const dictionaries: Record<Lang, Dict> = {
     "journal.filterAllMonths": "Барлық айлар",
     "journal.filterStatusAll": "Барлығы",
     "journal.filterStatusPresent": "Қатысты",
+    "journal.filterStatusLate": "Кешікті",
     "journal.filterStatusAbsent": "Қатыспады",
     "journal.filterReset": "Тазалау",
     "journal.entries": "жазба",
@@ -1378,6 +1381,7 @@ const dictionaries: Record<Lang, Dict> = {
     "journal.colStatus": "Күйі",
     "journal.colMarkedAt": "Белгіленген уақыт",
     "journal.statusPresent": "Қатысты",
+    "journal.statusLate": "Кешікті",
     "journal.statusAbsent": "Қатыспады",
     "journal.statusNotMarked": "Белгіленбеген",
 
@@ -1667,8 +1671,7 @@ const dictionaries: Record<Lang, Dict> = {
     "settings.telegram.disconnecting": "Ажыратылуда...",
     "settings.telegram.getCode": "Байланыстыру кодын алу",
     "settings.telegram.generating": "Жасалуда...",
-    "settings.telegram.instruction":
-      "Ботты ашып, команданы жіберіңіз: /start КОДЫҢЫЗ",
+    "settings.telegram.instruction": "Ботты ашып, команданы жіберіңіз: /start КОДЫҢЫЗ",
     "settings.telegram.codeLabel": "Бір реттік кодыңыз (10 мин. жарамды):",
     "settings.telegram.codeCopied": "Код көшірілді!",
     "settings.telegram.disconnected": "Telegram ажыратылды.",
