@@ -589,3 +589,4 @@ async def recognize_from_image(file: UploadFile = File(...)):
 if __name__ == "__main__":
     print("[INFO] Запуск FastAPI сервера на порту 8002...")
     uvicorn.run(app, host="0.0.0.0", port=8002)
+
