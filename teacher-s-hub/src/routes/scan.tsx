@@ -264,7 +264,7 @@ function ScanPage() {
   }, []);
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30_000);
+    const id = setInterval(() => setNow(new Date()), 10_000);
     return () => clearInterval(id);
   }, []);
 
@@ -283,13 +283,19 @@ function ScanPage() {
         if (controller.signal.aborted) return;
         setScheduleOptions(response);
 
+        const todayEntries = response
+          .filter((entry) => entry.date === weekRange.todayDate)
+          .sort((a, b) => getTimeLabel(a.time).localeCompare(getTimeLabel(b.time)));
+        const liveEntry = todayEntries.find(
+          (entry) => getScheduleSessionStatus(entry) === "live",
+        );
+        const nextUpcomingEntry = todayEntries.find(
+          (entry) => getScheduleSessionStatus(entry) === "upcoming",
+        );
         const nextSelectedId =
           scheduleIdParam && response.some((entry) => entry.id === scheduleIdParam)
             ? scheduleIdParam
-            : (response.find((entry) => getScheduleSessionStatus(entry) === "live")?.id ??
-              response.find((entry) => entry.date === weekRange.todayDate)?.id ??
-              response[0]?.id ??
-              null);
+            : (liveEntry?.id ?? nextUpcomingEntry?.id ?? todayEntries[0]?.id ?? response[0]?.id ?? null);
 
         setSelectedScheduleId(nextSelectedId);
       } catch (error) {
@@ -711,7 +717,7 @@ function ScanPage() {
               </button>
             </div>
 
-            <div className="mb-4 flex flex-col gap-3 rounded-md border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-4 flex flex-col gap-3 overflow-hidden rounded-md border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
                   <ScanFace className="h-4.5 w-4.5" />
@@ -729,7 +735,7 @@ function ScanPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <div className="hidden h-1.5 w-48 overflow-hidden rounded-full bg-muted sm:block">
                   <div
                     className="h-full bg-primary transition-all"
