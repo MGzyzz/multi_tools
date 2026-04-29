@@ -78,7 +78,10 @@ class AnalyticsSummaryAPI(APIView):
             )
             .annotate(week=TruncWeek("schedule__date"))
             .values("week")
-            .annotate(total=Count("id"), attended=Count("id", filter=Q(presense=True)))
+            .annotate(
+                total=Count("id"),
+                attended=Count("id", filter=Q(status__in=("present", "late"))),
+            )
             .order_by("week")
         )
         trend = [

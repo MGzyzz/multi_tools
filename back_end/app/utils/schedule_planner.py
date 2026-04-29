@@ -91,11 +91,13 @@ def _bulk_create_attendance_rows(
 
     for schedule in created_schedules:
         for student_id in student_ids:
+            from app.models._choices.attendanceChoices import AttendanceStatusChoices
+
             pending.append(
                 Attendance(
                     student_id=student_id,
                     schedule_id=schedule.id,
-                    presense=False,
+                    status=AttendanceStatusChoices.NOT_MARKED,
                 )
             )
 

@@ -141,9 +141,15 @@ def create_attendance_for_schedule(sender, instance, created, **kwargs):
                 group.id,
             )
         else:
+            from app.models._choices.attendanceChoices import AttendanceStatusChoices
+
             created_att = Attendance.objects.bulk_create(
                 [
-                    Attendance(student_id=sid, schedule_id=schedule.id, presense=False)
+                    Attendance(
+                        student_id=sid,
+                        schedule_id=schedule.id,
+                        status=AttendanceStatusChoices.NOT_MARKED,
+                    )
                     for sid in student_ids
                 ],
                 ignore_conflicts=True,
@@ -405,36 +411,38 @@ def notify_group_students_changed(sender, instance, action, pk_set, **kwargs):
 
 @receiver(pre_save, sender=Attendance)
 def cache_old_presense(sender, instance, **kwargs):
+    from app.models._choices.attendanceChoices import AttendanceStatusChoices
+
     if not instance.pk:
-        instance._old_presense = None
+        instance._old_status = None
         return
-    old = Attendance.objects.only("presense").filter(pk=instance.pk).first()
-    instance._old_presense = old.presense if old else None
+    old = Attendance.objects.only("status").filter(pk=instance.pk).first()
+    instance._old_status = old.status if old else None
+
+    _attended = (AttendanceStatusChoices.PRESENT, AttendanceStatusChoices.LATE)
+    instance._old_attended = (instance._old_status in _attended) if instance._old_status else False
 
 
 @receiver(post_save, sender=Attendance)
 def update_stat_on_attendance_save(sender, instance, created, **kwargs):
+    from app.models._choices.attendanceChoices import AttendanceStatusChoices
+
+    _attended = (AttendanceStatusChoices.PRESENT, AttendanceStatusChoices.LATE)
+
     schedule = instance.schedule
     group_id = schedule.group_id
     subject_id = schedule.subject_id
     student_id = instance.student_id
 
     if created:
-        if instance.presense:
-            logger.info(
-                "Attendance created with presense=True: attendance_id=%s student_id=%s schedule_id=%s",
-                instance.id,
-                student_id,
-                schedule.id,
-            )
         return
 
-    old = getattr(instance, "_old_presense", None)
-    new = instance.presense
-    if old is None or old == new:
+    old_attended = getattr(instance, "_old_attended", None)
+    new_attended = instance.status in _attended
+    if old_attended is None or old_attended == new_attended:
         return
 
-    delta = 1 if (old is False and new is True) else -1
+    delta = 1 if (not old_attended and new_attended) else -1
 
     if instance.marked_at is None:
         Attendance.objects.filter(pk=instance.pk).update(marked_at=timezone.now())
@@ -470,6 +478,8 @@ def update_stat_on_attendance_delete(sender, instance, **kwargs):
         group_id=schedule.group_id,
     )
 
+    from app.models._choices.attendanceChoices import AttendanceStatusChoices
+
     qs.filter(total__gt=0).update(total=F("total") - 1)
-    if instance.presense:
+    if instance.status in (AttendanceStatusChoices.PRESENT, AttendanceStatusChoices.LATE):
         qs.filter(attended__gt=0).update(attended=F("attended") - 1)

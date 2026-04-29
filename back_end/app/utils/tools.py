@@ -34,7 +34,7 @@ def create_excel_attendance_file(request):
                 f"{student.first_name} {student.last_name}",
                 subject_name,
                 str(record.schedule.date) if record.schedule else "—",
-                "✔️" if record.presense else "❌",
+                "✔️" if record.status in ("present", "late") else "❌",
             ]
             worksheet.append(row)
 

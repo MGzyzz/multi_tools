@@ -53,7 +53,7 @@ class AttendanceAPITests(BaseJWTAPITestCase):
         self.attendance = Attendance.objects.create(
             student=self.student,
             schedule=self.schedule,
-            presense=False,
+            status="not_marked",
         )
 
     def test_attendance_list_returns_200(self):
@@ -97,11 +97,11 @@ class AttendanceAPITests(BaseJWTAPITestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_edit_attendance_updates(self):
-        """Update attendance presence with HTTP 200."""
+        """Update attendance status with HTTP 200."""
         url = reverse("edit_attendance", args=[self.attendance.id])
         response = self.client.patch(
             url,
-            {"presense": True, "score": "91.50"},
+            {"status": "present", "score": "91.50"},
             format="json",
             **self.auth_headers(),
         )
@@ -111,7 +111,7 @@ class AttendanceAPITests(BaseJWTAPITestCase):
             "Attendance updated successfully",
         )
         self.attendance.refresh_from_db()
-        self.assertTrue(self.attendance.presense)
+        self.assertEqual(self.attendance.status, "present")
         self.assertEqual(self.attendance.score, Decimal("91.50"))
         self.assertIn("attendance", response.data)
 
@@ -120,7 +120,7 @@ class AttendanceAPITests(BaseJWTAPITestCase):
         url = reverse("edit_attendance", args=[9999])
         response = self.client.patch(
             url,
-            {"presense": True},
+            {"status": "present"},
             format="json",
             **self.auth_headers(),
         )
@@ -142,7 +142,7 @@ class AttendanceAPITests(BaseJWTAPITestCase):
         self.assertEqual(response.data["schedule_id"], self.schedule.id)
         self.assertEqual(response.data["present_count"], 1)
         self.attendance.refresh_from_db()
-        self.assertTrue(self.attendance.presense)
+        self.assertEqual(self.attendance.status, "present")
 
     def test_mark_attendance_schedule_without_teacher_returns_400(self):
         """Return 400 when schedule has no teacher assigned."""
@@ -183,9 +183,9 @@ class AttendanceAPITests(BaseJWTAPITestCase):
             date=date.today() + timedelta(days=1),
         )
 
-        self.attendance.presense = True
+        self.attendance.status = "present"
         self.attendance.score = Decimal("88.00")
-        self.attendance.save(update_fields=["presense", "score"])
+        self.attendance.save(update_fields=["status", "score"])
 
         url = reverse(
             "student_journal_detail",

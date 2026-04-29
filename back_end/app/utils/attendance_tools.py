@@ -2,13 +2,17 @@ from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 
+from app.models._choices.attendanceChoices import AttendanceStatusChoices
 from app.utils.risk_incidents import sync_attendance_risk_incident
+
+_ATTENDED_STATUSES = (AttendanceStatusChoices.PRESENT, AttendanceStatusChoices.LATE)
 
 
 def mark_attendance(schedule_id: int, present_student_ids: list[int]) -> dict:
     """
     Отмечает посещаемость по занятию (Schedule) списком присутствующих.
-    Быстро: 2 UPDATE по Attendance + 0-2 UPDATE по AttendanceStat.
+    Присутствующие → PRESENT, остальные → ABSENT.
+    Обновляет AttendanceStat и при необходимости тригgerит риск-инциденты.
     """
     from app.models import Attendance, AttendanceStat, NotificationPreference, Schedule, Student
 
@@ -18,47 +22,48 @@ def mark_attendance(schedule_id: int, present_student_ids: list[int]) -> dict:
     group_id = schedule.group_id
     subject_id = schedule.subject_id
 
-    # Защита: принимаем только студентов этой группы
     allowed_ids = set(schedule.group.students.values_list("id", flat=True))
     present_set = set(present_student_ids) & allowed_ids
 
     with transaction.atomic():
-        # Снимем "прошлое состояние" presense для вычисления дельты
-        # (в твоей архитектуре Attendance должны существовать для всех студентов группы)
+        # Снимем прошлое состояние для вычисления дельты
         prev_map = dict(
-            Attendance.objects.filter(schedule_id=schedule_id).values_list("student_id", "presense")
+            Attendance.objects.filter(schedule_id=schedule_id).values_list("student_id", "status")
         )
 
-        # 1) Сбросить всем False
-        Attendance.objects.filter(schedule_id=schedule_id).update(presense=False, marked_at=now)
+        # 1) Всем ставим ABSENT + время отметки
+        Attendance.objects.filter(schedule_id=schedule_id).update(
+            status=AttendanceStatusChoices.ABSENT, marked_at=now
+        )
 
-        # 2) Проставить True присутствующим
+        # 2) Присутствующим ставим PRESENT
         if present_set:
             Attendance.objects.filter(schedule_id=schedule_id, student_id__in=present_set).update(
-                presense=True, marked_at=now
+                status=AttendanceStatusChoices.PRESENT, marked_at=now
             )
 
-        # 3) Посчитать дельту attended
-        delta_plus = []  # False -> True
-        delta_minus = []  # True -> False
+        # 3) Считаем дельту attended (not_marked/absent → present/late = +1; present/late → absent = -1)
+        delta_plus = []
+        delta_minus = []
 
-        # prev_map может быть меньше allowed_ids если кто-то удалил Attendance вручную
-        for student_id, old_presense in prev_map.items():
-            new_presense = student_id in present_set
+        for student_id, old_status in prev_map.items():
+            old_attended = old_status in _ATTENDED_STATUSES
+            new_attended = student_id in present_set  # new status = PRESENT if in set, else ABSENT
 
-            if old_presense is False and new_presense is True:
+            if not old_attended and new_attended:
                 delta_plus.append(student_id)
-            elif old_presense is True and new_presense is False:
+            elif old_attended and not new_attended:
                 delta_minus.append(student_id)
 
-        # 4) Применить дельту к статистике
+        # Студенты у которых не было записи — теперь ABSENT, не меняют delta attended
+
+        # 4) Применить дельту к AttendanceStat
         if delta_plus:
             AttendanceStat.objects.filter(
                 group_id=group_id, subject_id=subject_id, student_id__in=delta_plus
             ).update(attended=F("attended") + 1)
 
         if delta_minus:
-            # защитимся от ухода в минус
             AttendanceStat.objects.filter(
                 group_id=group_id,
                 subject_id=subject_id,
@@ -66,7 +71,8 @@ def mark_attendance(schedule_id: int, present_student_ids: list[int]) -> dict:
                 attended__gt=0,
             ).update(attended=F("attended") - 1)
 
-        # 5) Обновить риск-инциденты по посещаемости.
+        # 5) Риск-инциденты только для студентов у кого изменился статус
+        #    и только если у них total > 0 (т.е. есть реально отмеченные записи)
         affected_student_ids = set(delta_plus + delta_minus)
         if affected_student_ids:
             stats = AttendanceStat.objects.filter(
@@ -76,10 +82,7 @@ def mark_attendance(schedule_id: int, present_student_ids: list[int]) -> dict:
                 total__gt=0,
             )
 
-            student_map = {
-                student.id: student
-                for student in Student.objects.filter(id__in=affected_student_ids)
-            }
+            student_map = {s.id: s for s in Student.objects.filter(id__in=affected_student_ids)}
 
             for stat in stats:
                 student = student_map.get(stat.student_id)

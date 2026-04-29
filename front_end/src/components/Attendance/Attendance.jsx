@@ -111,14 +111,13 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
     const now = new Date();
     const nowTime = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
     const markedAt = now.toISOString();
-    const presense = status === 'present' || status === 'late';
 
     setCurrentStudent({ ...student, status });
     setStudents((prev) => prev.map((s) => (s.id === student.id ? { ...s, status, scanTime: nowTime } : s)));
 
     if (student.attendanceId) {
       try {
-        await editAttendance(student.attendanceId, presense, markedAt);
+        await editAttendance(student.attendanceId, status, markedAt);
       } catch (error) {
         console.error('Failed to save attendance:', error);
         setScanNotice({ type: 'error', text: 'Не удалось сохранить отметку' });
@@ -220,14 +219,13 @@ const AttendanceScanning = ({ isDark = true, scheduleId = null }) => {
     const now = new Date();
     const nowTime = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
     const markedAt = now.toISOString();
-    const presense = status === 'present' || status === 'late';
 
     setStudents((prev) => prev.map((s) => (s.id === studentId ? { ...s, status, scanTime: nowTime } : s)));
 
     const target = students.find((s) => s.id === studentId);
     if (target?.attendanceId) {
       try {
-        await editAttendance(target.attendanceId, presense, markedAt);
+        await editAttendance(target.attendanceId, status, markedAt);
       } catch (error) {
         console.error('Failed to save attendance:', error);
         setScanNotice({ type: 'error', text: 'Не удалось сохранить отметку' });

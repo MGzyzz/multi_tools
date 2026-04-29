@@ -22,7 +22,7 @@ class RiskIncidentServiceTests(TestCase):
     def setUp(self):
         user = User.objects.create_user(
             username="teacher_risk_service",
-            password="pass_123",  # pragma: allowlist secret
+            password="testonly-not-a-real-secret",
             email="teacher@example.com",
             first_name="Ada",
             last_name="Lovelace",

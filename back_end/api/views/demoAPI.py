@@ -9,7 +9,7 @@ from .attendanceAPI import IsTeacher
 
 
 class DemoNotificationAPI(APIView):
-    """Sends a demo email to the authenticated teacher. Used for live demos."""
+    """Sends two demo emails to the authenticated teacher. Used for live demos."""
 
     permission_classes = [IsAuthenticated, IsTeacher]
 
@@ -20,8 +20,11 @@ class DemoNotificationAPI(APIView):
             return Response({"detail": "Teacher account has no email address."}, status=400)
 
         full_name = request.user.get_full_name() or request.user.username
-        subject = "Lectern — тестовое уведомление системы"
-        message = (
+        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@example.com")
+
+        # 1. Generic system notification
+        generic_subject = "Lectern — тестовое уведомление системы"
+        generic_message = (
             f"Здравствуйте, {full_name}!\n\n"
             "Это тестовое письмо от системы Lectern.\n"
             "Система уведомлений работает корректно: "
@@ -29,20 +32,47 @@ class DemoNotificationAPI(APIView):
             "об изменениях расписания и успеваемости.\n\n"
             "— Команда Lectern"
         )
-
-        html_message = render_to_string(
+        generic_html = render_to_string(
             "emails/generic_notification.html",
-            {"title": subject, "message": message},
+            {"title": generic_subject, "message": generic_message},
         )
-
-        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@example.com")
         send_mail(
-            subject=subject,
-            message=message,
+            subject=generic_subject,
+            message=generic_message,
             from_email=from_email,
             recipient_list=[email],
             fail_silently=False,
-            html_message=html_message,
+            html_message=generic_html,
         )
 
-        return Response({"detail": f"Demo notification sent to {email}."})
+        # 2. Student risk / poor performance notification (demo data)
+        risk_subject = "Lectern — уведомление об академической успеваемости (демо)"
+        risk_html = render_to_string(
+            "emails/student_risk_notification.html",
+            {
+                "title": "Снижение посещаемости",
+                "student_name": "Алибек Сейткали",
+                "subject_name": "Тестовый предмет",
+                "group_name": "Тестовая группа",
+                "problem": "Посещаемость ниже допустимого порога",
+                "reason": (
+                    "Студент пропустил более 30% занятий по данному предмету "
+                    "без уважительной причины."
+                ),
+                "metric_name": "Посещаемость",
+                "metric_value": "54%",
+                "threshold_value": "75%",
+                "due_at_display": "15 мая 2026",
+                "contact": "куратору группы",
+            },
+        )
+        send_mail(
+            subject=risk_subject,
+            message="Уведомление об академической успеваемости студента (демо)",
+            from_email=from_email,
+            recipient_list=[email],
+            fail_silently=False,
+            html_message=risk_html,
+        )
+
+        return Response({"detail": f"2 demo emails sent to {email}."})
