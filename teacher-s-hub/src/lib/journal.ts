@@ -2,12 +2,14 @@ import { apiRequest } from "@/lib/auth";
 
 export type ApiSubject = { id: number; name: string; description: string };
 
+export type JournalEntryStatus = "present" | "absent" | "late" | "not_marked";
+
 export type JournalEntry = {
   id: number;
   schedule_id: number;
   date: string;
   time: string;
-  presense: boolean;
+  status: JournalEntryStatus;
   marked_at: string | null;
   score: string | null;
 };

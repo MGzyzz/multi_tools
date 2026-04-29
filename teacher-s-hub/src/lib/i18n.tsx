@@ -228,6 +228,7 @@ const dictionaries: Record<Lang, Dict> = {
     "journal.colMarkedAt": "Marked at",
     "journal.statusPresent": "Present",
     "journal.statusAbsent": "Absent",
+    "journal.statusNotMarked": "Not marked",
 
     // Schedule
     "schedule.title": "Schedule",
@@ -807,6 +808,7 @@ const dictionaries: Record<Lang, Dict> = {
     "journal.colMarkedAt": "Отмечено в",
     "journal.statusPresent": "Присутствовал",
     "journal.statusAbsent": "Отсутствовал",
+    "journal.statusNotMarked": "Не отмечено",
 
     // Schedule
     "schedule.title": "Расписание",
@@ -1377,6 +1379,7 @@ const dictionaries: Record<Lang, Dict> = {
     "journal.colMarkedAt": "Белгіленген уақыт",
     "journal.statusPresent": "Қатысты",
     "journal.statusAbsent": "Қатыспады",
+    "journal.statusNotMarked": "Белгіленбеген",
 
     // Schedule
     "schedule.title": "Кесте",

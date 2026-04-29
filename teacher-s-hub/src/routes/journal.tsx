@@ -226,8 +226,8 @@ function JournalPage() {
 
   const filteredJournal = useMemo(() => {
     return sortedJournal.filter((entry) => {
-      if (statusFilter === "present" && !entry.presense) return false;
-      if (statusFilter === "absent" && entry.presense) return false;
+      if (statusFilter === "present" && entry.status !== "present" && entry.status !== "late") return false;
+      if (statusFilter === "absent" && entry.status !== "absent") return false;
       if (monthFilter && !entry.date.startsWith(monthFilter)) return false;
       if (dateFrom && entry.date < dateFrom) return false;
       if (dateTo && entry.date > dateTo) return false;
@@ -452,12 +452,18 @@ function JournalPage() {
                               <span
                                 className={cn(
                                   "inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium",
-                                  entry.presense
+                                  entry.status === "present" || entry.status === "late"
                                     ? "border-success/30 bg-success/10 text-success"
-                                    : "border-destructive/30 bg-destructive/10 text-destructive",
+                                    : entry.status === "absent"
+                                      ? "border-destructive/30 bg-destructive/10 text-destructive"
+                                      : "border-border bg-muted text-muted-foreground",
                                 )}
                               >
-                                {entry.presense ? t("journal.statusPresent") : t("journal.statusAbsent")}
+                                {entry.status === "present" || entry.status === "late"
+                                  ? t("journal.statusPresent")
+                                  : entry.status === "absent"
+                                    ? t("journal.statusAbsent")
+                                    : t("journal.statusNotMarked")}
                               </span>
                             </td>
                             <td className="px-4 py-2.5 tabular-nums text-muted-foreground">
