@@ -29,6 +29,7 @@ import { ApiError } from "@/lib/auth";
 import { requireAuth } from "@/lib/route-auth";
 import { recognizeStudentFace, type FaceRecognitionResult } from "@/lib/scan";
 import { getScheduleList, getTimeLabel, type ApiScheduleEntry } from "@/lib/schedule";
+import { useBlinkDetector } from "@/lib/use-blink-detector";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/scan")({
@@ -225,6 +226,7 @@ function ScanPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const { waitForBlink } = useBlinkDetector();
 
   const [now, setNow] = useState(() => new Date());
   const [scanState, setScanState] = useState<ScanState>("idle");
@@ -590,9 +592,22 @@ function ScanPage() {
     }
 
     setScanState("liveness");
-    await new Promise((resolve) => setTimeout(resolve, 2500));
+    const blinked = await waitForBlink(videoRef.current!, 8000);
 
     if (!isCameraActive) return;
+
+    if (!blinked) {
+      appendEvent(
+        "liveness-failed",
+        t("scan.livenessTitle"),
+        t("scan.livenessFailedDetails"),
+      );
+      setScanState("unknown");
+      toast.error(t("scan.livenessTitle"), {
+        description: t("scan.livenessFailedDetails"),
+      });
+      return;
+    }
 
     setScanLoading(true);
     setScanState("scanning");
@@ -661,6 +676,7 @@ function ScanPage() {
                 !sessionInfo ||
                 !isCameraActive ||
                 scanLoading ||
+                scanState === "liveness" ||
                 attendanceLoading ||
                 sessionTimeStatus !== "live"
               }
@@ -860,11 +876,11 @@ function ScanPage() {
                           className="h-7"
                           onClick={() => void handleCaptureScan()}
                           disabled={
-                            !isCameraActive || scanLoading || attendanceLoading || !sessionInfo || sessionTimeStatus !== "live"
+                            !isCameraActive || scanLoading || scanState === "liveness" || attendanceLoading || !sessionInfo || sessionTimeStatus !== "live"
                           }
                         >
                           <ScanFace className="h-3.5 w-3.5" />{" "}
-                          {scanLoading ? t("scan.scanning") : t("scan.scan")}
+                          {scanState === "liveness" ? t("scan.stateLabelLiveness") : scanLoading ? t("scan.scanning") : t("scan.scan")}
                         </Button>
                       </div>
                     }
@@ -977,7 +993,7 @@ function ScanPage() {
                       <Button
                         size="sm"
                         onClick={() => void handleCaptureScan()}
-                        disabled={!sessionInfo || !isCameraActive || scanLoading}
+                        disabled={!sessionInfo || !isCameraActive || scanLoading || scanState === "liveness"}
                       >
                         <CheckCircle2 className="h-4 w-4" /> {t("scan.captureAndScan")}
                       </Button>
