@@ -25,3 +25,4 @@ def send_recognition_result_to_backend(label: str, backend_url: str = "http://lo
         print(f"[✔ SUCCESS] Результат '{label}' отправлен на backend. Код: {response.status_code}")
     except requests.exceptions.RequestException as e:
         print(f"[✖ ERROR] Не удалось отправить данные на backend: {e}")
+
