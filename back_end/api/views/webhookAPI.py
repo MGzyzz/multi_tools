@@ -135,3 +135,94 @@ class StudentSyncWebhookAPI(APIView):
             student.id,
         )
         return Response({"action": action, "student_id": student.id}, status=status.HTTP_200_OK)
+
+
+class StudentBulkSyncWebhookAPI(APIView):
+    """
+    Bulk-sync students from an external platform.
+
+    Accepts a list of student records and creates or updates each by `platonus_id`.
+    Requires `X-Webhook-Secret` header.
+    """
+
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request: Request) -> Response:
+        if not _check_secret(request):
+            return Response(
+                {"detail": "Invalid or missing webhook secret."}, status=status.HTTP_403_FORBIDDEN
+            )
+
+        students_data = request.data.get("students")
+        if not isinstance(students_data, list):
+            return Response(
+                {"detail": "'students' must be a list."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        created_count = 0
+        updated_count = 0
+        errors = []
+
+        for item in students_data:
+            platonus_id = item.get("platonus_id")
+            first_name = (item.get("first_name") or "").strip()
+            last_name = (item.get("last_name") or "").strip()
+            email = (item.get("email") or "").strip()
+            age = item.get("age")
+            phone = (item.get("phone") or "").strip() or None
+            group_name = (item.get("group_name") or "").strip() or None
+
+            item_errors = {}
+            if not platonus_id:
+                item_errors["platonus_id"] = "Required."
+            if not first_name:
+                item_errors["first_name"] = "Required."
+            if not last_name:
+                item_errors["last_name"] = "Required."
+            if not email:
+                item_errors["email"] = "Required."
+            if age is None:
+                item_errors["age"] = "Required."
+
+            if item_errors:
+                errors.append({"platonus_id": platonus_id, **item_errors})
+                continue
+
+            student, created = Student.objects.update_or_create(
+                platonus_id=platonus_id,
+                defaults={
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "email": email,
+                    "age": age,
+                    "phone": phone,
+                },
+            )
+
+            if group_name:
+                group = Group.objects.filter(name__iexact=group_name).first()
+                if group:
+                    group.students.add(student)
+                else:
+                    logger.warning(
+                        "Bulk webhook: group '%s' not found, student platonus_id=%s not assigned.",
+                        group_name,
+                        platonus_id,
+                    )
+
+            if created:
+                created_count += 1
+            else:
+                updated_count += 1
+
+        logger.info(
+            "Bulk webhook student sync: created=%s updated=%s errors=%s",
+            created_count,
+            updated_count,
+            len(errors),
+        )
+        return Response(
+            {"created": created_count, "updated": updated_count, "errors": errors},
+            status=status.HTTP_200_OK,
+        )

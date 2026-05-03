@@ -59,7 +59,8 @@ from .telegramSettingsAPI import (
     TeacherTelegramLinkTokenAPI,
     TeacherTelegramStatusAPI,
 )
-from .webhookAPI import StudentSyncWebhookAPI
+from .webhookAPI import StudentBulkSyncWebhookAPI, StudentSyncWebhookAPI
+from .webhookSubscriptionAPI import WebhookSubscriptionDetailAPI, WebhookSubscriptionListCreateAPI
 
 __all__ = [
     "DemoNotificationAPI",
@@ -103,7 +104,10 @@ __all__ = [
     "AnalyticsSummaryAPI",
     "AnalyticsGroupsAPI",
     "AnalyticsGroupStudentsAPI",
+    "StudentBulkSyncWebhookAPI",
     "StudentSyncWebhookAPI",
+    "WebhookSubscriptionDetailAPI",
+    "WebhookSubscriptionListCreateAPI",
     "GroupLeadershipAPI",
     "TeacherBroadcastAPI",
     "TeacherNotificationSettingsAPI",

@@ -1,4 +1,7 @@
 import datetime
+import hashlib
+import hmac
+import json
 import logging
 import os
 
@@ -351,3 +354,73 @@ def _format_metric_value(value, unit: str | None) -> str:
             return f"{int(numeric_value)}{unit}"
         return f"{numeric_value:.1f}{unit}"
     return str(value)
+
+
+@shared_task(name="deliver_webhook_event", ignore_result=True)
+def deliver_webhook_event(event_type: str, payload: dict) -> None:
+    from app.models.webhookModels import WebhookDelivery, WebhookSubscription
+
+    subscriptions = WebhookSubscription.objects.filter(is_active=True)
+    for sub in subscriptions:
+        if event_type in (sub.events or []):
+            delivery = WebhookDelivery.objects.create(
+                subscription=sub,
+                event_type=event_type,
+                payload=payload,
+            )
+            _dispatch_single_webhook.delay(delivery.id)
+
+
+@shared_task(name="_dispatch_single_webhook", bind=True, ignore_result=True)
+def _dispatch_single_webhook(self, delivery_id: int) -> None:
+    from app.models.webhookModels import WebhookDelivery
+
+    try:
+        delivery = WebhookDelivery.objects.select_related("subscription").get(id=delivery_id)
+    except WebhookDelivery.DoesNotExist:
+        return
+
+    sub = delivery.subscription
+    body = json.dumps(delivery.payload, separators=(",", ":"), sort_keys=True)
+    sig = hmac.new(
+        key=sub.secret.encode(),
+        msg=body.encode(),
+        digestmod=hashlib.sha256,
+    ).hexdigest()
+
+    delivery.attempts += 1
+    try:
+        resp = requests.post(
+            sub.callback_url,
+            data=body,
+            headers={
+                "Content-Type": "application/json",
+                "X-Lectern-Signature": f"sha256={sig}",
+            },
+            timeout=10,
+        )
+        delivery.response_status = resp.status_code
+        if 200 <= resp.status_code < 300:
+            delivery.status = WebhookDelivery.Status.SUCCESS
+            delivery.delivered_at = timezone.now()
+            delivery.save()
+        else:
+            delivery.status = WebhookDelivery.Status.FAILED
+            delivery.save()
+            if delivery.attempts < MAX_RETRY_ATTEMPTS:
+                raise self.retry(countdown=60)
+            logger.warning(
+                "Webhook max retries exceeded: delivery_id=%s response_status=%s",
+                delivery_id,
+                resp.status_code,
+            )
+    except requests.RequestException as exc:
+        delivery.status = WebhookDelivery.Status.FAILED
+        delivery.save()
+        if delivery.attempts < MAX_RETRY_ATTEMPTS:
+            raise self.retry(exc=exc, countdown=60) from exc
+        logger.warning(
+            "Webhook max retries exceeded: delivery_id=%s error=%s",
+            delivery_id,
+            exc,
+        )

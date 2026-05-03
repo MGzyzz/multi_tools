@@ -64,5 +64,6 @@ jobs:
                   DATABASE_PASSWORD: admin
                   DATABASE_HOST: localhost
                   DATABASE_PORT: 5432
+                  CELERY_TASK_ALWAYS_EAGER: "true"
               run: |
                   poetry run python manage.py test

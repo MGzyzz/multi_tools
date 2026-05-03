@@ -3,6 +3,7 @@ from django.db.models import F
 from django.utils import timezone
 
 from app.models._choices.attendanceChoices import AttendanceStatusChoices
+from app.tasks import deliver_webhook_event
 from app.utils.risk_incidents import sync_attendance_risk_incident
 
 _ATTENDED_STATUSES = (AttendanceStatusChoices.PRESENT, AttendanceStatusChoices.LATE)
@@ -102,6 +103,21 @@ def mark_attendance(schedule_id: int, present_student_ids: list[int]) -> dict:
                     schedule_id=schedule_id,
                     assigned_teacher=schedule.teacher or schedule.group.teacher,
                 )
+
+    present_students = list(Student.objects.filter(id__in=present_set).values("id", "platonus_id"))
+    absent_ids = allowed_ids - present_set
+    absent_students = list(Student.objects.filter(id__in=absent_ids).values("id", "platonus_id"))
+    deliver_webhook_event.delay(
+        "attendance.marked",
+        {
+            "event": "attendance.marked",
+            "timestamp": now.isoformat(),
+            "schedule_id": schedule_id,
+            "group_name": schedule.group.name,
+            "present": present_students,
+            "absent": absent_students,
+        },
+    )
 
     return {
         "schedule_id": schedule_id,

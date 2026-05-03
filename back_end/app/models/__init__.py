@@ -11,6 +11,7 @@ from .scheduleModels import Schedule
 from .studentModels import Student, StudentFaceImage
 from .subjectStudyModels import Subject_study
 from .teacherNotificationSettingsModels import TeacherNotificationSettings
+from .webhookModels import WebhookDelivery, WebhookSubscription
 
 Attendance = import_module(".\u0430ttendanceModels", __name__).Attendance
 AttendanceStat = import_module(".\u0430ttendanceStatModels", __name__).AttendanceStat
@@ -31,4 +32,6 @@ __all__ = [
     "Subject_study",
     "TeacherNotificationSettings",
     "TeacherRiskIncidentAction",
+    "WebhookDelivery",
+    "WebhookSubscription",
 ]
