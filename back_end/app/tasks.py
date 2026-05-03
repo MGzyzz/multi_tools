@@ -356,7 +356,7 @@ def _format_metric_value(value, unit: str | None) -> str:
     return str(value)
 
 
-@shared_task(name="deliver_webhook_event")
+@shared_task(name="deliver_webhook_event", ignore_result=True)
 def deliver_webhook_event(event_type: str, payload: dict) -> None:
     from app.models.webhookModels import WebhookDelivery, WebhookSubscription
 
@@ -371,7 +371,7 @@ def deliver_webhook_event(event_type: str, payload: dict) -> None:
             _dispatch_single_webhook.delay(delivery.id)
 
 
-@shared_task(name="_dispatch_single_webhook", bind=True)
+@shared_task(name="_dispatch_single_webhook", bind=True, ignore_result=True)
 def _dispatch_single_webhook(self, delivery_id: int) -> None:
     from app.models.webhookModels import WebhookDelivery
 
