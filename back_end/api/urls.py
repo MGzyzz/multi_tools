@@ -37,6 +37,7 @@ from .views import (
     SchedulePlannerAPI,
     ScheduleSemesterApplyAPI,
     ScheduleSemesterPreviewAPI,
+    StudentBulkSyncWebhookAPI,
     StudentJournalDetailAPI,
     StudentListAPI,
     StudentNotificationListAPI,
@@ -49,6 +50,8 @@ from .views import (
     TeacherTelegramLinkTokenAPI,
     TeacherTelegramStatusAPI,
     UpdateStudentFaceEmbedding,
+    WebhookSubscriptionDetailAPI,
+    WebhookSubscriptionListCreateAPI,
     getStudentInformation,
 )
 
@@ -222,6 +225,19 @@ urlpatterns = [
     ),
     # === WEBHOOKS ===
     path("webhooks/student-sync/", StudentSyncWebhookAPI.as_view(), name="webhook_student_sync"),
+    path(
+        "webhooks/students-bulk/", StudentBulkSyncWebhookAPI.as_view(), name="webhook_students_bulk"
+    ),
+    path(
+        "webhooks/subscriptions/",
+        WebhookSubscriptionListCreateAPI.as_view(),
+        name="webhook_subscriptions",
+    ),
+    path(
+        "webhooks/subscriptions/<int:pk>/",
+        WebhookSubscriptionDetailAPI.as_view(),
+        name="webhook_subscription_detail",
+    ),
     # === DEMO ===
     path("demo/send-notification/", DemoNotificationAPI.as_view(), name="demo_send_notification"),
 ]
