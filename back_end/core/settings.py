@@ -255,6 +255,7 @@ DEFAULT_REDIS_URL = "redis://127.0.0.1:6379/0" if LOCALHOST_DATABASE else "redis
 
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", DEFAULT_REDIS_URL)
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
+CELERY_TASK_ALWAYS_EAGER = os.getenv("CELERY_TASK_ALWAYS_EAGER", "false").lower() == "true"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_BEAT_SCHEDULE = {
     "enqueue-pending-notification-deliveries": {
