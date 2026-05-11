@@ -20,14 +20,15 @@ export const redirectIfAuthenticated = () => {
   if (typeof window === "undefined") return;
 
   if (isAuthenticated()) {
-    throw redirect({ to: "/" });
+    throw redirect({ to: "/dashboard" });
   }
 };
 
 export const sanitizeRedirectTarget = (target?: string) => {
-  if (!target) return "/";
-  if (!target.startsWith("/")) return "/";
-  if (target.startsWith("//")) return "/";
-  if (target.startsWith("/login")) return "/";
+  if (!target) return "/dashboard";
+  if (!target.startsWith("/")) return "/dashboard";
+  if (target.startsWith("//")) return "/dashboard";
+  if (target.startsWith("/login")) return "/dashboard";
+  if (target === "/") return "/dashboard";
   return target;
 };

@@ -633,16 +633,17 @@ function ScanPage() {
       const result = await recognizeStudentFace(frame);
       await applyRecognition(result);
     } catch (error) {
-      appendEvent(
-        "error",
-        "Scan request failed",
-        error instanceof ApiError ? error.message : "The face recognition request failed.",
-      );
+      const isServiceDown =
+        error instanceof ApiError &&
+        /HTTPConnectionPool|Max retries|Connection refused|ConnectionError/i.test(
+          error.message ?? "",
+        );
+      const userMessage = isServiceDown
+        ? "The face recognition service is currently unavailable. Please try again later or use manual attendance."
+        : "The face recognition request failed.";
+      appendEvent("error", "Scan request failed", userMessage);
       setScanState("unknown");
-      toast.error("Scan failed", {
-        description:
-          error instanceof ApiError ? error.message : "The backend did not accept this scan.",
-      });
+      toast.error("Scan failed", { description: userMessage });
     } finally {
       setScanLoading(false);
     }
@@ -898,6 +899,7 @@ function ScanPage() {
                         playsInline
                         muted
                         className={cn("h-full w-full object-cover", !isCameraActive && "hidden")}
+                        style={{ transform: "scaleX(-1)" }}
                       />
 
                       {isCameraActive ? (

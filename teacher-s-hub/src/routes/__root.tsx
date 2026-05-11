@@ -115,6 +115,8 @@ function AppBootSplash() {
 function ChromeOrOutlet() {
   const location = useLocation();
   const bare =
+    location.pathname === "/" ||
+    location.pathname === "/docs" ||
     location.pathname === "/login" ||
     location.pathname === "/signup" ||
     location.pathname === "/error";
