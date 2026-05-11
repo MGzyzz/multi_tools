@@ -20,6 +20,8 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as JournalRouteImport } from './routes/journal'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as ErrorRouteImport } from './routes/error'
+import { Route as DocsRouteImport } from './routes/docs'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BroadcastRouteImport } from './routes/broadcast'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
@@ -80,6 +82,16 @@ const ErrorRoute = ErrorRouteImport.update({
   path: '/error',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BroadcastRoute = BroadcastRouteImport.update({
   id: '/broadcast',
   path: '/broadcast',
@@ -106,6 +118,8 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AnalyticsRoute
   '/attendance': typeof AttendanceRoute
   '/broadcast': typeof BroadcastRoute
+  '/dashboard': typeof DashboardRoute
+  '/docs': typeof DocsRoute
   '/error': typeof ErrorRoute
   '/groups': typeof GroupsRoute
   '/journal': typeof JournalRoute
@@ -123,6 +137,8 @@ export interface FileRoutesByTo {
   '/analytics': typeof AnalyticsRoute
   '/attendance': typeof AttendanceRoute
   '/broadcast': typeof BroadcastRoute
+  '/dashboard': typeof DashboardRoute
+  '/docs': typeof DocsRoute
   '/error': typeof ErrorRoute
   '/groups': typeof GroupsRoute
   '/journal': typeof JournalRoute
@@ -141,6 +157,8 @@ export interface FileRoutesById {
   '/analytics': typeof AnalyticsRoute
   '/attendance': typeof AttendanceRoute
   '/broadcast': typeof BroadcastRoute
+  '/dashboard': typeof DashboardRoute
+  '/docs': typeof DocsRoute
   '/error': typeof ErrorRoute
   '/groups': typeof GroupsRoute
   '/journal': typeof JournalRoute
@@ -160,6 +178,8 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/attendance'
     | '/broadcast'
+    | '/dashboard'
+    | '/docs'
     | '/error'
     | '/groups'
     | '/journal'
@@ -177,6 +197,8 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/attendance'
     | '/broadcast'
+    | '/dashboard'
+    | '/docs'
     | '/error'
     | '/groups'
     | '/journal'
@@ -194,6 +216,8 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/attendance'
     | '/broadcast'
+    | '/dashboard'
+    | '/docs'
     | '/error'
     | '/groups'
     | '/journal'
@@ -212,6 +236,8 @@ export interface RootRouteChildren {
   AnalyticsRoute: typeof AnalyticsRoute
   AttendanceRoute: typeof AttendanceRoute
   BroadcastRoute: typeof BroadcastRoute
+  DashboardRoute: typeof DashboardRoute
+  DocsRoute: typeof DocsRoute
   ErrorRoute: typeof ErrorRoute
   GroupsRoute: typeof GroupsRoute
   JournalRoute: typeof JournalRoute
@@ -304,6 +330,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ErrorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/broadcast': {
       id: '/broadcast'
       path: '/broadcast'
@@ -340,6 +380,8 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsRoute: AnalyticsRoute,
   AttendanceRoute: AttendanceRoute,
   BroadcastRoute: BroadcastRoute,
+  DashboardRoute: DashboardRoute,
+  DocsRoute: DocsRoute,
   ErrorRoute: ErrorRoute,
   GroupsRoute: GroupsRoute,
   JournalRoute: JournalRoute,

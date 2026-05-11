@@ -43,7 +43,7 @@ type NavItem = {
 };
 
 const nav: NavItem[] = [
-  { to: "/", labelKey: "nav.dashboard", icon: LayoutDashboard, group: "Workspace" },
+  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard, group: "Workspace" },
   { to: "/schedule", labelKey: "nav.schedule", icon: CalendarDays, group: "Workspace" },
   { to: "/attendance", labelKey: "nav.attendance", icon: CalendarCheck2, group: "Attendance" },
   { to: "/scan", labelKey: "nav.scan", icon: ScanFace, group: "Attendance", badge: "AI" },
@@ -93,10 +93,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
             {nav
               .filter((item) => item.group === group)
               .map((item) => {
-                const active =
-                  item.to === "/"
-                    ? location.pathname === "/"
-                    : location.pathname.startsWith(item.to);
+                const active = location.pathname.startsWith(item.to);
                 const Icon = item.icon;
 
                 return (
@@ -190,7 +187,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
   const { t } = useI18n();
   const location = useLocation();
   const current = nav.find((item) =>
-    item.to === "/" ? location.pathname === "/" : location.pathname.startsWith(item.to),
+    location.pathname.startsWith(item.to),
   );
 
   return (
