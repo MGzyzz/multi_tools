@@ -139,12 +139,12 @@ function AttendancePage() {
 
   const weekRange = useMemo(() => {
     const monday = startOfCurrentWeek();
-    const friday = new Date(monday);
-    friday.setDate(monday.getDate() + 4);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
 
     return {
       startDate: toIsoDate(monday),
-      endDate: toIsoDate(friday),
+      endDate: toIsoDate(sunday),
       todayDate: toIsoDate(new Date()),
     };
   }, []);

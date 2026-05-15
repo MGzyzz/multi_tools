@@ -19,6 +19,7 @@
 
 import * as React from "react";
 import { useLayoutEffect, useRef, useState } from "react";
+import { usePoseDetector, type PoseId as DetectedPoseId, type FaceBounds } from "@/lib/use-pose-detector";
 import { Camera, Check, FileImage, Loader2, RotateCcw, ScanFace, Send, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -204,9 +205,13 @@ function CameraWizard({
   const [shots, setShots] = React.useState<PoseShot[]>([]);
   const [poseOk, setPoseOk] = React.useState(false);
   const [streamReady, setStreamReady] = React.useState(false);
+  const [detectorReady, setDetectorReady] = React.useState(false);
+  const [faceBounds, setFaceBounds] = React.useState<FaceBounds | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [reviewing, setReviewing] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
+
+  const { start: startDetector, stop: stopDetector } = usePoseDetector();
 
   // Запуск камеры
   React.useEffect(() => {
@@ -238,16 +243,39 @@ function CameraWizard({
     };
   }, []);
 
-  // Имитация распознавания позы. В проде замените на MediaPipe FaceMesh:
-  // — для front: yaw ≈ 0, pitch ≈ 0
-  // — для left/right: yaw отрицательный/положительный
-  // — для smile: mouthAspectRatio > threshold
+  // Ref для текущей требуемой позы — меняется без перезапуска детектора
+  const requiredPoseRef = React.useRef<DetectedPoseId>(POSES[0].id as DetectedPoseId);
+
+  // Обновляем требуемую позу при смене шага (без перезапуска MediaPipe)
   React.useEffect(() => {
-    if (reviewing) return;
+    requiredPoseRef.current = POSES[stepIdx].id as DetectedPoseId;
     setPoseOk(false);
-    const t = window.setTimeout(() => setPoseOk(true), 1600);
-    return () => window.clearTimeout(t);
-  }, [stepIdx, reviewing]);
+  }, [stepIdx]);
+
+  // Запуск MediaPipe один раз при готовности камеры
+  React.useEffect(() => {
+    if (!streamReady || reviewing) {
+      stopDetector();
+      setDetectorReady(false);
+      return;
+    }
+    const video = videoRef.current;
+    if (!video) return;
+
+    setDetectorReady(false);
+    setPoseOk(false);
+
+    startDetector(video, ({ facePresent, pose, bounds }) => {
+      setDetectorReady(facePresent);
+      setPoseOk(facePresent && pose === requiredPoseRef.current);
+      setFaceBounds(facePresent ? bounds : null);
+    }).catch(() => {
+      const t = window.setTimeout(() => { setPoseOk(true); setDetectorReady(true); }, 1600);
+      return () => window.clearTimeout(t);
+    });
+
+    return () => stopDetector();
+  }, [streamReady, reviewing, startDetector, stopDetector]);
 
   const capture = React.useCallback(async () => {
     const video = videoRef.current;
@@ -380,9 +408,27 @@ function CameraWizard({
           <div className="absolute inset-0 pointer-events-none">
             <div
               className={cn(
-                "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[56%] aspect-[3/4] rounded-full border-2 border-dashed transition-colors",
+                "absolute rounded-full border-2 border-dashed",
                 poseOk ? "border-emerald-400 border-solid" : "border-white/50",
               )}
+              style={faceBounds
+                ? {
+                    left: `${faceBounds.cx * 100}%`,
+                    top: `${faceBounds.cy * 100}%`,
+                    width: `${Math.min(faceBounds.w * 115, 90)}%`,
+                    aspectRatio: `${faceBounds.w} / ${Math.max(faceBounds.h, faceBounds.w * 1.1)}`,
+                    transform: "translate(-50%, -50%)",
+                    transition: "width 0.12s ease, aspect-ratio 0.12s ease, border-color 0.2s",
+                  }
+                : {
+                    left: "50%",
+                    top: "50%",
+                    width: "56%",
+                    aspectRatio: "3/4",
+                    transform: "translate(-50%, -50%)",
+                    transition: "border-color 0.2s",
+                  }
+              }
             />
             <div
               className={cn(
@@ -392,8 +438,8 @@ function CameraWizard({
                   : "bg-black/55 text-white border border-white/10",
               )}
             >
-              <span className={cn("size-2 rounded-full", poseOk ? "bg-emerald-950" : "bg-amber-400")} />
-              {poseOk ? "Поза корректна" : "Подстройте позу…"}
+              <span className={cn("size-2 rounded-full", poseOk ? "bg-emerald-950" : detectorReady ? "bg-amber-400" : "bg-gray-400")} />
+              {poseOk ? "Поза корректна" : detectorReady ? "Подстройте позу…" : "Загрузка детектора…"}
             </div>
             <div
               className={cn(
