@@ -354,7 +354,7 @@ function Dashboard() {
               </Link>
             </Button>
             <Button size="sm" asChild>
-              <Link to="/scan">
+              <Link to="/scan" search={{ scheduleId: focusLesson?.isActionable ? focusLesson.id : undefined }}>
                 <ScanFace className="h-4 w-4" /> {t("dashboard.openFaceScan")}
               </Link>
             </Button>
