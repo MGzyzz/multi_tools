@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Search, Download, ArrowUpDown, AlertCircle, BookOpen, Wifi, WifiOff, X, UserCheck } from "lucide-react";
+import { Search, Download, ArrowUpDown, AlertCircle, BookOpen, Wifi, WifiOff, X, UserCheck, Camera, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { PageBody, PageHeader } from "@/components/app-shell";
@@ -30,8 +30,10 @@ import {
   getStudentFullName,
   getStudentInitials,
   updateStudentTelegramId,
+  uploadStudentFacePhoto,
   type ApiStudent,
 } from "@/lib/students";
+import { StudentPhotoUploadDialog, type PoseShot } from "@/components/student-photo-upload-dialog";
 import { getGroupStudentRisks, type StudentRisk } from "@/lib/analytics";
 import {
   assignGroupLeader,
@@ -87,6 +89,7 @@ function StudentsPage() {
   const [assigningLeader, setAssigningLeader] = useState(false);
   const [telegramIdInput, setTelegramIdInput] = useState("");
   const [savingTelegramId, setSavingTelegramId] = useState(false);
+  const [photoUploadOpen, setPhotoUploadOpen] = useState(false);
 
   useEffect(() => {
     if (!groupId) { setLeaders([]); return; }
@@ -126,6 +129,31 @@ function StudentsPage() {
       setSavingTelegramId(false);
     }
   }
+
+  const refreshStudentState = async (studentId: number) => {
+    const refreshed = await getAllStudents();
+    setStudents(refreshed);
+    const updated = refreshed.find((s) => s.id === studentId);
+    if (updated) setSelectedStudent(updated);
+  };
+
+  const handleSubmitCameraPhotos = async (shots: PoseShot[]) => {
+    if (!selectedStudent) return;
+    const studentId = selectedStudent.id;
+    for (const shot of shots) {
+      await uploadStudentFacePhoto(studentId, shot.blob);
+    }
+    await refreshStudentState(studentId);
+  };
+
+  const handleSubmitFilePhotos = async (files: File[]) => {
+    if (!selectedStudent) return;
+    const studentId = selectedStudent.id;
+    for (const file of files) {
+      await uploadStudentFacePhoto(studentId, file);
+    }
+    await refreshStudentState(studentId);
+  };
 
   async function handleRemoveLeader(studentId: number) {
     if (!groupId) return;
@@ -580,9 +608,24 @@ function StudentsPage() {
                 </div>
                 <div className="flex items-center justify-between py-1.5 text-sm">
                   <span className="text-muted-foreground">{t("students.sheetFacePhoto")}</span>
-                  <span className="font-medium">
-                    {selectedStudent.face_image ? t("students.photoAvailable") : t("students.noPhoto")}
-                  </span>
+                  <Button
+                    size="sm"
+                    variant={selectedStudent.face_image ? "outline" : "default"}
+                    className="h-7 gap-1.5 text-xs"
+                    onClick={() => setPhotoUploadOpen(true)}
+                  >
+                    {selectedStudent.face_image ? (
+                      <>
+                        <Upload className="h-3 w-3" />
+                        {t("students.photoAvailable")}
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="h-3 w-3" />
+                        {t("students.noPhoto")}
+                      </>
+                    )}
+                  </Button>
                 </div>
               </div>
 
@@ -613,6 +656,17 @@ function StudentsPage() {
                 </Button>
               </Link>
             </>
+          )}
+
+          {selectedStudent && (
+            <StudentPhotoUploadDialog
+              open={photoUploadOpen}
+              onOpenChange={setPhotoUploadOpen}
+              student={{ id: String(selectedStudent.id), name: getStudentFullName(selectedStudent) }}
+              defaultMode={selectedStudent.face_image ? "files" : "camera"}
+              onSubmitCamera={handleSubmitCameraPhotos}
+              onSubmitFiles={handleSubmitFilePhotos}
+            />
           )}
         </SheetContent>
       </Sheet>

@@ -66,7 +66,7 @@ const groupKeyMap: Record<GroupKey, string> = {
 
 function Brand() {
   return (
-    <Link to="/" className="flex items-center gap-2.5 px-2 py-1">
+    <Link to="/dashboard" className="flex items-center gap-2.5 px-2 py-1">
       <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-[13px] font-semibold text-primary-foreground">
         L
       </div>

@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/auth";
+import { ApiError, apiRequest } from "@/lib/auth";
 
 export type ApiStudent = {
   id: number;
@@ -37,4 +37,26 @@ export const getStudentInitials = (student: ApiStudent) => {
     .toUpperCase();
 
   return initials || "ST";
+};
+
+export const uploadStudentFacePhoto = async (
+  studentId: number,
+  file: Blob | File,
+): Promise<void> => {
+  const form = new FormData();
+  form.append("file", file instanceof File ? file : new File([file], "photo.jpg", { type: "image/jpeg" }));
+  try {
+    await apiRequest<unknown>(`/api/students/${studentId}/face_embedding/`, {
+      method: "POST",
+      body: form,
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      const data = error.data as Record<string, unknown> | null;
+      if (data?.error === "no_face") {
+        throw new Error("Лицо не обнаружено на фото. Убедитесь, что лицо чётко видно и хорошо освещено.");
+      }
+    }
+    throw error;
+  }
 };
