@@ -225,8 +225,8 @@ function StudentsPage() {
     });
 
     next = next.filter((student) => {
-      if (tab === "with_telegram") return Boolean(student.telegram_username);
-      if (tab === "without_telegram") return !student.telegram_username;
+      if (tab === "with_telegram") return Boolean(student.telegram_username || student.telegram_id);
+      if (tab === "without_telegram") return !student.telegram_username && !student.telegram_id;
       if (tab === "with_photo") return Boolean(student.face_image);
       return true;
     });
@@ -460,17 +460,9 @@ function StudentsPage() {
                       >
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-3">
-                            {student.face_image ? (
-                              <img
-                                src={student.face_image}
-                                alt={getStudentFullName(student)}
-                                className="h-8 w-8 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-[11px] font-medium">
-                                {getStudentInitials(student)}
-                              </div>
-                            )}
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-[11px] font-medium shrink-0">
+                              {getStudentInitials(student)}
+                            </div>
                             <div className="min-w-0">
                               <div className="truncate font-medium">
                                 {getStudentFullName(student)}
@@ -484,7 +476,7 @@ function StudentsPage() {
                         <td className="px-4 py-2.5 text-muted-foreground">{student.email}</td>
                         <td className="px-4 py-2.5 text-right tabular-nums">{student.age}</td>
                         <td className="px-4 py-2.5 text-muted-foreground">
-                          {student.telegram_username || t("students.telegramNotConnected")}
+                          {student.telegram_username || student.telegram_id || t("students.telegramNotConnected")}
                         </td>
                         {groupId && (
                           <td className="px-4 py-2.5 text-right">
