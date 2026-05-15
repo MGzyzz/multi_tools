@@ -22,7 +22,7 @@ class StudentListAPI(APIView):
 
     def get(self, request, *args, **kwargs):
         students = Student.objects.all()
-        serializer = StudentSerializer(students, many=True)
+        serializer = StudentSerializer(students, many=True, context={"request": request})
         return Response(serializer.data)
 
 

@@ -433,40 +433,69 @@ def update_stat_on_attendance_save(sender, instance, created, **kwargs):
     group_id = schedule.group_id
     subject_id = schedule.subject_id
     student_id = instance.student_id
+    new_attended = instance.status in _attended
 
     if created:
+        # Если создан сразу как PRESENT/LATE — обновляем счётчик attended
+        if new_attended:
+            if instance.marked_at is None:
+                Attendance.objects.filter(pk=instance.pk).update(marked_at=timezone.now())
+            AttendanceStat.objects.update_or_create(
+                student_id=student_id,
+                subject_id=subject_id,
+                group_id=group_id,
+                defaults={},
+            )
+            AttendanceStat.objects.filter(
+                student_id=student_id,
+                subject_id=subject_id,
+                group_id=group_id,
+            ).update(attended=F("attended") + 1)
+        # Проверяем риск-инцидент в любом случае при создании
+        transaction.on_commit(
+            lambda: _notify_student_performance_if_needed(
+                student_id=student_id,
+                group_id=group_id,
+                subject_id=subject_id,
+                schedule_id=schedule.id,
+            )
+        )
         return
 
     old_attended = getattr(instance, "_old_attended", None)
-    new_attended = instance.status in _attended
-    if old_attended is None or old_attended == new_attended:
+    if old_attended is None:
         return
 
-    delta = 1 if (not old_attended and new_attended) else -1
+    # Обновляем счётчик attended только при реальной смене статуса
+    if old_attended != new_attended:
+        delta = 1 if (not old_attended and new_attended) else -1
 
-    if instance.marked_at is None:
-        Attendance.objects.filter(pk=instance.pk).update(marked_at=timezone.now())
+        if instance.marked_at is None:
+            Attendance.objects.filter(pk=instance.pk).update(marked_at=timezone.now())
 
-    AttendanceStat.objects.update_or_create(
-        student_id=student_id,
-        subject_id=subject_id,
-        group_id=group_id,
-        defaults={},
-    )
-    AttendanceStat.objects.filter(
-        student_id=student_id,
-        subject_id=subject_id,
-        group_id=group_id,
-    ).update(attended=F("attended") + delta)
-
-    transaction.on_commit(
-        lambda: _notify_student_performance_if_needed(
+        AttendanceStat.objects.update_or_create(
             student_id=student_id,
-            group_id=group_id,
             subject_id=subject_id,
-            schedule_id=schedule.id,
+            group_id=group_id,
+            defaults={},
         )
-    )
+        AttendanceStat.objects.filter(
+            student_id=student_id,
+            subject_id=subject_id,
+            group_id=group_id,
+        ).update(attended=F("attended") + delta)
+
+    # Проверяем риск-инцидент при любом изменении в сторону "отсутствовал"
+    # Покрывает случай NOT_MARKED → ABSENT через админку
+    if not new_attended:
+        transaction.on_commit(
+            lambda: _notify_student_performance_if_needed(
+                student_id=student_id,
+                group_id=group_id,
+                subject_id=subject_id,
+                schedule_id=schedule.id,
+            )
+        )
 
 
 @receiver(post_delete, sender=Attendance)

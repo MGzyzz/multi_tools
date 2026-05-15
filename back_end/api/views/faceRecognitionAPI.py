@@ -33,7 +33,8 @@ class UpdateStudentFaceEmbedding(APIView):
             student=student, image=file_obj, embedding=embedding
         )
         trim_face_images(student)
-        student.save(update_fields=["face_updated_at"])
+        student.face_image = face_image.image.name
+        student.save(update_fields=["face_updated_at", "face_image"])
 
         return Response(
             {
