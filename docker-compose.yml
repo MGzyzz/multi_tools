@@ -102,7 +102,7 @@ services:
   frontend:
     container_name: frontend
     build:
-      context: ./teacher-s-hub
+      context: ./front_end
     ports:
       - "8080:8080"
     depends_on:

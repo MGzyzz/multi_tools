@@ -68,13 +68,13 @@ function StatusBadge({ status, label }: { status: LessonStatus; label: string })
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider",
+        "inline-flex max-w-[52%] shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider",
         lessonStatusClasses[status],
       )}
     >
       {status === "live" && <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />}
       {status === "next" && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
-      {label}
+      <span className="truncate">{label}</span>
     </span>
   );
 }
@@ -371,7 +371,7 @@ function Dashboard() {
           </div>
         )}
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="rounded-lg border border-border bg-card p-4">
@@ -469,17 +469,17 @@ function Dashboard() {
                   <li
                     key={lesson.id}
                     className={cn(
-                      "flex items-center gap-4 px-4 py-2.5 transition-colors hover:bg-accent/40",
+                      "flex min-w-0 items-center gap-3 px-3 py-2.5 transition-colors hover:bg-accent/40 sm:gap-4 sm:px-4",
                       lesson.status === "next" && "bg-primary/[0.025]",
                     )}
                   >
-                    <div className="w-16 shrink-0 text-[13px] tabular-nums">
+                    <div className="w-14 shrink-0 text-[13px] tabular-nums sm:w-16">
                       <div className="font-semibold">{getTimeLabel(lesson.time)}</div>
                       <div className="text-[11px] text-muted-foreground">{lesson.endTime}</div>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate text-[13px] font-medium">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
                           {lesson.subject_name}
                         </span>
                         <StatusBadge
@@ -489,9 +489,10 @@ function Dashboard() {
                           )}
                         />
                       </div>
-                      <div className="mt-0.5 flex items-center gap-3 text-[11px] text-muted-foreground">
-                        <span className="inline-flex items-center gap-1">
-                          <Users className="h-3 w-3" /> {lesson.groupName}
+                      <div className="mt-0.5 flex min-w-0 items-center gap-3 text-[11px] text-muted-foreground">
+                        <span className="inline-flex min-w-0 max-w-full items-center gap-1">
+                          <Users className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{lesson.groupName}</span>
                         </span>
                       </div>
                     </div>
@@ -522,7 +523,7 @@ function Dashboard() {
 
           <div className="space-y-4">
             <SectionCard padded={false} title={focusTitle} description={focusDescription}>
-              <div className="space-y-3 p-4">
+              <div className="space-y-3 p-3 sm:p-4">
                 {loading ? (
                   <>
                     <div className="flex items-center gap-2">
@@ -545,13 +546,13 @@ function Dashboard() {
                   </>
                 ) : focusLesson ? (
                   <>
-                    <div className="flex items-center gap-2 text-[13px]">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium tabular-nums">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2 text-[13px]">
+                      <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0 truncate font-medium tabular-nums">
                         {focusLesson.date} - {getTimeLabel(focusLesson.time)}
                       </span>
                       {focusLesson.status === "next" && (
-                        <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-medium text-primary">
+                        <span className="ml-auto inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-primary">
                           <CircleDot className="h-3 w-3 animate-pulse" /> {t("dashboard.next")}
                         </span>
                       )}
@@ -576,7 +577,7 @@ function Dashboard() {
                           <div className="text-base font-semibold tabular-nums">
                             {focusCounts.total}
                           </div>
-                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          <div className="break-words text-[10px] uppercase leading-tight tracking-wider text-muted-foreground [overflow-wrap:anywhere]">
                             {t("dashboard.focusRoster")}
                           </div>
                         </div>
@@ -584,7 +585,7 @@ function Dashboard() {
                           <div className="text-base font-semibold tabular-nums text-success">
                             {focusCounts.present}
                           </div>
-                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          <div className="break-words text-[10px] uppercase leading-tight tracking-wider text-muted-foreground [overflow-wrap:anywhere]">
                             {t("dashboard.focusPresent")}
                           </div>
                         </div>
@@ -592,7 +593,7 @@ function Dashboard() {
                           <div className="text-base font-semibold tabular-nums text-muted-foreground">
                             {focusCounts.unmarked}
                           </div>
-                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          <div className="break-words text-[10px] uppercase leading-tight tracking-wider text-muted-foreground [overflow-wrap:anywhere]">
                             {t("dashboard.focusUnmarked")}
                           </div>
                         </div>
@@ -635,38 +636,38 @@ function Dashboard() {
             </SectionCard>
 
             <SectionCard title={t("dashboard.quickActions")}>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <Link
                   to="/students"
-                  className="flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-[13px] transition-colors hover:bg-accent"
+                  className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-[13px] transition-colors hover:bg-accent"
                 >
-                  <GraduationCap className="h-3.5 w-3.5 text-muted-foreground" />
-                  {t("dashboard.quickStudents")}
+                  <GraduationCap className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 truncate">{t("dashboard.quickStudents")}</span>
                 </Link>
                 <NewGroupDialog
                   trigger={
                     <button
                       type="button"
-                      className="flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-[13px] transition-colors hover:bg-accent"
+                      className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-[13px] transition-colors hover:bg-accent"
                     >
-                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                      {t("dashboard.quickNewGroup")}
+                      <Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0 truncate">{t("dashboard.quickNewGroup")}</span>
                     </button>
                   }
                 />
                 <Link
                   to="/schedule"
-                  className="flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-[13px] transition-colors hover:bg-accent"
+                  className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-[13px] transition-colors hover:bg-accent"
                 >
-                  <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
-                  {t("dashboard.quickSchedule")}
+                  <CalendarDays className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 truncate">{t("dashboard.quickSchedule")}</span>
                 </Link>
                 <Link
                   to="/attendance"
-                  className="flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-[13px] transition-colors hover:bg-accent"
+                  className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-[13px] transition-colors hover:bg-accent"
                 >
-                  <CalendarCheck2 className="h-3.5 w-3.5 text-muted-foreground" />
-                  {t("dashboard.quickAttendance")}
+                  <CalendarCheck2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 truncate">{t("dashboard.quickAttendance")}</span>
                 </Link>
               </div>
             </SectionCard>

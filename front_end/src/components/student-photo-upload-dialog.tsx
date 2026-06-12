@@ -120,15 +120,15 @@ export function StudentPhotoUploadDialog({
 }: StudentPhotoUploadDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl p-0 gap-0">
-        <DialogHeader className="px-6 pt-5 pb-4 border-b">
+      <DialogContent className="sm:max-w-3xl w-[calc(100vw-2rem)] max-h-[90svh] overflow-y-auto p-0 gap-0">
+        <DialogHeader className="px-4 sm:px-6 pt-5 pb-4 border-b sticky top-0 bg-background z-10">
           <DialogTitle>Загрузка фото · {student.name}</DialogTitle>
           <DialogDescription>
             Фото используется для распознавания посещаемости.
           </DialogDescription>
         </DialogHeader>
 
-        <AnimatedTabs defaultMode={defaultMode} className="px-6 pt-4 pb-6">
+        <AnimatedTabs defaultMode={defaultMode} className="px-4 sm:px-6 pt-4 pb-4 sm:pb-6">
           {(activeTab, setActiveTab) => (
             <>
               <div className="mb-4 inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">

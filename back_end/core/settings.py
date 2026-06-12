@@ -153,6 +153,10 @@ DATABASES = {
         "PASSWORD": os.getenv("DATABASE_PASSWORD"),
         "HOST": DB_HOST,
         "PORT": os.getenv("DATABASE_PORT"),
+        "CONN_MAX_AGE": 60,  # reuse connections for 60s instead of reconnecting on every request
+        "OPTIONS": {
+            "connect_timeout": 5,
+        },
     }
 }
 
@@ -266,6 +270,10 @@ CELERY_BEAT_SCHEDULE = {
     "send-lesson-reminders": {
         "task": "send_lesson_reminders",
         "schedule": 300.0,  # каждые 5 минут
+    },
+    "auto-mark-absent": {
+        "task": "auto_mark_absent",
+        "schedule": 900.0,  # каждые 15 минут
     },
 }
 

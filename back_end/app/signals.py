@@ -473,17 +473,15 @@ def update_stat_on_attendance_save(sender, instance, created, **kwargs):
         if instance.marked_at is None:
             Attendance.objects.filter(pk=instance.pk).update(marked_at=timezone.now())
 
-        AttendanceStat.objects.update_or_create(
-            student_id=student_id,
-            subject_id=subject_id,
-            group_id=group_id,
-            defaults={},
-        )
-        AttendanceStat.objects.filter(
-            student_id=student_id,
-            subject_id=subject_id,
-            group_id=group_id,
-        ).update(attended=F("attended") + delta)
+        with transaction.atomic():
+            # select_for_update locks the row to prevent race conditions
+            # when multiple students from the same group are saved concurrently
+            stat, _ = AttendanceStat.objects.select_for_update().get_or_create(
+                student_id=student_id,
+                subject_id=subject_id,
+                group_id=group_id,
+            )
+            AttendanceStat.objects.filter(pk=stat.pk).update(attended=F("attended") + delta)
 
     # Проверяем риск-инцидент при любом изменении в сторону "отсутствовал"
     # Покрывает случай NOT_MARKED → ABSENT через админку
