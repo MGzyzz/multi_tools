@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -72,8 +73,12 @@ function formatDate(d: Date) {
 
 function BroadcastPage() {
   const { t } = useI18n();
+  const isMac = typeof navigator !== "undefined" && (
+    /Mac/i.test(navigator.platform) || /Macintosh/i.test(navigator.userAgent)
+  );
 
   const [groups, setGroups] = useState<ApiGroup[]>([]);
+  const [loadingGroups, setLoadingGroups] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -93,7 +98,8 @@ function BroadcastPage() {
   useEffect(() => {
     getGroupList()
       .then((r) => setGroups(r.groups))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingGroups(false));
   }, []);
 
   useEffect(() => {
@@ -301,7 +307,16 @@ function BroadcastPage() {
                   </Button>
                 </div>
 
-                {groups.length === 0 ? (
+                {loadingGroups ? (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div key={i} className="rounded-md border border-border p-3 space-y-1.5">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-36" />
+                      </div>
+                    ))}
+                  </div>
+                ) : groups.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     {t("broadcast.noGroups")}
                   </p>
@@ -383,7 +398,7 @@ function BroadcastPage() {
                   className="resize-none"
                 />
                 <p className="text-xs text-muted-foreground">
-                  {t("broadcast.sendHint")}
+                  {t(isMac ? "broadcast.sendHintMac" : "broadcast.sendHint")}
                 </p>
 
                 {message.trim() && (
@@ -448,9 +463,14 @@ function BroadcastPage() {
                   {t("broadcast.selectGroupsPlaceholder")}
                 </p>
               ) : loadingLeaders ? (
-                <p className="text-sm text-muted-foreground animate-pulse">
-                  {t("notifications.loading")}
-                </p>
+                <div className="space-y-2">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-5 w-20 rounded-full" />
+                    </div>
+                  ))}
+                </div>
               ) : leaders.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   {t("broadcast.leaderNoLeader")}
