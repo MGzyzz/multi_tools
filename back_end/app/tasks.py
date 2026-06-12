@@ -369,8 +369,8 @@ def auto_mark_absent() -> dict:
     from app.models import Attendance, Schedule
     from app.models._choices.attendanceChoices import AttendanceStatusChoices
 
-    CUTOFF_MINUTES = 80   # 50 min lesson + 30 min grace period
-    LOOKBACK_DAYS = 30    # don't scan schedules older than this
+    CUTOFF_MINUTES = 80  # 50 min lesson + 30 min grace period
+    LOOKBACK_DAYS = 30  # don't scan schedules older than this
     BATCH_SIZE = 500
 
     now = timezone.localtime(timezone.now())
@@ -381,9 +381,7 @@ def auto_mark_absent() -> dict:
     # Subquery — stays in DB, no Python list of IDs
     finished_schedules = Schedule.objects.filter(
         date__gte=lookback_date,
-    ).filter(
-        Q(date__lt=today) | Q(date=today, time__lte=cutoff_time)
-    )
+    ).filter(Q(date__lt=today) | Q(date=today, time__lte=cutoff_time))
 
     total_updated = 0
     while True:

@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("accounts", "0002_teacherprofile_telegram_chat_id"),
         ("app", "0040_add_webhook_models"),
@@ -13,9 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddIndex(
             model_name="attendance",
-            index=models.Index(
-                fields=["status", "schedule"], name="att_status_schedule_idx"
-            ),
+            index=models.Index(fields=["status", "schedule"], name="att_status_schedule_idx"),
         ),
         migrations.AddIndex(
             model_name="schedule",
