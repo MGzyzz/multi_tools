@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useI18n } from "@/lib/i18n";
 import { requireAuth } from "@/lib/route-auth";
@@ -118,6 +119,8 @@ function SettingsPage() {
     }
   }
 
+  const loading = telegramLoading || reminderSettings === null;
+
   return (
     <>
       <PageHeader
@@ -125,6 +128,43 @@ function SettingsPage() {
         description={t("settings.description")}
       />
       <PageBody>
+        {loading ? (
+          <div className="grid gap-6 lg:grid-cols-2 max-w-4xl">
+            {/* Telegram card skeleton */}
+            <div className="rounded-lg border border-border bg-card">
+              <div className="border-b border-border px-4 py-3">
+                <Skeleton className="h-4 w-20" />
+              </div>
+              <div className="p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-5 w-5 rounded-full" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                </div>
+                <Skeleton className="h-8 w-28 rounded-md" />
+              </div>
+            </div>
+            {/* Reminders card skeleton */}
+            <div className="rounded-lg border border-border bg-card">
+              <div className="border-b border-border px-4 py-3">
+                <Skeleton className="h-4 w-28" />
+              </div>
+              <div className="p-4 space-y-5">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-5 w-9 rounded-full" />
+                </div>
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-9 w-32 rounded-md" />
+                </div>
+                <Skeleton className="h-8 w-16 rounded-md" />
+              </div>
+            </div>
+          </div>
+        ) : (
         <div className="grid gap-6 lg:grid-cols-2 max-w-4xl">
           {/* Telegram section */}
           <SectionCard title={t("settings.telegram.section")}>
@@ -249,13 +289,10 @@ function SettingsPage() {
                     : t("settings.reminders.save")}
                 </Button>
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground animate-pulse">
-                {t("notifications.loading")}
-              </p>
-            )}
+            ) : null}
           </SectionCard>
         </div>
+        )}
       </PageBody>
     </>
   );
