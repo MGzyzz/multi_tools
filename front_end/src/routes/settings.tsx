@@ -39,6 +39,22 @@ function SettingsPage() {
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  useEffect(() => {
+    if (!linkToken || telegramConnected) return;
+    const interval = setInterval(() => {
+      getTelegramStatus()
+        .then((s) => {
+          if (s.connected) {
+            setTelegramConnected(true);
+            setLinkToken(null);
+            toast.success(t("settings.telegram.linkedSuccess"));
+          }
+        })
+        .catch(() => {});
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [linkToken, telegramConnected]);
+
   const [reminderSettings, setReminderSettings] =
     useState<TeacherNotificationSettings | null>(null);
   const [saving, setSaving] = useState(false);

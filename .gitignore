@@ -61,6 +61,7 @@ wandb/
 ai/ai/data/analytics
 back_end/media
 back_end/docs/
+back_end/staticfiles/
 CLAUDE.md
 test_folder/
 back_end/.claude/
