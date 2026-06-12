@@ -232,9 +232,9 @@ class TeacherBroadcastAPI(APIView):
         sent = 0
         for ldr in leaderships:
             enriched_message = (
-                f"👤 Преподаватель: {teacher_name}\n"
-                f"👥 Группа: {ldr.group.name}\n"
-                f"📅 {today_str}\n\n"
+                f"Преподаватель: {teacher_name}\n"
+                f"Группа: {ldr.group.name}\n"
+                f"Дата: {today_str}\n\n"
                 f"{message_text}"
             )
             notification = create_student_notification(
