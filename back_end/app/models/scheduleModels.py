@@ -47,4 +47,5 @@ class Schedule(models.Model):
         indexes = [
             models.Index(fields=["group", "date"]),
             models.Index(fields=["teacher", "date"]),
+            models.Index(fields=["date"], name="schedule_date_idx"),
         ]

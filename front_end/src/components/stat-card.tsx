@@ -18,15 +18,17 @@ export function StatCard({
   icon?: ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="min-w-0 rounded-lg border border-border bg-card p-4">
       <div className="flex items-start justify-between gap-3">
-        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <div className="min-w-0 break-words text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {label}
         </div>
-        {icon && <div className="text-muted-foreground">{icon}</div>}
+        {icon && <div className="shrink-0 text-muted-foreground">{icon}</div>}
       </div>
-      <div className="mt-2 flex items-baseline gap-2">
-        <div className="text-2xl font-semibold tracking-tight tabular-nums">{value}</div>
+      <div className="mt-2 flex min-w-0 items-baseline gap-2">
+        <div className="min-w-0 break-words text-2xl font-semibold tracking-tight tabular-nums">
+          {value}
+        </div>
         {delta && (
           <span
             className={cn(
@@ -42,7 +44,7 @@ export function StatCard({
           </span>
         )}
       </div>
-      {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
+      {hint && <div className="mt-1 break-words text-xs text-muted-foreground">{hint}</div>}
     </div>
   );
 }

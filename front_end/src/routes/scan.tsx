@@ -1152,13 +1152,14 @@ function ScanPage() {
                         {t("scan.feedEmpty")}
                       </div>
                     ) : (
+                      <div className="overflow-x-auto">
                       <table className="w-full text-[13px]">
                         <thead className="border-b border-border bg-muted/40 text-left text-[10px] uppercase tracking-wider text-muted-foreground">
                           <tr>
                             <th className="px-4 py-2 font-medium">{t("scan.feedColTime")}</th>
                             <th className="px-4 py-2 font-medium">{t("scan.feedColDetected")}</th>
-                            <th className="px-4 py-2 font-medium">{t("scan.feedColDetails")}</th>
-                            <th className="px-4 py-2 font-medium text-right">
+                            <th className="hidden sm:table-cell px-4 py-2 font-medium">{t("scan.feedColDetails")}</th>
+                            <th className="hidden sm:table-cell px-4 py-2 font-medium text-right">
                               {t("scan.feedColSimilarity")}
                             </th>
                             <th className="px-4 py-2 font-medium">{t("scan.feedColStatus")}</th>
@@ -1171,8 +1172,8 @@ function ScanPage() {
                                 {event.time}
                               </td>
                               <td className="px-4 py-2 font-medium">{event.label}</td>
-                              <td className="px-4 py-2 text-muted-foreground">{event.details}</td>
-                              <td className="px-4 py-2 text-right tabular-nums">
+                              <td className="hidden sm:table-cell px-4 py-2 text-muted-foreground">{event.details}</td>
+                              <td className="hidden sm:table-cell px-4 py-2 text-right tabular-nums">
                                 {formatSimilarity(event.similarity)}
                               </td>
                               <td className="px-4 py-2">
@@ -1189,6 +1190,7 @@ function ScanPage() {
                           ))}
                         </tbody>
                       </table>
+                      </div>
                     )}
                   </SectionCard>
 

@@ -224,8 +224,13 @@ function AnalyticsPage() {
                       </svg>
                     </div>
                     <div className="mt-2 flex justify-between text-[11px] text-muted-foreground tabular-nums">
-                      {trend.map((d) => (
-                        <span key={d.week}>{d.week}</span>
+                      {trend.map((d, i) => (
+                        <span
+                          key={d.week}
+                          className={i > 0 && i < trend.length - 1 ? "hidden sm:inline" : ""}
+                        >
+                          {d.week}
+                        </span>
                       ))}
                     </div>
                   </>
@@ -272,52 +277,54 @@ function AnalyticsPage() {
                     {t("analytics.groupPerfEmpty")}
                   </p>
                 ) : (
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-border bg-muted/30 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                      <tr>
-                        <th className="px-4 py-2.5 font-medium">{t("analytics.colGroup")}</th>
-                        <th className="px-4 py-2.5 font-medium">{t("analytics.colSubject")}</th>
-                        <th className="px-4 py-2.5 font-medium text-right">
-                          {t("analytics.colAttendance")}
-                        </th>
-                        <th className="px-4 py-2.5 font-medium text-right">
-                          {t("analytics.colAtRisk")}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {[...groups]
-                        .sort((a, b) => b.at_risk - a.at_risk || a.avg_attendance - b.avg_attendance)
-                        .map((g) => (
-                        <tr
-                          key={g.id}
-                          className="cursor-pointer hover:bg-accent/40"
-                          onClick={() => navigate({ to: "/students", search: { group: g.name, groupId: g.id } })}
-                        >
-                          <td className="px-4 py-2.5 font-medium">{g.name}</td>
-                          <td className="px-4 py-2.5 text-muted-foreground">{g.subject}</td>
-                          <td className="px-4 py-2.5 text-right tabular-nums">
-                            {g.avg_attendance}%
-                          </td>
-                          <td className="px-4 py-2.5 text-right">
-                            <span
-                              className={cn(
-                                "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums",
-                                g.at_risk > 4
-                                  ? "bg-destructive/10 text-destructive"
-                                  : g.at_risk > 2
-                                    ? "bg-warning/15 text-warning-foreground"
-                                    : "bg-success/10 text-success",
-                              )}
-                            >
-                              {g.at_risk}
-                              <ChevronRight className="h-3.5 w-3.5 ml-1 text-muted-foreground/50 inline" />
-                            </span>
-                          </td>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="border-b border-border bg-muted/30 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                        <tr>
+                          <th className="px-4 py-2.5 font-medium">{t("analytics.colGroup")}</th>
+                          <th className="hidden sm:table-cell px-4 py-2.5 font-medium">{t("analytics.colSubject")}</th>
+                          <th className="px-4 py-2.5 font-medium text-right">
+                            {t("analytics.colAttendance")}
+                          </th>
+                          <th className="px-4 py-2.5 font-medium text-right">
+                            {t("analytics.colAtRisk")}
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {[...groups]
+                          .sort((a, b) => b.at_risk - a.at_risk || a.avg_attendance - b.avg_attendance)
+                          .map((g) => (
+                          <tr
+                            key={g.id}
+                            className="cursor-pointer hover:bg-accent/40"
+                            onClick={() => navigate({ to: "/students", search: { group: g.name, groupId: g.id } })}
+                          >
+                            <td className="px-4 py-2.5 font-medium">{g.name}</td>
+                            <td className="hidden sm:table-cell px-4 py-2.5 text-muted-foreground">{g.subject}</td>
+                            <td className="px-4 py-2.5 text-right tabular-nums">
+                              {g.avg_attendance}%
+                            </td>
+                            <td className="px-4 py-2.5 text-right">
+                              <span
+                                className={cn(
+                                  "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums",
+                                  g.at_risk > 4
+                                    ? "bg-destructive/10 text-destructive"
+                                    : g.at_risk > 2
+                                      ? "bg-warning/15 text-warning-foreground"
+                                      : "bg-success/10 text-success",
+                                )}
+                              >
+                                {g.at_risk}
+                                <ChevronRight className="h-3.5 w-3.5 ml-1 text-muted-foreground/50 inline" />
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </SectionCard>
             </div>

@@ -51,4 +51,5 @@ class Attendance(models.Model):
         indexes = [
             models.Index(fields=["schedule"]),
             models.Index(fields=["student"]),
+            models.Index(fields=["status", "schedule"], name="att_status_schedule_idx"),
         ]

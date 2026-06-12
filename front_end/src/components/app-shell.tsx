@@ -191,7 +191,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
   );
 
   return (
-    <header className="sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/70 lg:px-6">
+    <header className="sticky top-0 z-30 flex h-12 min-w-0 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/70 lg:px-6">
       <Button
         variant="ghost"
         size="icon"
@@ -202,15 +202,15 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
         <Menu className="h-4 w-4" />
       </Button>
 
-      <div className="flex items-center gap-2 text-[13px]">
-        <span className="text-muted-foreground">
+      <div className="flex min-w-0 flex-1 items-center gap-2 text-[13px]">
+        <span className="min-w-0 truncate text-muted-foreground">
           {current ? t(groupKeyMap[current.group]) : t("nav.group.workspace")}
         </span>
-        <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
-        <span className="font-medium">{current ? t(current.labelKey) : ""}</span>
+        <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+        <span className="min-w-0 truncate font-medium">{current ? t(current.labelKey) : ""}</span>
       </div>
 
-      <div className="ml-auto flex items-center gap-1">
+      <div className="ml-auto flex shrink-0 items-center gap-1">
         <NotificationsButton />
         <LanguageSwitcher />
         <Button
@@ -231,7 +231,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen w-full bg-background text-foreground">
+    <div className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground">
       <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
         <div className="px-3 py-3">
           <Brand />
@@ -258,7 +258,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar onMenu={() => setOpen(true)} />
-        <main className="flex-1">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden">{children}</main>
       </div>
     </div>
   );
@@ -274,16 +274,18 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-end sm:justify-between lg:px-6">
+    <div className="flex min-w-0 flex-col gap-3 overflow-hidden border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-end sm:justify-between lg:px-6">
       <div className="min-w-0">
         <h1 className="text-lg font-semibold tracking-tight sm:text-xl">{title}</h1>
-        {description && <p className="mt-0.5 text-[13px] text-muted-foreground">{description}</p>}
+        {description && (
+          <p className="mt-0.5 break-words text-[13px] text-muted-foreground">{description}</p>
+        )}
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="flex max-w-full flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }
 
 export function PageBody({ children }: { children: ReactNode }) {
-  return <div className="px-4 py-5 lg:px-6">{children}</div>;
+  return <div className="min-w-0 max-w-full overflow-x-hidden px-4 py-5 lg:px-6">{children}</div>;
 }
