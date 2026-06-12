@@ -22,6 +22,10 @@ class DemoNotificationAPI(APIView):
         full_name = request.user.get_full_name() or request.user.username
         from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@example.com")
 
+        # Always include the sender account so the demo works even if
+        # the teacher's institutional inbox silently blocks external mail.
+        recipients = list({email, from_email})
+
         # 1. Generic system notification
         generic_subject = "Lectern — тестовое уведомление системы"
         generic_message = (
@@ -40,7 +44,7 @@ class DemoNotificationAPI(APIView):
             subject=generic_subject,
             message=generic_message,
             from_email=from_email,
-            recipient_list=[email],
+            recipient_list=recipients,
             fail_silently=False,
             html_message=generic_html,
         )
@@ -51,7 +55,7 @@ class DemoNotificationAPI(APIView):
             "emails/student_risk_notification.html",
             {
                 "title": "Снижение посещаемости",
-                "student_name": "Алибек Сейткали",
+                "student_name": "John Jon",
                 "subject_name": "Тестовый предмет",
                 "group_name": "Тестовая группа",
                 "problem": "Посещаемость ниже допустимого порога",
@@ -70,9 +74,9 @@ class DemoNotificationAPI(APIView):
             subject=risk_subject,
             message="Уведомление об академической успеваемости студента (демо)",
             from_email=from_email,
-            recipient_list=[email],
+            recipient_list=recipients,
             fail_silently=False,
             html_message=risk_html,
         )
 
-        return Response({"detail": f"2 demo emails sent to {email}."})
+        return Response({"detail": f"2 demo emails sent to {', '.join(recipients)}."})

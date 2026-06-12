@@ -1,5 +1,6 @@
 import secrets
 import string
+from datetime import date as _date
 
 from django.core.cache import cache
 from rest_framework import status
@@ -15,7 +16,7 @@ from api.serializer import (
 from api.views.attendanceAPI import IsTeacher
 from app.models import Group, GroupLeadership, TeacherNotificationSettings
 from app.models._choices import NotificationDeliveryChoices, NotificationTypeChoices
-from app.utils.notification import create_notifications
+from app.utils.notification import create_student_notification
 
 _LINK_TOKEN_TTL = 600  # 10 минут
 _LINK_TOKEN_PREFIX = "tg_link:"
@@ -214,7 +215,9 @@ class TeacherBroadcastAPI(APIView):
             )
 
         leaderships = (
-            GroupLeadership.objects.filter(group__in=groups).select_related("student").distinct()
+            GroupLeadership.objects.filter(group__in=groups)
+            .select_related("student", "group")
+            .distinct()
         )
 
         if not leaderships.exists():
@@ -223,20 +226,31 @@ class TeacherBroadcastAPI(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        students = [ldr.student for ldr in leaderships]
+        teacher_name = teacher.user.get_full_name() or teacher.user.username
+        today_str = _date.today().strftime("%d.%m.%Y")
 
-        create_notifications(
-            event_type=NotificationTypeChoices.GROUP_CHANGED,
-            title="Сообщение от преподавателя",
-            message=message_text,
-            students=students,
-            student_channels=[NotificationDeliveryChoices.TELEGRAM],
-        )
+        sent = 0
+        for ldr in leaderships:
+            enriched_message = (
+                f"Преподаватель: {teacher_name}\n"
+                f"Группа: {ldr.group.name}\n"
+                f"Дата: {today_str}\n\n"
+                f"{message_text}"
+            )
+            notification = create_student_notification(
+                student=ldr.student,
+                event_type=NotificationTypeChoices.GROUP_CHANGED,
+                title="Сообщение от преподавателя",
+                message=enriched_message,
+                channels=[NotificationDeliveryChoices.TELEGRAM],
+            )
+            if notification is not None:
+                sent += 1
 
         return Response(
             {
                 "detail": "Broadcast sent.",
-                "recipients": len(students),
+                "recipients": sent,
                 "group_names": [g.name for g in groups],
             }
         )

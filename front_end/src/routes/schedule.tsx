@@ -334,7 +334,8 @@ function SchedulePage() {
             {t("schedule.loading")}
           </div>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-border bg-card">
+          <div className="overflow-x-auto rounded-lg border border-border">
+          <div className="min-w-[640px] overflow-hidden bg-card">
             <div className="grid grid-cols-[80px_repeat(6,1fr)] border-b border-border bg-muted/30">
               <div className="flex items-center justify-center px-2 py-2.5 text-xs text-muted-foreground">
                 <Calendar className="h-3.5 w-3.5" />
@@ -532,6 +533,7 @@ function SchedulePage() {
                 </div>
               ))}
             </div>
+          </div>
           </div>
         )}
 

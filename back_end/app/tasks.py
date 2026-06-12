@@ -356,6 +356,59 @@ def _format_metric_value(value, unit: str | None) -> str:
     return str(value)
 
 
+@shared_task(name="auto_mark_absent")
+def auto_mark_absent() -> dict:
+    """
+    Runs every 15 minutes. Marks NOT_MARKED attendance records as ABSENT
+    for lessons that ended more than LESSON_DURATION + GRACE_PERIOD minutes ago.
+    Default: 50 min lesson + 30 min grace = 80 min after lesson start.
+    Processes in batches to avoid long-held row locks.
+    """
+    from django.db.models import Q
+
+    from app.models import Attendance, Schedule
+    from app.models._choices.attendanceChoices import AttendanceStatusChoices
+
+    CUTOFF_MINUTES = 80  # 50 min lesson + 30 min grace period
+    LOOKBACK_DAYS = 30  # don't scan schedules older than this
+    BATCH_SIZE = 500
+
+    now = timezone.localtime(timezone.now())
+    today = now.date()
+    cutoff_time = (now - datetime.timedelta(minutes=CUTOFF_MINUTES)).time()
+    lookback_date = (now - datetime.timedelta(days=LOOKBACK_DAYS)).date()
+
+    # Subquery — stays in DB, no Python list of IDs
+    finished_schedules = Schedule.objects.filter(
+        date__gte=lookback_date,
+    ).filter(Q(date__lt=today) | Q(date=today, time__lte=cutoff_time))
+
+    total_updated = 0
+    while True:
+        with transaction.atomic():
+            # select_for_update must be inside a transaction; skip_locked avoids
+            # blocking if another worker is processing the same batch concurrently
+            batch_ids = list(
+                Attendance.objects.filter(
+                    schedule__in=finished_schedules,
+                    status=AttendanceStatusChoices.NOT_MARKED,
+                )
+                .select_for_update(skip_locked=True)
+                .values_list("id", flat=True)[:BATCH_SIZE]
+            )
+            if not batch_ids:
+                break
+
+            Attendance.objects.filter(id__in=batch_ids).update(
+                status=AttendanceStatusChoices.ABSENT,
+                marked_at=now,
+            )
+            total_updated += len(batch_ids)
+
+    logger.info("auto_mark_absent: marked %s records as ABSENT", total_updated)
+    return {"auto_marked_absent": total_updated}
+
+
 @shared_task(name="deliver_webhook_event", ignore_result=True)
 def deliver_webhook_event(event_type: str, payload: dict) -> None:
     from app.models.webhookModels import WebhookDelivery, WebhookSubscription
