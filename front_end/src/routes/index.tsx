@@ -364,8 +364,62 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "ИИ-учёт посещаемости, аналитика рисков, автоматические уведомления — для университетов и колледжей." },
     ],
   }),
-  component: LandingPage,
+  component: LandingGate,
 });
+
+// ── Loader / hydration gate ─────────────────────────────────────────────────
+// The landing resolves its language from localStorage, which only exists on the
+// client. Rendering the page before that is known produced a visible flash
+// (default Russian → the user's saved language). The gate shows a lightweight
+// spinner (with scroll locked) until mounted, then renders the landing once in
+// the correct language — no per-block skeletons, no flash.
+function LandingLoader() {
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-background">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
+    </div>
+  );
+}
+
+function LandingGate() {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const reveal = () => {
+      if (!cancelled) setReady(true);
+    };
+
+    // Wait for the display font before showing the hero — otherwise a cold/hard
+    // refresh renders the fallback font first (narrower → "compressed" text) and
+    // visibly reflows when Inter swaps in. Capped by a timeout so a slow or
+    // failed font fetch never blocks the page.
+    const fonts = document.fonts;
+    if (fonts?.load) {
+      Promise.race([
+        Promise.all([fonts.load("400 1rem Inter"), fonts.load("600 1rem Inter")]),
+        new Promise((resolve) => setTimeout(resolve, 1200)),
+      ]).finally(reveal);
+    } else {
+      reveal();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!ready) return <LandingLoader />;
+  return <LandingPage />;
+}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 function LandingPage() {

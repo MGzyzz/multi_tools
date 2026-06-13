@@ -58,10 +58,12 @@ class EditProfileAPITests(BaseJWTAPITestCase):
         self.assertEqual(response.data["description"], new_description)
         self.assertEqual(response.data["role"], "teacher")
 
-    def test_role_update_profile_with_jwt_returns_400_on_invalid_choice(self):
-        """Return 400 when updating profile with invalid role."""
+    def test_role_is_read_only_and_cannot_be_changed(self):
+        """Role is read-only: any role in the payload is ignored, account stays teacher."""
         url = reverse("edit_user_profile")
-        invalid_role = "InvalidRole"
-        response = self.client.patch(url, {"role": invalid_role}, **self.auth_headers())
-        self.assertEqual(response.status_code, 400)
-        self.assertIn("role", response.data)
+        # Even a different *valid* role must not change the account role.
+        response = self.client.patch(url, {"role": "student"}, **self.auth_headers())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["role"], "teacher")
+        self.user.teacher_profile.refresh_from_db()
+        self.assertEqual(self.user.teacher_profile.role, "teacher")

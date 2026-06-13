@@ -9,12 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiError, getUserInitials, type AuthUser } from "@/lib/auth";
-import {
-  getProfile,
-  PROFILE_ROLE_OPTIONS,
-  resolveProfileAvatarUrl,
-  updateProfile,
-} from "@/lib/profile";
+import { getProfile, resolveProfileAvatarUrl, updateProfile } from "@/lib/profile";
 import { requireAuth } from "@/lib/route-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useI18n } from "@/lib/i18n";
@@ -116,7 +111,6 @@ function ProfilePage() {
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
         email: form.email.trim(),
-        role: form.role,
         description: form.description.trim(),
       });
 
@@ -303,23 +297,15 @@ function ProfilePage() {
                     </div>
                     <div>
                       <Label htmlFor="profile-role">{t("profile.role")}</Label>
-                      <select
+                      <div
                         id="profile-role"
-                        value={form.role}
-                        onChange={(event) =>
-                          setForm((current) =>
-                            current ? { ...current, role: event.target.value } : current,
-                          )
-                        }
-                        className="mt-1.5 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                        disabled={saving}
+                        className="mt-1.5 flex h-9 w-full items-center rounded-md border border-input bg-muted px-3 py-1 text-sm text-muted-foreground"
                       >
-                        {PROFILE_ROLE_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+                        {t("profile.roleTeacher")}
+                      </div>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        {t("profile.roleNote")}
+                      </p>
                     </div>
                     <div className="sm:col-span-2">
                       <Label htmlFor="profile-username">{t("profile.username")}</Label>

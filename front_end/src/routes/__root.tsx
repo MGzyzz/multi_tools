@@ -34,7 +34,11 @@ export const Route = createRootRoute({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "stylesheet", href: appCss },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -72,14 +76,21 @@ function RootComponent() {
   );
 }
 
+const BARE_ROUTES = new Set(["/", "/docs", "/login", "/signup", "/error"]);
+const isBareRoute = (pathname: string) => BARE_ROUTES.has(pathname);
+
 function BootstrapBoundary() {
   const [hydrated, setHydrated] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     setHydrated(true);
   }, []);
 
-  if (!hydrated) return <AppBootSplash />;
+  // Bare routes (login / signup / error / landing / docs) have no app chrome and
+  // don't depend on client-only state, so render them immediately instead of
+  // flashing the boot splash on first load.
+  if (!hydrated && !isBareRoute(location.pathname)) return <AppBootSplash />;
 
   return (
     <>
@@ -114,13 +125,7 @@ function AppBootSplash() {
 
 function ChromeOrOutlet() {
   const location = useLocation();
-  const bare =
-    location.pathname === "/" ||
-    location.pathname === "/docs" ||
-    location.pathname === "/login" ||
-    location.pathname === "/signup" ||
-    location.pathname === "/error";
-  if (bare) return <Outlet />;
+  if (isBareRoute(location.pathname)) return <Outlet />;
   return (
     <AppShell>
       <Outlet />
