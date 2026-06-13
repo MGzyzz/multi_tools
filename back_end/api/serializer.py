@@ -497,8 +497,10 @@ class TeacherProfileSerializer(ModelSerializer):
     Serializer for the TeacherProfile model.
     """
 
+    # Role is fixed to the account's profile role and cannot be changed via the
+    # profile edit form (read-only). The teacher workspace only supports teachers.
     role = serializers.ChoiceField(
-        source="teacher_profile.role", choices=RoleChoices, required=False, allow_blank=True
+        source="teacher_profile.role", choices=RoleChoices, read_only=True
     )
     avatar = serializers.SerializerMethodField()
     description = serializers.CharField(
