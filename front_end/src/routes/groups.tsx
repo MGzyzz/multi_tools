@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Users, ChevronRight } from "lucide-react";
+import { Plus, Search, Users, ChevronRight, Download, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { PageBody, PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { NewGroupDialog } from "@/components/new-group-dialog";
 import { ApiError } from "@/lib/auth";
+import { downloadAttendanceExport } from "@/lib/export";
 import { formatCourseLabel, getGroupList, type ApiGroup } from "@/lib/groups";
 import { requireAuth } from "@/lib/route-auth";
 import { cn } from "@/lib/utils";
@@ -45,6 +47,23 @@ function GroupsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE_GRID);
+  // null = exporting all groups, a number = exporting that single group, undefined = idle
+  const [exportingId, setExportingId] = useState<number | null | undefined>(undefined);
+
+  const handleExport = async (groupId?: number) => {
+    if (exportingId !== undefined) return;
+    setExportingId(groupId ?? null);
+    try {
+      await downloadAttendanceExport(groupId);
+      toast.success(t("groups.exportSuccess"));
+    } catch (err) {
+      toast.error(t("groups.exportError"), {
+        description: err instanceof ApiError ? err.message : undefined,
+      });
+    } finally {
+      setExportingId(undefined);
+    }
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -129,8 +148,18 @@ function GroupsPage() {
         description={headerDescription}
         actions={
           <>
-            <Button variant="outline" size="sm" disabled>
-              {t("groups.import")}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void handleExport()}
+              disabled={exportingId !== undefined}
+            >
+              {exportingId === null ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              {t("groups.export")}
             </Button>
             <NewGroupDialog
               onCreated={handleCreated}
@@ -244,12 +273,31 @@ function GroupsPage() {
                   onClick={() => navigate({ to: "/students", search: { group: group.name, groupId: group.id } })}
                   className="group cursor-pointer rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary/40"
                 >
-                  <div>
-                    <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      {formatLocalizedCourseLabel(group.course)}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        {formatLocalizedCourseLabel(group.course)}
+                      </div>
+                      <div className="mt-1 text-lg font-semibold tracking-tight">{group.name}</div>
+                      <div className="text-sm text-muted-foreground">{group.group_specialty}</div>
                     </div>
-                    <div className="mt-1 text-lg font-semibold tracking-tight">{group.name}</div>
-                    <div className="text-sm text-muted-foreground">{group.group_specialty}</div>
+                    <button
+                      type="button"
+                      title={t("groups.exportGroup")}
+                      aria-label={t("groups.exportGroup")}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleExport(group.id);
+                      }}
+                      disabled={exportingId !== undefined}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {exportingId === group.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Download className="h-3.5 w-3.5" />
+                      )}
+                    </button>
                   </div>
                   <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -301,13 +349,29 @@ function GroupsPage() {
                       </td>
                       <td className="px-4 py-2.5 tabular-nums">{group.students_count}</td>
                       <td className="px-4 py-2.5 text-right">
-                        <button
-                          type="button"
-                          onClick={() => navigate({ to: "/students", search: { group: group.name, groupId: group.id } })}
-                          className="text-xs font-medium text-primary hover:underline"
-                        >
-                          {t("groups.open")}
-                        </button>
+                        <div className="flex items-center justify-end gap-3">
+                          <button
+                            type="button"
+                            title={t("groups.exportGroup")}
+                            aria-label={t("groups.exportGroup")}
+                            onClick={() => void handleExport(group.id)}
+                            disabled={exportingId !== undefined}
+                            className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {exportingId === group.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Download className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => navigate({ to: "/students", search: { group: group.name, groupId: group.id } })}
+                            className="text-xs font-medium text-primary hover:underline"
+                          >
+                            {t("groups.open")}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
