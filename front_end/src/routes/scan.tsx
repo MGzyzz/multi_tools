@@ -756,11 +756,13 @@ function ScanPage() {
                     {scheduleOptions.length === 0 ? (
                       <option value="">{t("scan.noLessonsWeek")}</option>
                     ) : (
-                      scheduleOptions.map((entry) => (
-                        <option key={entry.id} value={entry.id}>
-                          {formatScheduleLabel(entry, locale)}
-                        </option>
-                      ))
+                      scheduleOptions
+                        .filter((entry) => entry.date >= weekRange.todayDate)
+                        .map((entry) => (
+                          <option key={entry.id} value={entry.id}>
+                            {formatScheduleLabel(entry, locale)}
+                          </option>
+                        ))
                     )}
                   </select>
                 </div>

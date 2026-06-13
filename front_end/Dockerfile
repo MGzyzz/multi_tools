@@ -7,5 +7,5 @@ FROM oven/bun:1
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-EXPOSE 5173
-CMD ["bun", "run", "dev", "--", "--host", "0.0.0.0"]
+EXPOSE 8080
+CMD ["bun", "run", "dev", "--", "--host", "0.0.0.0", "--port", "8080"]
