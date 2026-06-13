@@ -30,7 +30,7 @@ STATUS_SYMBOL = {
     AttendanceStatusChoices.NOT_MARKED.value: "",
 }
 JOURNAL_LEGEND = (
-    "Условные обозначения:  + присутствовал   О опоздал   " "Н отсутствовал   (пусто) не отмечено"
+    "Условные обозначения:  + присутствовал   О опоздал   Н отсутствовал   (пусто) не отмечено"
 )
 
 
@@ -235,7 +235,7 @@ def create_excel_attendance_file(request):
     # percent-encoded) so Django does not fall back to RFC 2047 word-encoding,
     # which browsers don't understand for downloads.
     response["Content-Disposition"] = (
-        f'attachment; filename="lectern_attendance.xlsx"; ' f"filename*=UTF-8''{quote(filename)}"
+        f"attachment; filename=\"lectern_attendance.xlsx\"; filename*=UTF-8''{quote(filename)}"
     )
     workbook.save(response)
     return response
