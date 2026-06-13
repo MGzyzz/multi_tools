@@ -51,11 +51,13 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@example.com")
 FACE_RECOGNITION_THRESHOLD = float(os.getenv("FACE_RECOGNITION_THRESHOLD", "0.7"))
 FACE_IMAGE_LIMIT = int(os.getenv("FACE_IMAGE_LIMIT", "5"))
 
-CORS_ALLOWED_ORIGINS = [url for url in [NGROK_URL] if url]
+_extra_origins = [o.strip() for o in os.getenv("CORS_EXTRA_ORIGINS", "").split(",") if o.strip()]
+CORS_ALLOWED_ORIGINS = [url for url in [NGROK_URL] if url] + _extra_origins
 
 CORS_ALLOW_HEADERS = ["*"]
 
-ALLOWED_HOSTS = ["*"]
+_allowed_hosts = os.getenv("ALLOWED_HOSTS", "")
+ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts.split(",") if h.strip()] or ["*"]
 
 AUTH_USER_MODEL = "accounts.User"
 

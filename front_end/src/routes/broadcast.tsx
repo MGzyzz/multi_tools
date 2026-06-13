@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -72,8 +73,12 @@ function formatDate(d: Date) {
 
 function BroadcastPage() {
   const { t } = useI18n();
+  const isMac = typeof navigator !== "undefined" && (
+    /Mac/i.test(navigator.platform) || /Macintosh/i.test(navigator.userAgent)
+  );
 
   const [groups, setGroups] = useState<ApiGroup[]>([]);
+  const [loadingGroups, setLoadingGroups] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -93,7 +98,8 @@ function BroadcastPage() {
   useEffect(() => {
     getGroupList()
       .then((r) => setGroups(r.groups))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingGroups(false));
   }, []);
 
   useEffect(() => {
@@ -250,6 +256,51 @@ function BroadcastPage() {
         description={t("broadcast.description")}
       />
       <PageBody>
+        {loadingGroups ? (
+          <div className="grid gap-6 lg:grid-cols-[1fr_380px] max-w-5xl">
+            {/* Left column skeleton */}
+            <div className="space-y-5">
+              <div className="rounded-lg border border-border bg-card">
+                <div className="border-b border-border px-4 py-3">
+                  <Skeleton className="h-4 w-28" />
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="flex gap-2">
+                    <Skeleton className="h-8 flex-1 rounded-md" />
+                    <Skeleton className="h-8 w-24 rounded-md" />
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div key={i} className="rounded-md border border-border p-3 space-y-1.5">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-36" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-card">
+                <div className="border-b border-border px-4 py-3">
+                  <Skeleton className="h-4 w-20" />
+                </div>
+                <div className="p-4 space-y-3">
+                  <Skeleton className="h-28 w-full rounded-md" />
+                  <Skeleton className="h-3 w-48" />
+                </div>
+              </div>
+              <Skeleton className="h-9 w-full rounded-md" />
+            </div>
+            {/* Right column skeleton */}
+            <div className="rounded-lg border border-border bg-card">
+              <div className="border-b border-border px-4 py-3">
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <div className="p-4">
+                <Skeleton className="h-4 w-48" />
+              </div>
+            </div>
+          </div>
+        ) : (
         <div className="grid gap-6 lg:grid-cols-[1fr_380px] max-w-5xl">
           {/* ── Left column ── */}
           <div className="space-y-5">
@@ -383,7 +434,7 @@ function BroadcastPage() {
                   className="resize-none"
                 />
                 <p className="text-xs text-muted-foreground">
-                  {t("broadcast.sendHint")}
+                  {t(isMac ? "broadcast.sendHintMac" : "broadcast.sendHint")}
                 </p>
 
                 {message.trim() && (
@@ -448,9 +499,14 @@ function BroadcastPage() {
                   {t("broadcast.selectGroupsPlaceholder")}
                 </p>
               ) : loadingLeaders ? (
-                <p className="text-sm text-muted-foreground animate-pulse">
-                  {t("notifications.loading")}
-                </p>
+                <div className="space-y-2">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-5 w-20 rounded-full" />
+                    </div>
+                  ))}
+                </div>
               ) : leaders.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   {t("broadcast.leaderNoLeader")}
@@ -483,6 +539,7 @@ function BroadcastPage() {
             </SectionCard>
           </div>
         </div>
+        )}
       </PageBody>
 
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>

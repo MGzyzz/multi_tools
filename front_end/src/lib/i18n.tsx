@@ -531,6 +531,7 @@ const dictionaries: Record<Lang, Dict> = {
     "settings.telegram.instruction": "Open the bot and send the command: /start YOUR_CODE",
     "settings.telegram.codeLabel": "Your one-time code (valid 10 min):",
     "settings.telegram.codeCopied": "Code copied!",
+    "settings.telegram.linkedSuccess": "Telegram connected successfully!",
     "settings.telegram.disconnected": "Telegram disconnected.",
     "settings.telegram.errorDisconnect": "Failed to disconnect Telegram.",
     "settings.reminders.section": "Lesson reminders",
@@ -582,6 +583,7 @@ const dictionaries: Record<Lang, Dict> = {
     "broadcast.summaryConnected": "{count} connected to Telegram",
     "broadcast.noResult": "No groups match the filter.",
     "broadcast.sendHint": "Press Ctrl+Enter to send",
+    "broadcast.sendHintMac": "Press Cmd+Enter to send",
 
     // Group leadership
     "groups.leaders": "Group leaders",
@@ -1103,6 +1105,7 @@ const dictionaries: Record<Lang, Dict> = {
     "settings.telegram.instruction": "Откройте бота и отправьте команду: /start ВАШ_КОД",
     "settings.telegram.codeLabel": "Ваш одноразовый код (действует 10 мин):",
     "settings.telegram.codeCopied": "Код скопирован!",
+    "settings.telegram.linkedSuccess": "Telegram успешно подключён!",
     "settings.telegram.disconnected": "Telegram отключён.",
     "settings.telegram.errorDisconnect": "Не удалось отключить Telegram.",
     "settings.reminders.section": "Напоминания об уроках",
@@ -1154,6 +1157,7 @@ const dictionaries: Record<Lang, Dict> = {
     "broadcast.summaryConnected": "Подключено к Telegram: {count}",
     "broadcast.noResult": "Нет групп по фильтру.",
     "broadcast.sendHint": "Нажмите Ctrl+Enter для отправки",
+    "broadcast.sendHintMac": "Нажмите Cmd+Enter для отправки",
 
     // Group leadership
     "groups.leaders": "Старосты",
@@ -1674,6 +1678,7 @@ const dictionaries: Record<Lang, Dict> = {
     "settings.telegram.instruction": "Ботты ашып, команданы жіберіңіз: /start КОДЫҢЫЗ",
     "settings.telegram.codeLabel": "Бір реттік кодыңыз (10 мин. жарамды):",
     "settings.telegram.codeCopied": "Код көшірілді!",
+    "settings.telegram.linkedSuccess": "Telegram сәтті қосылды!",
     "settings.telegram.disconnected": "Telegram ажыратылды.",
     "settings.telegram.errorDisconnect": "Telegram ажырату мүмкін емес.",
     "settings.reminders.section": "Сабақ туралы еске салулар",
@@ -1725,6 +1730,7 @@ const dictionaries: Record<Lang, Dict> = {
     "broadcast.summaryConnected": "Telegram-қа қосылған: {count}",
     "broadcast.noResult": "Сүзгіге сәйкес топтар жоқ.",
     "broadcast.sendHint": "Жіберу үшін Ctrl+Enter басыңыз",
+    "broadcast.sendHintMac": "Жіберу үшін Cmd+Enter басыңыз",
 
     // Group leadership
     "groups.leaders": "Старосталар",
