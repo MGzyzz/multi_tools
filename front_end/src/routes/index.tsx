@@ -8,6 +8,7 @@ import "./landing.css";
 type Lang = "ru" | "kk" | "en";
 type Dict = Record<string, string>;
 type I18n = Record<Lang, Dict>;
+type TFn = (key: string) => string;
 
 // ── Translations ──────────────────────────────────────────────────────────────
 const i18n: I18n = {
@@ -19,11 +20,25 @@ const i18n: I18n = {
     "hero.sub": "Lectern автоматически фиксирует посещаемость по лицу, выявляет студентов в зоне риска и эскалирует проблему до того, как она станет критичной.",
     "hero.cta.primary": "Связаться с нами", "hero.cta.secondary": "Узнать больше",
     "hero.trust": "Запущено в пилотных программах с университетами Казахстана",
+    "brand.subtitle": "Академические операции",
     "hero.mock.workspace": "Рабочее пространство", "hero.mock.home": "Главная",
     "hero.mock.manual": "Ручная перекличка", "hero.mock.scan": "Открыть сканер",
+    "hero.mock.schedule": "Расписание", "hero.mock.faceScan": "Сканирование лица",
     "hero.mock.classes": "ЗАНЯТИЙ СЕГОДНЯ", "hero.mock.groups": "ГРУППЫ",
     "hero.mock.students": "СТУДЕНТЫ", "hero.mock.attendance": "ПОСЕЩАЕМОСТЬ",
     "hero.mock.live": "В реальном времени",
+    "hero.mock.url": "app.lectern.io / рабочее пространство",
+    "hero.mock.summary": "— занятий · — групп · — студентов",
+    "hero.mock.classesHint": "4 прошло · 2 предстоит",
+    "hero.mock.groupsHint": "— студентов всего",
+    "hero.mock.studentsHint": "— с фото",
+    "hero.mock.todaySchedule": "Расписание на сегодня",
+    "hero.mock.todayScheduleSub": "Актуальный список занятий из API расписания",
+    "hero.mock.riskZone": "Зона риска",
+    "hero.mock.riskSub": "— студентов нуждаются в реакции",
+    "hero.mock.demoStatus": "Демо-данные · уведомления отправлены",
+    "stats.attendance.value": "<2 мин", "stats.accuracy.value": "до 99%",
+    "stats.workload.value": "4×", "stats.integration.value": "1 спринт",
     "stats.attendance": "на перекличку группы вместо 10", "stats.accuracy": "точность распознавания лиц",
     "stats.workload": "меньше ручной работы куратора", "stats.integration": "подключение к LMS вуза",
     "about.eyebrow": "О компании",
@@ -55,15 +70,46 @@ const i18n: I18n = {
     "f.notify.b1": "Telegram, e-mail, in-app", "f.notify.b2": "Триггеры: посещаемость, балл, оплата", "f.notify.b3": "История доставки и реакций",
     "mock.analytics.title": "Аналитика", "mock.analytics.sub": "Состояние групп · текущая неделя",
     "mock.analytics.risk": "В зоне риска", "mock.analytics.attendance": "Средняя посещаемость", "mock.analytics.trend": "Тренд за 4 недели",
+    "mock.analytics.legendAttendance": "Посещаемость",
+    "mock.attendance.course": "Курс «Алгоритмы»",
+    "mock.attendance.courseMeta": "LCTN-DEMO · пн 08:00 · 18 студентов",
+    "mock.attendance.live": "Онлайн",
+    "mock.attendance.present": "Присутствует",
+    "mock.attendance.absent": "Отсутствует",
+    "mock.attendance.unmarked": "Не отмечено",
+    "mock.attendance.percent": "% посещ.",
+    "mock.attendance.studentA1": "Студент A1",
+    "mock.attendance.studentB2": "Студент B2",
+    "mock.attendance.studentC3": "Студент C3",
+    "mock.attendance.studentD4": "Студент D4",
+    "mock.attendance.absentMeta": "отсутствует",
+    "mock.face.rec": "REC · Проверка живости",
+    "mock.face.student": "Студент A1",
+    "mock.face.match": "Совпадение",
+    "mock.face.detected": "Лицо обнаружено",
+    "mock.face.blink": "Моргание подтверждено",
+    "mock.face.groupMatch": "Совпадение в группе",
+    "mock.face.saving": "Запись в журнал…",
     "mock.notify.channel": "Telegram", "mock.notify.title": "Низкая посещаемость",
     "mock.notify.body": "Студент, посещаемость по курсу «Алгоритмы» — 58%. Срок: до конца недели. Куратор: куратор группы.",
     "mock.notify.cta": "Открыть журнал",
+    "mock.notify.now": "сейчас",
+    "mock.notify.contactTutor": "Связаться с куратором",
+    "mock.notify.escalation": "Эскалация",
+    "mock.notify.escalationTime": "через 48ч без реакции",
+    "mock.notify.escalationTitle": "Передано куратору группы",
+    "mock.notify.escalationBody": "Куратор получил 3 кейса по группе LCTN-DEMO. Деканат уведомлён в копии.",
+    "mock.notify.meta": "Доставлено 14 · Прочитано 11 · Реакция в течение 24ч 9",
     "integration.eyebrow": "Интеграция", "integration.title": "Подключается к вашей платформе за один спринт",
     "integration.sub": "Lectern не заменяет Platonus, Univer или вашу LMS — он подключается к ним и забирает данные о расписании, группах и студентах через API.",
     "integration.platforms.title": "Готовые коннекторы",
+    "integration.connector.1c": "1C: Университет",
+    "integration.connector.active": "Активный коннектор",
     "integration.custom.title": "Свой формат?", "integration.custom.body": "REST API + webhook'и. SSO через SAML/OIDC. Команда внедрения настроит коннектор под ваш формат данных за 2–4 недели.",
     "integration.custom.cta": "Запросить интеграцию",
     "integration.code.title": "Пример: импорт расписания из Platonus", "integration.code.lang": "HTTP",
+    "integration.code.comment": "# Фоновая синхронизация расписания каждые 30 минут",
+    "integration.code.students": "студентов", "integration.code.groups": "групп", "integration.code.classes": "занятий",
     "integration.step.1": "Преподаватель авторизуется через SSO вуза", "integration.step.2": "Lectern забирает расписание и группы из API", "integration.step.3": "Посещаемость возвращается обратно в LMS",
     "cta.eyebrow": "Начать", "cta.title": "Покажем Lectern на ваших группах",
     "cta.sub": "Развернём демо-стенд с вашим расписанием за 3 рабочих дня. Без обязательств и без интеграции на старте.",
@@ -72,6 +118,7 @@ const i18n: I18n = {
     "cta.form.message": "Что хотите автоматизировать в первую очередь?",
     "cta.form.submit": "Отправить заявку", "cta.form.note": "Ответим в течение одного рабочего дня. Данные не передаём третьим лицам.",
     "cta.form.success": "Заявка отправлена. Свяжемся с вами в течение одного рабочего дня.",
+    "cta.contact.city": "Алматы",
     "footer.tagline": "Операционная система академического процесса.",
     "footer.product": "Продукт", "footer.company": "Компания", "footer.legal": "Документы",
     "footer.rights": "© 2026 Lectern. Все права защищены.", "footer.status": "Все системы работают",
@@ -84,11 +131,25 @@ const i18n: I18n = {
     "hero.sub": "Lectern бет арқылы қатысуды автоматты түрде белгілейді, тәуекел аймағындағы студенттерді анықтайды және мәселе сыни деңгейге жеткенше эскалация жасайды.",
     "hero.cta.primary": "Бізбен байланысу", "hero.cta.secondary": "Толығырақ",
     "hero.trust": "Қазақстан университеттерімен пилоттық бағдарламаларда іске қосылды",
+    "brand.subtitle": "Академиялық операциялар",
     "hero.mock.workspace": "Жұмыс кеңістігі", "hero.mock.home": "Басты бет",
     "hero.mock.manual": "Қол перекличкасы", "hero.mock.scan": "Сканерді ашу",
+    "hero.mock.schedule": "Кесте", "hero.mock.faceScan": "Бетті сканерлеу",
     "hero.mock.classes": "БҮГІНГІ САБАҚТАР", "hero.mock.groups": "ТОПТАР",
     "hero.mock.students": "СТУДЕНТТЕР", "hero.mock.attendance": "ҚАТЫСУ",
     "hero.mock.live": "Нақты уақытта",
+    "hero.mock.url": "app.lectern.io / жұмыс кеңістігі",
+    "hero.mock.summary": "— сабақ · — топ · — студент",
+    "hero.mock.classesHint": "4 өтті · 2 алда",
+    "hero.mock.groupsHint": "— студент барлығы",
+    "hero.mock.studentsHint": "— фотосымен",
+    "hero.mock.todaySchedule": "Бүгінгі кесте",
+    "hero.mock.todayScheduleSub": "Кесте API-інен алынған өзекті сабақтар тізімі",
+    "hero.mock.riskZone": "Тәуекел аймағы",
+    "hero.mock.riskSub": "— студентке реакция қажет",
+    "hero.mock.demoStatus": "Демо-деректер · хабарламалар жіберілді",
+    "stats.attendance.value": "<2 мин", "stats.accuracy.value": "99%-ға дейін",
+    "stats.workload.value": "4×", "stats.integration.value": "1 спринт",
     "stats.attendance": "топтың перекличкасына 10 емес", "stats.accuracy": "бет тану дәлдігі",
     "stats.workload": "кураторға аз қол жұмысы", "stats.integration": "ЖОО LMS-іне қосылу мерзімі",
     "about.eyebrow": "Компания туралы",
@@ -120,14 +181,45 @@ const i18n: I18n = {
     "f.notify.b1": "Telegram, e-mail, in-app", "f.notify.b2": "Триггерлер: қатысу, балл, төлем", "f.notify.b3": "Жеткізу мен реакциялар тарихы",
     "mock.analytics.title": "Аналитика", "mock.analytics.sub": "Топтар жағдайы · ағымдағы апта",
     "mock.analytics.risk": "Тәуекел аймағында", "mock.analytics.attendance": "Орташа қатысу", "mock.analytics.trend": "4 апталық тренд",
+    "mock.analytics.legendAttendance": "Қатысу",
+    "mock.attendance.course": "«Алгоритмдер» курсы",
+    "mock.attendance.courseMeta": "LCTN-DEMO · дс 08:00 · 18 студент",
+    "mock.attendance.live": "Онлайн",
+    "mock.attendance.present": "Қатысты",
+    "mock.attendance.absent": "Қатыспады",
+    "mock.attendance.unmarked": "Белгіленбеген",
+    "mock.attendance.percent": "% қатысу",
+    "mock.attendance.studentA1": "Студент A1",
+    "mock.attendance.studentB2": "Студент B2",
+    "mock.attendance.studentC3": "Студент C3",
+    "mock.attendance.studentD4": "Студент D4",
+    "mock.attendance.absentMeta": "қатыспады",
+    "mock.face.rec": "REC · Живость тексеруі",
+    "mock.face.student": "Студент A1",
+    "mock.face.match": "Сәйкестік",
+    "mock.face.detected": "Бет анықталды",
+    "mock.face.blink": "Көзді жұму расталды",
+    "mock.face.groupMatch": "Топта сәйкестік бар",
+    "mock.face.saving": "Журналға жазылуда…",
     "mock.notify.channel": "Telegram", "mock.notify.title": "Төмен қатысу",
     "mock.notify.body": "Студент, «Алгоритмдер» курсы бойынша қатысу — 58%.", "mock.notify.cta": "Журналды ашу",
+    "mock.notify.now": "қазір",
+    "mock.notify.contactTutor": "Куратормен байланысу",
+    "mock.notify.escalation": "Эскалация",
+    "mock.notify.escalationTime": "48 сағ реакциясыз",
+    "mock.notify.escalationTitle": "Топ кураторына жіберілді",
+    "mock.notify.escalationBody": "Куратор LCTN-DEMO тобы бойынша 3 кейс алды. Деканат көшірмеде хабардар етілді.",
+    "mock.notify.meta": "Жеткізілді 14 · Оқылды 11 · 24 сағ ішінде реакция 9",
     "integration.eyebrow": "Интеграция", "integration.title": "Сіздің платформаңызға бір спринтте қосылады",
     "integration.sub": "Lectern Platonus, Univer немесе сіздің LMS-ыңызды ауыстырмайды — оларға қосылып деректерді алады.",
     "integration.platforms.title": "Дайын коннекторлар",
+    "integration.connector.1c": "1C: Университет",
+    "integration.connector.active": "Белсенді коннектор",
     "integration.custom.title": "Өз форматыңыз бар ма?", "integration.custom.body": "REST API + webhook-тар. SSO арқылы SAML/OIDC.",
     "integration.custom.cta": "Интеграцияны сұрау",
     "integration.code.title": "Мысал: Platonus-тан кестені импорттау", "integration.code.lang": "HTTP",
+    "integration.code.comment": "# Кестені әр 30 минут сайын фондық синхрондау",
+    "integration.code.students": "студент", "integration.code.groups": "топ", "integration.code.classes": "сабақ",
     "integration.step.1": "Оқытушы ЖОО SSO арқылы кіреді", "integration.step.2": "Lectern API-ден кесте мен топтарды алады", "integration.step.3": "Қатысу LMS-ке қайтарылады",
     "cta.eyebrow": "Бастау", "cta.title": "Lectern-ді сіздің топтарыңызда көрсетеміз",
     "cta.sub": "Сіздің кестеңізбен демо-стендті 3 жұмыс күнінде орналастырамыз.",
@@ -136,6 +228,7 @@ const i18n: I18n = {
     "cta.form.message": "Алдымен нені автоматтандырғыңыз келеді?",
     "cta.form.submit": "Өтінім жіберу", "cta.form.note": "Бір жұмыс күні ішінде жауап береміз. Деректерді үшінші тұлғаларға бермейміз.",
     "cta.form.success": "Өтінім жіберілді. Бір жұмыс күні ішінде сізбен байланысамыз.",
+    "cta.contact.city": "Алматы",
     "footer.tagline": "Академиялық үдерістің операциялық жүйесі.",
     "footer.product": "Өнім", "footer.company": "Компания", "footer.legal": "Құжаттар",
     "footer.rights": "© 2026 Lectern. Барлық құқықтар қорғалған.", "footer.status": "Барлық жүйелер жұмыс істейді",
@@ -148,11 +241,25 @@ const i18n: I18n = {
     "hero.sub": "Lectern automatically marks attendance by face, surfaces students at risk, and escalates the problem before it becomes critical.",
     "hero.cta.primary": "Contact us", "hero.cta.secondary": "Learn more",
     "hero.trust": "Running in pilot programs with universities in Kazakhstan",
+    "brand.subtitle": "Academic operations",
     "hero.mock.workspace": "Workspace", "hero.mock.home": "Home",
     "hero.mock.manual": "Manual roll-call", "hero.mock.scan": "Open scanner",
+    "hero.mock.schedule": "Schedule", "hero.mock.faceScan": "Face scanning",
     "hero.mock.classes": "CLASSES TODAY", "hero.mock.groups": "GROUPS",
     "hero.mock.students": "STUDENTS", "hero.mock.attendance": "ATTENDANCE",
     "hero.mock.live": "Live",
+    "hero.mock.url": "app.lectern.io / workspace",
+    "hero.mock.summary": "— classes · — groups · — students",
+    "hero.mock.classesHint": "4 completed · 2 upcoming",
+    "hero.mock.groupsHint": "— students total",
+    "hero.mock.studentsHint": "— with photos",
+    "hero.mock.todaySchedule": "Today's schedule",
+    "hero.mock.todayScheduleSub": "Current class list from the schedule API",
+    "hero.mock.riskZone": "Risk zone",
+    "hero.mock.riskSub": "— students need a response",
+    "hero.mock.demoStatus": "Demo data · notifications sent",
+    "stats.attendance.value": "<2 min", "stats.accuracy.value": "up to 99%",
+    "stats.workload.value": "4×", "stats.integration.value": "1 sprint",
     "stats.attendance": "for a group roll-call instead of 10", "stats.accuracy": "face-recognition accuracy",
     "stats.workload": "less manual work for tutors", "stats.integration": "to plug into your LMS",
     "about.eyebrow": "About us",
@@ -184,14 +291,45 @@ const i18n: I18n = {
     "f.notify.b1": "Telegram, e-mail, in-app", "f.notify.b2": "Triggers: attendance, grade, payment", "f.notify.b3": "Delivery and response history",
     "mock.analytics.title": "Analytics", "mock.analytics.sub": "Group health · this week",
     "mock.analytics.risk": "At risk", "mock.analytics.attendance": "Avg. attendance", "mock.analytics.trend": "4-week trend",
+    "mock.analytics.legendAttendance": "Attendance",
+    "mock.attendance.course": "Algorithms course",
+    "mock.attendance.courseMeta": "LCTN-DEMO · Mon 08:00 · 18 students",
+    "mock.attendance.live": "Live",
+    "mock.attendance.present": "Present",
+    "mock.attendance.absent": "Absent",
+    "mock.attendance.unmarked": "Unmarked",
+    "mock.attendance.percent": "% attendance",
+    "mock.attendance.studentA1": "Student A1",
+    "mock.attendance.studentB2": "Student B2",
+    "mock.attendance.studentC3": "Student C3",
+    "mock.attendance.studentD4": "Student D4",
+    "mock.attendance.absentMeta": "absent",
+    "mock.face.rec": "REC · Liveness",
+    "mock.face.student": "Student A1",
+    "mock.face.match": "Match",
+    "mock.face.detected": "Face detected",
+    "mock.face.blink": "Blink confirmed",
+    "mock.face.groupMatch": "Group match",
+    "mock.face.saving": "Writing to journal…",
     "mock.notify.channel": "Telegram", "mock.notify.title": "Low attendance",
     "mock.notify.body": "Student, attendance for Algorithms is 58%. Deadline: end of the week. Tutor: group tutor.", "mock.notify.cta": "Open journal",
+    "mock.notify.now": "now",
+    "mock.notify.contactTutor": "Contact tutor",
+    "mock.notify.escalation": "Escalation",
+    "mock.notify.escalationTime": "after 48h without response",
+    "mock.notify.escalationTitle": "Sent to group tutor",
+    "mock.notify.escalationBody": "The tutor received 3 cases for group LCTN-DEMO. The dean's office was copied.",
+    "mock.notify.meta": "Delivered 14 · Read 11 · Response within 24h 9",
     "integration.eyebrow": "Integration", "integration.title": "Plugs into your platform in a single sprint",
     "integration.sub": "Lectern doesn't replace Platonus, Univer or your LMS — it connects to them and pulls schedule, groups and student data via API.",
     "integration.platforms.title": "Ready connectors",
+    "integration.connector.1c": "1C: University",
+    "integration.connector.active": "Active connector",
     "integration.custom.title": "Different format?", "integration.custom.body": "REST API + webhooks. SSO via SAML/OIDC. Our onboarding team builds a connector for your data in 2–4 weeks.",
     "integration.custom.cta": "Request integration",
     "integration.code.title": "Example: importing schedule from Platonus", "integration.code.lang": "HTTP",
+    "integration.code.comment": "# Background schedule sync every 30 minutes",
+    "integration.code.students": "students", "integration.code.groups": "groups", "integration.code.classes": "classes",
     "integration.step.1": "Teacher signs in with the university SSO", "integration.step.2": "Lectern pulls schedule and groups from the API", "integration.step.3": "Attendance is pushed back to the LMS",
     "cta.eyebrow": "Get started", "cta.title": "We'll show Lectern on your real groups",
     "cta.sub": "We'll spin up a demo with your schedule in 3 working days. No commitment, no integration up front.",
@@ -200,6 +338,7 @@ const i18n: I18n = {
     "cta.form.message": "What would you like to automate first?",
     "cta.form.submit": "Send request", "cta.form.note": "We reply within one working day. We never share your data.",
     "cta.form.success": "Request sent. We'll get back to you within one working day.",
+    "cta.contact.city": "Almaty",
     "footer.tagline": "The operating system for academic operations.",
     "footer.product": "Product", "footer.company": "Company", "footer.legal": "Legal",
     "footer.rights": "© 2026 Lectern. All rights reserved.", "footer.status": "All systems operational",
@@ -326,8 +465,8 @@ const BurgerIcon = () => (
 );
 
 // ── CodeTyper data ────────────────────────────────────────────────────────────
-const REQUEST_TOKENS: Token[] = [
-  { text: "# Фоновая синхронизация расписания каждые 30 минут\n", cls: "cc" },
+const getRequestTokens = (t: TFn): Token[] => [
+  { text: `${t("integration.code.comment")}\n`, cls: "cc" },
   { text: "POST", cls: "cm" }, { text: " ", cls: "" },
   { text: "/api/v1/connectors/platonus/sync\n", cls: "cp" },
   { text: "Authorization", cls: "ck" }, { text: ": Bearer ", cls: "" },
@@ -344,16 +483,16 @@ const REQUEST_TOKENS: Token[] = [
   { text: '"https://app.lectern.io/hooks/in"', cls: "cs" }, { text: "\n}", cls: "" },
 ];
 
-const RESPONSE_TOKENS: Token[] = [
+const getResponseTokens = (t: TFn): Token[] => [
   { text: "\n\n", cls: "" },
   { text: "→ HTTP/1.1 200 OK\n", cls: "csuccess" },
   { text: "→ { synced: ", cls: "cc" },
   { text: "248", cls: "cn" },
-  { text: " students, ", cls: "cc" },
+  { text: ` ${t("integration.code.students")}, `, cls: "cc" },
   { text: "9", cls: "cn" },
-  { text: " groups, ", cls: "cc" },
+  { text: ` ${t("integration.code.groups")}, `, cls: "cc" },
   { text: "62", cls: "cn" },
-  { text: " classes }", cls: "cc" },
+  { text: ` ${t("integration.code.classes")} }`, cls: "cc" },
 ];
 
 // ── Route ─────────────────────────────────────────────────────────────────────
@@ -480,7 +619,7 @@ function LandingPage() {
             <span className="lp-logo-mark">L</span>
             <span>
               <div className="lp-logo-name">Lectern</div>
-              <div className="lp-logo-sub">Academic operations</div>
+              <div className="lp-logo-sub">{t("brand.subtitle")}</div>
             </span>
           </a>
           <nav className="lp-nav">
@@ -553,13 +692,13 @@ function LandingPage() {
             <div className="hero-mock" ref={mockRef}>
               <div className="mock-bar">
                 <div className="dots"><span /><span /><span /></div>
-                <div className="url">app.lectern.io / workspace</div>
+                <div className="url">{t("hero.mock.url")}</div>
               </div>
               <div className="mock-app">
                 <aside className="mock-side">
                   <div className="brand">
                     <div className="mark">L</div>
-                    <div><div className="nm">Lectern</div><div className="sb">Academic operations</div></div>
+                    <div><div className="nm">Lectern</div><div className="sb">{t("brand.subtitle")}</div></div>
                   </div>
                   <div className="mock-label">{t("hero.mock.workspace")}</div>
                   <div className="mock-item active">
@@ -568,23 +707,23 @@ function LandingPage() {
                   </div>
                   <div className="mock-item">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
-                    <span>Расписание</span>
+                    <span>{t("hero.mock.schedule")}</span>
                   </div>
-                  <div className="mock-label">Посещаемость</div>
+                  <div className="mock-label">{t("hero.mock.attendance")}</div>
                   <div className="mock-item">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
                     <span>{t("hero.mock.manual")}</span>
                   </div>
                   <div className="mock-item">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9 9h.01" /><path d="M15 9h.01" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /></svg>
-                    <span>Сканирование лица</span>
+                    <span>{t("hero.mock.faceScan")}</span>
                     <span className="ai-badge">AI</span>
                   </div>
                 </aside>
                 <div className="mock-main">
                   <div className="mock-crumbs"><span>{t("hero.mock.workspace")}</span> &nbsp;›&nbsp; <span>{t("hero.mock.home")}</span></div>
                   <div className="mock-h">
-                    <div><h3>{t("hero.mock.home")}</h3><div className="sub">— занятий · — групп · — студентов</div></div>
+                    <div><h3>{t("hero.mock.home")}</h3><div className="sub">{t("hero.mock.summary")}</div></div>
                     <div className="actions">
                       <button className="mock-btn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
@@ -598,9 +737,9 @@ function LandingPage() {
                   </div>
                   <div className="mock-stats">
                     {[
-                      { lbl: t("hero.mock.classes"), count: "6", hint: "4 прошло · 2 предстоит" },
-                      { lbl: t("hero.mock.groups"), count: "9", hint: "— студентов всего" },
-                      { lbl: t("hero.mock.students"), count: "248", hint: "— с фото" },
+                      { lbl: t("hero.mock.classes"), count: "6", hint: t("hero.mock.classesHint") },
+                      { lbl: t("hero.mock.groups"), count: "9", hint: t("hero.mock.groupsHint") },
+                      { lbl: t("hero.mock.students"), count: "248", hint: t("hero.mock.studentsHint") },
                       { lbl: t("hero.mock.attendance"), count: "87", suffix: "%", hint: t("hero.mock.live"), live: true },
                     ].map(({ lbl, count, suffix, hint, live }) => (
                       <div key={lbl} className="mock-stat">
@@ -612,8 +751,8 @@ function LandingPage() {
                   </div>
                   <div className="mock-row">
                     <div className="mock-card">
-                      <h4>Расписание на сегодня</h4>
-                      <div className="sub">Актуальный список занятий из API расписания</div>
+                      <h4>{t("hero.mock.todaySchedule")}</h4>
+                      <div className="sub">{t("hero.mock.todayScheduleSub")}</div>
                       <div className="attn-bars">
                         {[60, 80, 45, 92, 70, 55, 88, 30].map((h, i) => (
                           <div key={i} className="b" style={{ height: `${h}%` }} />
@@ -621,9 +760,9 @@ function LandingPage() {
                       </div>
                     </div>
                     <div className="mock-card">
-                      <h4>Зона риска</h4>
-                      <div className="sub">— студентов нуждаются в реакции</div>
-                      <div className="mock-empty">Демо-данные · уведомления отправлены</div>
+                      <h4>{t("hero.mock.riskZone")}</h4>
+                      <div className="sub">{t("hero.mock.riskSub")}</div>
+                      <div className="mock-empty">{t("hero.mock.demoStatus")}</div>
                     </div>
                   </div>
                 </div>
@@ -656,12 +795,12 @@ function LandingPage() {
             </div>
             <div className="stats-strip">
               {[
-                { val: "<2 мин", lbl: t("stats.attendance") },
-                { val: "до 99%", lbl: t("stats.accuracy") },
-                { val: "4×", lbl: t("stats.workload") },
-                { val: "1 спринт", lbl: t("stats.integration") },
-              ].map(({ val, lbl }) => (
-                <div key={lbl} className="cell" data-reveal>
+                { key: "attendance", val: t("stats.attendance.value"), lbl: t("stats.attendance") },
+                { key: "accuracy", val: t("stats.accuracy.value"), lbl: t("stats.accuracy") },
+                { key: "workload", val: t("stats.workload.value"), lbl: t("stats.workload") },
+                { key: "integration", val: t("stats.integration.value"), lbl: t("stats.integration") },
+              ].map(({ key, val, lbl }) => (
+                <div key={key} className="cell" data-reveal>
                   <div className="snum"><span className="accent">{val}</span></div>
                   <div className="slbl">{lbl}</div>
                 </div>
@@ -739,22 +878,27 @@ function LandingPage() {
                   ))}
                 </ul>
               </div>
-              <div className="feature-vis vis-attendance">
-                <div className="vh">
-                  <div><h5>Курс «Алгоритмы»</h5><div className="sub">LCTN-DEMO · пн 08:00 · 18 студентов</div></div>
-                  <span className="mock-live"><span>Live</span></span>
+                <div className="feature-vis vis-attendance">
+                  <div className="vh">
+                  <div><h5>{t("mock.attendance.course")}</h5><div className="sub">{t("mock.attendance.courseMeta")}</div></div>
+                  <span className="mock-live"><span>{t("mock.attendance.live")}</span></span>
                 </div>
                 <div className="fstats">
-                  {[{ cls: "pres", lbl: "Присутствует", v: "14" }, { cls: "abs", lbl: "Отсутствует", v: "2" }, { cls: "", lbl: "Не отмечено", v: "2" }, { cls: "", lbl: "% посещ.", v: "88" }].map(({ cls, lbl, v }) => (
+                  {[
+                    { cls: "pres", lbl: t("mock.attendance.present"), v: "14" },
+                    { cls: "abs", lbl: t("mock.attendance.absent"), v: "2" },
+                    { cls: "", lbl: t("mock.attendance.unmarked"), v: "2" },
+                    { cls: "", lbl: t("mock.attendance.percent"), v: "88" },
+                  ].map(({ cls, lbl, v }) => (
                     <div key={lbl} className={`fstat${cls ? ` ${cls}` : ""}`}><div className="flbl">{lbl}</div><div className="fv">{v}</div></div>
                   ))}
                 </div>
                 <div className="roster">
                   {[
-                    { ix: 1, av: "A1", nm: "Студент A1", meta: "08:01", absent: false },
-                    { ix: 2, av: "B2", nm: "Студент B2", meta: "08:02", absent: false },
-                    { ix: 3, av: "C3", nm: "Студент C3", meta: "отсутствует", absent: true },
-                    { ix: 4, av: "D4", nm: "Студент D4", meta: "08:03", absent: false },
+                    { ix: 1, av: "A1", nm: t("mock.attendance.studentA1"), meta: "08:01", absent: false },
+                    { ix: 2, av: "B2", nm: t("mock.attendance.studentB2"), meta: "08:02", absent: false },
+                    { ix: 3, av: "C3", nm: t("mock.attendance.studentC3"), meta: t("mock.attendance.absentMeta"), absent: true },
+                    { ix: 4, av: "D4", nm: t("mock.attendance.studentD4"), meta: "08:03", absent: false },
                   ].map(({ ix, av, nm, meta, absent }) => (
                     <div key={ix} className={`row${absent ? " absent" : ""}`}>
                       <span className="ix">{ix}</span>
@@ -785,25 +929,25 @@ function LandingPage() {
                   ))}
                 </ul>
               </div>
-              <div className="feature-vis vis-face">
+                <div className="feature-vis vis-face">
                 <div className="cam">
                   <div className="corners" />
-                  <div className="live-badge">REC · Liveness</div>
+                  <div className="live-badge">{t("mock.face.rec")}</div>
                   <div className="face" />
                 </div>
                 <div className="finfo">
                   <div className="detected">
-                    <div className="dnm">Студент A1</div>
+                    <div className="dnm">{t("mock.face.student")}</div>
                     <div className="did">LCTN-DEMO · ID 0001</div>
                     <div className="conf"><div className="bar" /></div>
-                    <div className="dlbls"><span>Match</span><span>96%</span></div>
+                    <div className="dlbls"><span>{t("mock.face.match")}</span><span>96%</span></div>
                   </div>
                   <div className="fchecks">
                     {[
-                      { ok: true, label: "Лицо обнаружено" },
-                      { ok: true, label: "Моргание подтверждено" },
-                      { ok: true, label: "Совпадение в группе" },
-                      { ok: false, label: "Запись в журнал…" },
+                      { ok: true, label: t("mock.face.detected") },
+                      { ok: true, label: t("mock.face.blink") },
+                      { ok: true, label: t("mock.face.groupMatch") },
+                      { ok: false, label: t("mock.face.saving") },
                     ].map(({ ok, label }) => (
                       <div key={label} className={`fc${ok ? " ok" : ""}`}>
                         {ok
@@ -853,8 +997,8 @@ function LandingPage() {
                   </svg>
                 </div>
                 <div className="legend">
-                  <div className="lit"><span className="sw" style={{ background: "var(--lp-primary)" }} />Посещаемость</div>
-                  <div className="lit"><span className="sw" style={{ background: "var(--lp-warning)" }} />В зоне риска</div>
+                  <div className="lit"><span className="sw" style={{ background: "var(--lp-primary)" }} />{t("mock.analytics.legendAttendance")}</div>
+                  <div className="lit"><span className="sw" style={{ background: "var(--lp-warning)" }} />{t("mock.analytics.risk")}</div>
                 </div>
               </div>
             </div>
@@ -877,12 +1021,12 @@ function LandingPage() {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9z"/></svg>
                   </div>
                   <div>
-                    <div className="nhead"><span className="nch">{t("mock.notify.channel")}</span><span className="nt">сейчас</span></div>
+                    <div className="nhead"><span className="nch">{t("mock.notify.channel")}</span><span className="nt">{t("mock.notify.now")}</span></div>
                     <h6>{t("mock.notify.title")}</h6>
                     <p>{t("mock.notify.body")}</p>
                     <div className="nactions">
                       <button className="na primary">{t("mock.notify.cta")}</button>
-                      <button className="na">Связаться с куратором</button>
+                      <button className="na">{t("mock.notify.contactTutor")}</button>
                     </div>
                   </div>
                 </div>
@@ -891,12 +1035,12 @@ function LandingPage() {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                   </div>
                   <div>
-                    <div className="nhead"><span className="nch">Эскалация</span><span className="nt">через 48ч без реакции</span></div>
-                    <h6>Передано куратору группы</h6>
-                    <p>Куратор получил 3 кейса по группе LCTN-DEMO. Деканат уведомлён в копии.</p>
+                    <div className="nhead"><span className="nch">{t("mock.notify.escalation")}</span><span className="nt">{t("mock.notify.escalationTime")}</span></div>
+                    <h6>{t("mock.notify.escalationTitle")}</h6>
+                    <p>{t("mock.notify.escalationBody")}</p>
                   </div>
                 </div>
-                <div className="meta-row"><span className="mdot" />Доставлено 14 · Прочитано 11 · Реакция в течение 24ч 9</div>
+                <div className="meta-row"><span className="mdot" />{t("mock.notify.meta")}</div>
               </div>
             </div>
           </div>
@@ -918,11 +1062,11 @@ function LandingPage() {
                     { letter: "P", name: "Platonus", bg: "linear-gradient(135deg, #4F46E5, #2A6FDB)" },
                     { letter: "U", name: "Univer", bg: "linear-gradient(135deg, #0EA5E9, #2A6FDB)" },
                     { letter: "M", name: "Moodle", bg: "linear-gradient(135deg, #16A34A, #059669)" },
-                    { letter: "1C", name: "1C: Университет", bg: "linear-gradient(135deg, #DC2626, #EA580C)" },
+                    { letter: "1C", name: t("integration.connector.1c"), bg: "linear-gradient(135deg, #DC2626, #EA580C)" },
                   ].map(({ letter, name, bg }) => (
                     <div key={name} className="platform">
                       <div className="plg" style={{ background: bg }}>{letter}</div>
-                      <div><div className="pnm">{name}</div><div className="pst">Активный коннектор</div></div>
+                      <div><div className="pnm">{name}</div><div className="pst">{t("integration.connector.active")}</div></div>
                     </div>
                   ))}
                 </div>
@@ -936,8 +1080,8 @@ function LandingPage() {
                 <CodeTyper
                   titleLabel={t("integration.code.title")}
                   langLabel={t("integration.code.lang")}
-                  requestTokens={REQUEST_TOKENS}
-                  responseTokens={RESPONSE_TOKENS}
+                  requestTokens={getRequestTokens(t)}
+                  responseTokens={getResponseTokens(t)}
                 />
                 <div className="integ-card" style={{ marginTop: 16 }}>
                   <h3 style={{ marginBottom: 8 }}>{t("integration.custom.title")}</h3>
@@ -963,7 +1107,7 @@ function LandingPage() {
                   {[
                     { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>, lbl: "E-mail", val: "team@lectern.io" },
                     { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9z"/></svg>, lbl: "Telegram", val: "@lectern_sales" },
-                    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>, lbl: "Алматы", val: "+7 727 311 22 33" },
+                    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>, lbl: t("cta.contact.city"), val: "+7 727 311 22 33" },
                   ].map(({ icon, lbl, val }) => (
                     <div key={lbl} className="contact-row">
                       <div className="contact-icon">{icon}</div>
@@ -1019,7 +1163,7 @@ function LandingPage() {
             <div className="fbrand">
               <a href="#top" className="lp-logo" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
                 <span className="lp-logo-mark">L</span>
-                <span><div className="lp-logo-name">Lectern</div><div className="lp-logo-sub">Academic operations</div></span>
+                <span><div className="lp-logo-name">Lectern</div><div className="lp-logo-sub">{t("brand.subtitle")}</div></span>
               </a>
               <p>{t("footer.tagline")}</p>
             </div>
