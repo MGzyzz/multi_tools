@@ -292,10 +292,21 @@ function ScanPage() {
         const nextUpcomingEntry = todayEntries.find(
           (entry) => getScheduleSessionStatus(entry) === "upcoming",
         );
+        // Fall back only to today's or upcoming lessons (matches the dropdown
+        // filter below). The old `response[0]` fallback picked the first lesson
+        // of the week — a past one — and showed stale attendance marks when
+        // there were no lessons today.
+        const nextFutureEntry = response
+          .filter((entry) => entry.date > weekRange.todayDate)
+          .sort((a, b) =>
+            a.date === b.date
+              ? getTimeLabel(a.time).localeCompare(getTimeLabel(b.time))
+              : a.date.localeCompare(b.date),
+          )[0];
         const nextSelectedId =
           scheduleIdParam && response.some((entry) => entry.id === scheduleIdParam)
             ? scheduleIdParam
-            : (liveEntry?.id ?? nextUpcomingEntry?.id ?? todayEntries[0]?.id ?? response[0]?.id ?? null);
+            : (liveEntry?.id ?? nextUpcomingEntry?.id ?? todayEntries[0]?.id ?? nextFutureEntry?.id ?? null);
 
         setSelectedScheduleId(nextSelectedId);
       } catch (error) {
@@ -756,11 +767,13 @@ function ScanPage() {
                     {scheduleOptions.length === 0 ? (
                       <option value="">{t("scan.noLessonsWeek")}</option>
                     ) : (
-                      scheduleOptions.map((entry) => (
-                        <option key={entry.id} value={entry.id}>
-                          {formatScheduleLabel(entry, locale)}
-                        </option>
-                      ))
+                      scheduleOptions
+                        .filter((entry) => entry.date >= weekRange.todayDate)
+                        .map((entry) => (
+                          <option key={entry.id} value={entry.id}>
+                            {formatScheduleLabel(entry, locale)}
+                          </option>
+                        ))
                     )}
                   </select>
                 </div>

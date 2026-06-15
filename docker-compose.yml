@@ -51,6 +51,11 @@ services:
       CHANNEL_REDIS_URL: "redis://redis:6379/0"
       AI_SERVICE_URL: "http://ai:8002"
       BOT_SERVICE_URL: "http://bot:8001"
+      DATABASE_HOST: postgres
+      DATABASE_NAME: ai_bot_diplom
+      DATABASE_USER: admin
+      DATABASE_PASSWORD: "123"
+      DATABASE_PORT: "5432"
     command: >
       sh -c "python manage.py migrate --noinput &&
              python manage.py collectstatic --noinput &&
@@ -76,6 +81,11 @@ services:
       CELERY_BROKER_URL: "redis://redis:6379/0"
       CELERY_RESULT_BACKEND: "redis://redis:6379/0"
       BOT_SERVICE_URL: "http://bot:8001"
+      DATABASE_HOST: postgres
+      DATABASE_NAME: ai_bot_diplom
+      DATABASE_USER: admin
+      DATABASE_PASSWORD: "123"
+      DATABASE_PORT: "5432"
 
   celery-beat:
     container_name: celery-beat
@@ -96,6 +106,11 @@ services:
       TZ: Asia/Almaty
       CELERY_BROKER_URL: "redis://redis:6379/0"
       CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      DATABASE_HOST: postgres
+      DATABASE_NAME: ai_bot_diplom
+      DATABASE_USER: admin
+      DATABASE_PASSWORD: "123"
+      DATABASE_PORT: "5432"
 
   # ── Frontend ──────────────────────────────────────────────────────────────
 

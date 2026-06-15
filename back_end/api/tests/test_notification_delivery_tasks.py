@@ -36,7 +36,9 @@ class NotificationDeliveryTasksTests(TestCase):
         delivery = NotificationDelivery.objects.create(
             notification=self.notification,
             channel=NotificationDeliveryChoices.EMAIL,
-            target="teacher@example.com",
+            # A deliverable domain: reserved test domains (example.com etc.) are
+            # intentionally skipped by _send_delivery_email.
+            target="teacher@school.kz",
             status=NotificationStatusChoices.PENDING,
         )
 

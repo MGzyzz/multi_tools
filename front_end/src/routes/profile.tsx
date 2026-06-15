@@ -9,13 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiError, getUserInitials, type AuthUser } from "@/lib/auth";
-import {
-  getProfile,
-  PROFILE_ROLE_OPTIONS,
-  resolveProfileAvatarUrl,
-  updateProfile,
-} from "@/lib/profile";
+import { getProfile, resolveProfileAvatarUrl, updateProfile } from "@/lib/profile";
 import { requireAuth } from "@/lib/route-auth";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/profile")({
@@ -115,7 +111,6 @@ function ProfilePage() {
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
         email: form.email.trim(),
-        role: form.role,
         description: form.description.trim(),
       });
 
@@ -161,9 +156,57 @@ function ProfilePage() {
         )}
 
         {loading || !form ? (
-          <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
-            <div className="text-base font-medium">{t("profile.loadingTitle")}</div>
-            <p className="mt-2 text-sm text-muted-foreground">{t("profile.loadingDesc")}</p>
+          <div className="grid gap-4 lg:grid-cols-3">
+            {/* Account snapshot card skeleton */}
+            <div className="rounded-lg border border-border bg-card lg:col-span-1">
+              <div className="border-b border-border px-4 py-3">
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <div className="p-4">
+                <div className="flex flex-col items-center text-center space-y-2">
+                  <Skeleton className="h-20 w-20 rounded-full" />
+                  <Skeleton className="h-5 w-28" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+                <div className="mt-5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4 rounded-full shrink-0" />
+                    <Skeleton className="h-4 w-28" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4 rounded-full shrink-0" />
+                    <Skeleton className="h-4 w-40" />
+                  </div>
+                </div>
+                <Skeleton className="mt-5 h-16 w-full rounded-md" />
+              </div>
+            </div>
+            {/* Personal details card skeleton */}
+            <div className="space-y-4 lg:col-span-2">
+              <div className="rounded-lg border border-border bg-card">
+                <div className="border-b border-border px-4 py-3">
+                  <Skeleton className="h-4 w-28" />
+                </div>
+                <div className="p-4 space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div key={i} className="space-y-1.5">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-9 w-full rounded-md" />
+                      </div>
+                    ))}
+                    <div className="sm:col-span-2 space-y-1.5">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-9 w-full rounded-md" />
+                    </div>
+                    <div className="sm:col-span-2 space-y-1.5">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-28 w-full rounded-md" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="grid gap-4 lg:grid-cols-3">
@@ -254,23 +297,15 @@ function ProfilePage() {
                     </div>
                     <div>
                       <Label htmlFor="profile-role">{t("profile.role")}</Label>
-                      <select
+                      <div
                         id="profile-role"
-                        value={form.role}
-                        onChange={(event) =>
-                          setForm((current) =>
-                            current ? { ...current, role: event.target.value } : current,
-                          )
-                        }
-                        className="mt-1.5 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                        disabled={saving}
+                        className="mt-1.5 flex h-9 w-full items-center rounded-md border border-input bg-muted px-3 py-1 text-sm text-muted-foreground"
                       >
-                        {PROFILE_ROLE_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+                        {t("profile.roleTeacher")}
+                      </div>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        {t("profile.roleNote")}
+                      </p>
                     </div>
                     <div className="sm:col-span-2">
                       <Label htmlFor="profile-username">{t("profile.username")}</Label>

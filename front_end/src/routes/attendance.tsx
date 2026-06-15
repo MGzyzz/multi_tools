@@ -167,12 +167,19 @@ function AttendancePage() {
 
         setScheduleOptions(response);
 
+        // Only today's or upcoming lessons are selectable (matches the dropdown
+        // filter below). Without this, days with no lesson today fell back to
+        // response[0] — a past lesson — and showed stale attendance marks.
+        const selectableEntries = response.filter(
+          (entry) => entry.date >= weekRange.todayDate,
+        );
+
         const nextSelectedId =
           scheduleIdParam && response.some((entry) => entry.id === scheduleIdParam)
             ? scheduleIdParam
-            : (response.find((entry) => getScheduleSessionStatus(entry) === "live")?.id ??
-              response.find((entry) => entry.date === weekRange.todayDate)?.id ??
-              response[0]?.id ??
+            : (selectableEntries.find((entry) => getScheduleSessionStatus(entry) === "live")?.id ??
+              selectableEntries.find((entry) => entry.date === weekRange.todayDate)?.id ??
+              selectableEntries[0]?.id ??
               null);
 
         setSelectedScheduleId(nextSelectedId);
@@ -497,11 +504,13 @@ function AttendancePage() {
                     {scheduleOptions.length === 0 ? (
                       <option value="">{t("attendance.noLessonsWeek")}</option>
                     ) : (
-                      scheduleOptions.map((entry) => (
-                        <option key={entry.id} value={entry.id}>
-                          {formatScheduleLabel(entry, locale)}
-                        </option>
-                      ))
+                      scheduleOptions
+                        .filter((entry) => entry.date >= weekRange.todayDate)
+                        .map((entry) => (
+                          <option key={entry.id} value={entry.id}>
+                            {formatScheduleLabel(entry, locale)}
+                          </option>
+                        ))
                     )}
                   </select>
                 </div>
@@ -694,7 +703,7 @@ function AttendancePage() {
                         ))}
                         {filtered.length === 0 && (
                           <li className="px-4 py-10 text-center text-[13px] text-muted-foreground">
-                            {t("attendance.noMatchQuery")} "{query}".
+                            {t("attendance.noMatchQuery")}
                           </li>
                         )}
                       </ul>

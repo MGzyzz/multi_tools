@@ -185,9 +185,27 @@ def enqueue_pending_notification_deliveries(limit: int = 200) -> dict:
     return {"enqueued": len(ids), "limit": limit}
 
 
+# Domains reserved for documentation/testing (RFC 2606 / RFC 6761) — they will
+# never accept mail. Skipping them avoids bounce-backs ("mail delivery
+# subsystem") from seeded demo data with @example.com addresses.
+UNDELIVERABLE_EMAIL_DOMAINS = {"example.com", "example.org", "example.net"}
+UNDELIVERABLE_EMAIL_SUFFIXES = (".test", ".invalid", ".example", ".localhost", ".local")
+
+
+def _is_undeliverable_email(target: str) -> bool:
+    domain = target.rsplit("@", 1)[-1].strip().lower()
+    if domain in UNDELIVERABLE_EMAIL_DOMAINS:
+        return True
+    return any(domain.endswith(suffix) for suffix in UNDELIVERABLE_EMAIL_SUFFIXES)
+
+
 def _send_delivery_email(target: str | None, subject: str, message: str, notification) -> None:
     if not target:
         raise ValueError("Missing email target.")
+
+    if _is_undeliverable_email(target):
+        logger.info("Skipping email to non-deliverable test address: %s", target)
+        return
 
     from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@example.com")
     html_message = _build_email_html(notification=notification, fallback_subject=subject)

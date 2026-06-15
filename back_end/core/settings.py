@@ -37,6 +37,10 @@ CORS_ALLOW_ALL_METHODS = True
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 
+# Expose Content-Disposition so the SPA can read the server-suggested filename
+# of downloaded files (e.g. the Excel attendance export).
+CORS_EXPOSE_HEADERS = ["Content-Disposition"]
+
 STANDART_URL = "https://"
 
 NGROK_DOMAIN = os.getenv("NGROK_DOMAIN", "")

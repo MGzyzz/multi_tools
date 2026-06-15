@@ -157,6 +157,60 @@ export const apiRequest = async <T>(
   return data as T;
 };
 
+const parseFilename = (header: string | null, fallback: string) => {
+  if (!header) return fallback;
+  // Prefer RFC 5987 `filename*=UTF-8''...` (percent-encoded) over plain filename.
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(header);
+  if (encoded?.[1]) {
+    try {
+      return decodeURIComponent(encoded[1]);
+    } catch {
+      // fall through to the plain filename
+    }
+  }
+  const match = /filename="?([^";]+)"?/i.exec(header);
+  return match?.[1] ?? fallback;
+};
+
+/**
+ * Authenticated binary download (mirrors apiRequest: JWT header + refresh-on-401)
+ * but returns the response body as a Blob plus the server-suggested filename.
+ */
+export const apiDownload = async (
+  path: string,
+  fallbackFilename = "download",
+): Promise<{ blob: Blob; filename: string }> => {
+  const headers = new Headers();
+  headers.set(NGROK_HEADER, "true");
+
+  const accessToken = getAccessToken();
+  if (accessToken) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
+
+  let response = await fetch(buildUrl(path), { headers });
+
+  if (response.status === 401) {
+    const refreshedToken = await tryRefreshAccessToken();
+    if (refreshedToken) {
+      headers.set("Authorization", `Bearer ${refreshedToken}`);
+      response = await fetch(buildUrl(path), { headers });
+    }
+  }
+
+  if (!response.ok) {
+    const data = await parseResponse(response);
+    if (response.status === 401) {
+      clearAuthSession();
+    }
+    throw new ApiError(toErrorMessage(response.status, data), response.status, data);
+  }
+
+  const blob = await response.blob();
+  const filename = parseFilename(response.headers.get("Content-Disposition"), fallbackFilename);
+  return { blob, filename };
+};
+
 export const getAccessToken = () => getStorageItem(ACCESS_TOKEN_KEY);
 
 export const getRefreshToken = () => getStorageItem(REFRESH_TOKEN_KEY);
