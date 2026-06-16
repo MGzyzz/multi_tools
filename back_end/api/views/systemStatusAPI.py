@@ -51,6 +51,26 @@ def _prune_snapshots() -> None:
     ServiceStatusSnapshot.objects.filter(created_at__lt=cutoff).delete()
 
 
+PERSIST_DEBOUNCE = timedelta(seconds=50)
+
+
+def _persist_snapshot_if_due(result: dict) -> None:
+    """Persist from the live endpoint only when no recent snapshot exists.
+
+    The 60s celery task is the primary writer; this just fills gaps (e.g. before
+    the first beat tick) without amplifying writes per viewer/poll.
+    """
+    latest = (
+        ServiceStatusSnapshot.objects.order_by("-created_at")
+        .values_list("created_at", flat=True)
+        .first()
+    )
+    if latest and timezone.now() - latest < PERSIST_DEBOUNCE:
+        return
+    _persist_snapshot(result)
+    _prune_snapshots()
+
+
 def _latency_ms(started_at: float) -> int:
     return round((time.perf_counter() - started_at) * 1000)
 
@@ -270,8 +290,7 @@ class SystemStatusAPI(APIView):
 
     def get(self, request):
         result = gather_status()
-        _persist_snapshot(result)
-        _prune_snapshots()
+        _persist_snapshot_if_due(result)
         return Response(result)
 
 
@@ -287,15 +306,18 @@ class SystemStatusHistoryAPI(APIView):
         window = max(1, min(window, 180))
         since = timezone.now() - timedelta(minutes=window)
         rows = ServiceStatusSnapshot.objects.filter(created_at__gte=since).order_by("created_at")
-        points = [
-            {
-                "checked_at": row.created_at.isoformat(),
-                "overall_severity": row.overall_severity,
-                "services": {
-                    s["key"]: s.get("severity", _severity(s.get("status", "")))
-                    for s in row.services
-                },
-            }
-            for row in rows
-        ]
+        points = []
+        for row in rows:
+            services = row.services if isinstance(row.services, list) else []
+            points.append(
+                {
+                    "checked_at": row.created_at.isoformat(),
+                    "overall_severity": row.overall_severity,
+                    "services": {
+                        s["key"]: s.get("severity", _severity(s.get("status", "")))
+                        for s in services
+                        if isinstance(s, dict) and "key" in s
+                    },
+                }
+            )
         return Response({"window_minutes": window, "points": points})

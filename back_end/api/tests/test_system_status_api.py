@@ -110,6 +110,43 @@ class StatusHistoryTests(APITestCase):
         self.assertEqual(len(response.data["points"]), 2)
         self.assertEqual(response.data["points"][-1]["services"]["telegram"], 1)
 
+    def test_history_empty_returns_no_points(self):
+        url = reverse("system_status_history")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["points"], [])
+        self.assertEqual(response.data["window_minutes"], 30)
+
+    def test_history_invalid_window_falls_back_to_default(self):
+        url = reverse("system_status_history")
+        response = self.client.get(url, {"window": "abc"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["window_minutes"], 30)
+
+    def test_history_window_is_clamped(self):
+        url = reverse("system_status_history")
+        response = self.client.get(url, {"window": 99999})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["window_minutes"], 180)
+
+
+class PersistDebounceTests(APITestCase):
+    @patch("api.views.systemStatusAPI._check_http_service")
+    def test_live_get_debounces_persistence(self, mock_http):
+        mock_http.side_effect = lambda key, name, url: {
+            "key": key,
+            "name": name,
+            "status": "operational",
+            "latency_ms": 5,
+            "message": "ok",
+            "critical": False,
+        }
+        url = reverse("system_status")
+        self.client.get(url)
+        self.client.get(url)
+        # Two rapid live requests should yield a single snapshot (debounced).
+        self.assertEqual(ServiceStatusSnapshot.objects.count(), 1)
+
 
 class CollectSnapshotTaskTests(APITestCase):
     @patch("api.views.systemStatusAPI._check_http_service")
