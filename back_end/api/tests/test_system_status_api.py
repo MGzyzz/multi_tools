@@ -109,3 +109,21 @@ class StatusHistoryTests(APITestCase):
         self.assertEqual(response.data["window_minutes"], 30)
         self.assertEqual(len(response.data["points"]), 2)
         self.assertEqual(response.data["points"][-1]["services"]["telegram"], 1)
+
+
+class CollectSnapshotTaskTests(APITestCase):
+    @patch("api.views.systemStatusAPI._check_http_service")
+    def test_collect_status_snapshot_creates_a_row(self, mock_http):
+        mock_http.side_effect = lambda key, name, url: {
+            "key": key,
+            "name": name,
+            "status": "operational",
+            "latency_ms": 5,
+            "message": "ok",
+            "critical": False,
+        }
+        from app.tasks import collect_status_snapshot
+
+        self.assertEqual(ServiceStatusSnapshot.objects.count(), 0)
+        collect_status_snapshot()
+        self.assertEqual(ServiceStatusSnapshot.objects.count(), 1)
