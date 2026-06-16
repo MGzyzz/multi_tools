@@ -273,3 +273,29 @@ class SystemStatusAPI(APIView):
         _persist_snapshot(result)
         _prune_snapshots()
         return Response(result)
+
+
+class SystemStatusHistoryAPI(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes: list = []
+
+    def get(self, request):
+        try:
+            window = int(request.query_params.get("window", 30))
+        except (TypeError, ValueError):
+            window = 30
+        window = max(1, min(window, 180))
+        since = timezone.now() - timedelta(minutes=window)
+        rows = ServiceStatusSnapshot.objects.filter(created_at__gte=since).order_by("created_at")
+        points = [
+            {
+                "checked_at": row.created_at.isoformat(),
+                "overall_severity": row.overall_severity,
+                "services": {
+                    s["key"]: s.get("severity", _severity(s.get("status", "")))
+                    for s in row.services
+                },
+            }
+            for row in rows
+        ]
+        return Response({"window_minutes": window, "points": points})

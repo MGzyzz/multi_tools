@@ -80,3 +80,32 @@ class PersistSnapshotTests(APITestCase):
         )
         _prune_snapshots()
         self.assertEqual(ServiceStatusSnapshot.objects.count(), 1)
+
+
+class StatusHistoryTests(APITestCase):
+    def test_history_returns_points_within_window(self):
+        ServiceStatusSnapshot.objects.create(
+            overall_status="operational",
+            overall_severity=0,
+            services=[{"key": "telegram", "status": "operational", "severity": 0}],
+        )
+        ServiceStatusSnapshot.objects.create(
+            overall_status="degraded",
+            overall_severity=1,
+            services=[{"key": "telegram", "status": "degraded", "severity": 1}],
+        )
+        old = ServiceStatusSnapshot.objects.create(
+            overall_status="operational",
+            overall_severity=0,
+            services=[],
+        )
+        ServiceStatusSnapshot.objects.filter(pk=old.pk).update(
+            created_at=timezone.now() - timedelta(minutes=120),
+        )
+
+        url = reverse("system_status_history")
+        response = self.client.get(url, {"window": 30})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["window_minutes"], 30)
+        self.assertEqual(len(response.data["points"]), 2)
+        self.assertEqual(response.data["points"][-1]["services"]["telegram"], 1)
