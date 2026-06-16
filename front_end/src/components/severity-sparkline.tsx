@@ -38,10 +38,12 @@ export function SeveritySparkline({
   series,
   status,
   windowMinutes = 30,
+  unstableSinceMin,
 }: {
   series: number[];
   status: SystemStatusLevel;
   windowMinutes?: number;
+  unstableSinceMin?: number | null;
 }) {
   const { t } = useI18n();
   const stroke = sparkStroke[status];
@@ -50,12 +52,14 @@ export function SeveritySparkline({
   const points = hasData ? toPoints(series) : `${PAD},${baselineY} ${W - PAD},${baselineY}`;
 
   const unstableTail = trailingUnstable(series);
-  const unstableMin = Math.max(1, unstableTail);
 
   const caption = !hasData
     ? t("status.spark.collecting")
     : unstableTail > 0
-      ? t("status.spark.unstable").replace("{n}", String(unstableMin))
+      ? t("status.spark.unstable").replace(
+          "{n}",
+          String(unstableSinceMin ?? Math.max(1, unstableTail)),
+        )
       : t("status.spark.stable").replace("{min}", String(windowMinutes));
 
   return (

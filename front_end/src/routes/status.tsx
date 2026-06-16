@@ -14,6 +14,7 @@ import {
   getSystemStatus,
   getSystemStatusHistory,
   pivotHistory,
+  unstableSinceMinutes,
   type SystemStatusHistory,
   type SystemStatusLevel,
   type SystemStatusResponse,
@@ -101,11 +102,13 @@ function ServiceCard({
   service,
   series,
   windowMinutes,
+  unstableSinceMin,
   t,
 }: {
   service: SystemStatusService;
   series: number[];
   windowMinutes: number;
+  unstableSinceMin: number | null;
   t: (key: string) => string;
 }) {
   const detailEntries = Object.entries(service.details ?? {});
@@ -155,7 +158,12 @@ function ServiceCard({
         )}
       </div>
 
-      <SeveritySparkline series={series} status={service.status} windowMinutes={windowMinutes} />
+      <SeveritySparkline
+        series={series}
+        status={service.status}
+        windowMinutes={windowMinutes}
+        unstableSinceMin={unstableSinceMin}
+      />
 
       {detailEntries.length > 0 && (
         <div className="mt-3 rounded-md bg-muted/60 p-3">
@@ -241,6 +249,13 @@ function StatusPage() {
   }, [data?.checked_at, locale]);
 
   const pivoted = useMemo(() => pivotHistory(history), [history]);
+  const unstableSince = useMemo(() => {
+    const map: Record<string, number | null> = {};
+    for (const service of data?.services ?? []) {
+      map[service.key] = unstableSinceMinutes(history, service.key);
+    }
+    return map;
+  }, [history, data]);
   const windowMinutes = history?.window_minutes ?? 30;
   const services = data?.services ?? [];
   const unstableCount = services.filter((s) => s.status !== "operational").length;
@@ -326,6 +341,7 @@ function StatusPage() {
                   service={service}
                   series={pivoted[service.key] ?? []}
                   windowMinutes={windowMinutes}
+                  unstableSinceMin={unstableSince[service.key] ?? null}
                   t={t}
                 />
               ))}
