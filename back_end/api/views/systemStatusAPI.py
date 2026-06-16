@@ -1,5 +1,6 @@
 import logging
 import time
+from datetime import timedelta
 
 import requests
 from celery import current_app
@@ -10,8 +11,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from app.models import WebhookDelivery, WebhookSubscription
-
+from app.models import ServiceStatusSnapshot, WebhookDelivery, WebhookSubscription
 
 STATUS_OPERATIONAL = "operational"
 STATUS_DEGRADED = "degraded"
@@ -30,6 +30,25 @@ _SEVERITY = {
 
 def _severity(status: str) -> int:
     return _SEVERITY.get(status, 0)
+
+
+SNAPSHOT_RETENTION = timedelta(hours=24)
+
+
+def _persist_snapshot(result: dict) -> None:
+    try:
+        ServiceStatusSnapshot.objects.create(
+            overall_status=result["status"],
+            overall_severity=_severity(result["status"]),
+            services=result["services"],
+        )
+    except Exception:
+        logger.exception("Failed to persist status snapshot")
+
+
+def _prune_snapshots() -> None:
+    cutoff = timezone.now() - SNAPSHOT_RETENTION
+    ServiceStatusSnapshot.objects.filter(created_at__lt=cutoff).delete()
 
 
 def _latency_ms(started_at: float) -> int:
@@ -129,7 +148,11 @@ def _check_http_service(key: str, name: str, url: str) -> dict:
     try:
         response = requests.get(url, timeout=2)
         if 200 <= response.status_code < 300:
-            details = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
+            details = (
+                response.json()
+                if response.headers.get("content-type", "").startswith("application/json")
+                else {}
+            )
             return _service(
                 key,
                 name,
@@ -215,13 +238,21 @@ def gather_status() -> dict:
     started_at = time.perf_counter()
     services = [
         _service(
-            "backend", "Backend API", STATUS_OPERATIONAL, started_at,
-            message="Django API is serving requests.", critical=True,
+            "backend",
+            "Backend API",
+            STATUS_OPERATIONAL,
+            started_at,
+            message="Django API is serving requests.",
+            critical=True,
         ),
         _check_database(),
         _check_celery_workers(),
-        _check_http_service("ai", "AI face recognition", f"{settings.AI_SERVICE_URL.rstrip('/')}/status"),
-        _check_http_service("telegram", "Telegram bot", f"{settings.BOT_SERVICE_URL.rstrip('/')}/status"),
+        _check_http_service(
+            "ai", "AI face recognition", f"{settings.AI_SERVICE_URL.rstrip('/')}/status"
+        ),
+        _check_http_service(
+            "telegram", "Telegram bot", f"{settings.BOT_SERVICE_URL.rstrip('/')}/status"
+        ),
         _check_integrations(),
     ]
     for service in services:
@@ -238,4 +269,7 @@ class SystemStatusAPI(APIView):
     authentication_classes: list = []
 
     def get(self, request):
-        return Response(gather_status())
+        result = gather_status()
+        _persist_snapshot(result)
+        _prune_snapshots()
+        return Response(result)
