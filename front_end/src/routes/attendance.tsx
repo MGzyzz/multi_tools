@@ -149,6 +149,14 @@ function AttendancePage() {
     };
   }, []);
 
+  const todayScheduleOptions = useMemo(
+    () =>
+      scheduleOptions
+        .filter((entry) => entry.date === weekRange.todayDate)
+        .sort((a, b) => getTimeLabel(a.time).localeCompare(getTimeLabel(b.time))),
+    [scheduleOptions, weekRange.todayDate],
+  );
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -167,19 +175,15 @@ function AttendancePage() {
 
         setScheduleOptions(response);
 
-        // Only today's or upcoming lessons are selectable (matches the dropdown
-        // filter below). Without this, days with no lesson today fell back to
-        // response[0] — a past lesson — and showed stale attendance marks.
-        const selectableEntries = response.filter(
-          (entry) => entry.date >= weekRange.todayDate,
-        );
+        const todayEntries = response
+          .filter((entry) => entry.date === weekRange.todayDate)
+          .sort((a, b) => getTimeLabel(a.time).localeCompare(getTimeLabel(b.time)));
 
         const nextSelectedId =
-          scheduleIdParam && response.some((entry) => entry.id === scheduleIdParam)
+          scheduleIdParam && todayEntries.some((entry) => entry.id === scheduleIdParam)
             ? scheduleIdParam
-            : (selectableEntries.find((entry) => getScheduleSessionStatus(entry) === "live")?.id ??
-              selectableEntries.find((entry) => entry.date === weekRange.todayDate)?.id ??
-              selectableEntries[0]?.id ??
+            : (todayEntries.find((entry) => getScheduleSessionStatus(entry) === "live")?.id ??
+              todayEntries[0]?.id ??
               null);
 
         setSelectedScheduleId(nextSelectedId);
@@ -499,18 +503,16 @@ function AttendancePage() {
                       setSelectedScheduleId(event.target.value ? Number(event.target.value) : null)
                     }
                     className="bg-transparent outline-none"
-                    disabled={scheduleLoading || scheduleOptions.length === 0}
+                    disabled={scheduleLoading || todayScheduleOptions.length === 0}
                   >
-                    {scheduleOptions.length === 0 ? (
+                    {todayScheduleOptions.length === 0 ? (
                       <option value="">{t("attendance.noLessonsWeek")}</option>
                     ) : (
-                      scheduleOptions
-                        .filter((entry) => entry.date >= weekRange.todayDate)
-                        .map((entry) => (
-                          <option key={entry.id} value={entry.id}>
-                            {formatScheduleLabel(entry, locale)}
-                          </option>
-                        ))
+                      todayScheduleOptions.map((entry) => (
+                        <option key={entry.id} value={entry.id}>
+                          {formatScheduleLabel(entry, locale)}
+                        </option>
+                      ))
                     )}
                   </select>
                 </div>
@@ -540,7 +542,7 @@ function AttendancePage() {
               </div>
             )}
 
-            {!scheduleLoading && scheduleOptions.length === 0 ? (
+            {!scheduleLoading && todayScheduleOptions.length === 0 ? (
               <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
                 <div className="text-base font-medium">{t("attendance.noLessonsWeekTitle")}</div>
                 <p className="mt-2 text-sm text-muted-foreground">

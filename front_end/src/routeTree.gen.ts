@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as StudentsRouteImport } from './routes/students'
+import { Route as StatusRouteImport } from './routes/status'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as ScanRouteImport } from './routes/scan'
@@ -35,6 +36,11 @@ const ToolsRoute = ToolsRouteImport.update({
 const StudentsRoute = StudentsRouteImport.update({
   id: '/students',
   path: '/students',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/scan': typeof ScanRoute
   '/schedule': typeof ScheduleRoute
   '/settings': typeof SettingsRoute
+  '/status': typeof StatusRoute
   '/students': typeof StudentsRoute
   '/tools': typeof ToolsRoute
 }
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/scan': typeof ScanRoute
   '/schedule': typeof ScheduleRoute
   '/settings': typeof SettingsRoute
+  '/status': typeof StatusRoute
   '/students': typeof StudentsRoute
   '/tools': typeof ToolsRoute
 }
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/scan': typeof ScanRoute
   '/schedule': typeof ScheduleRoute
   '/settings': typeof SettingsRoute
+  '/status': typeof StatusRoute
   '/students': typeof StudentsRoute
   '/tools': typeof ToolsRoute
 }
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/schedule'
     | '/settings'
+    | '/status'
     | '/students'
     | '/tools'
   fileRoutesByTo: FileRoutesByTo
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/schedule'
     | '/settings'
+    | '/status'
     | '/students'
     | '/tools'
   id:
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/schedule'
     | '/settings'
+    | '/status'
     | '/students'
     | '/tools'
   fileRoutesById: FileRoutesById
@@ -247,6 +259,7 @@ export interface RootRouteChildren {
   ScanRoute: typeof ScanRoute
   ScheduleRoute: typeof ScheduleRoute
   SettingsRoute: typeof SettingsRoute
+  StatusRoute: typeof StatusRoute
   StudentsRoute: typeof StudentsRoute
   ToolsRoute: typeof ToolsRoute
 }
@@ -265,6 +278,13 @@ declare module '@tanstack/react-router' {
       path: '/students'
       fullPath: '/students'
       preLoaderRoute: typeof StudentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -391,6 +411,7 @@ const rootRouteChildren: RootRouteChildren = {
   ScanRoute: ScanRoute,
   ScheduleRoute: ScheduleRoute,
   SettingsRoute: SettingsRoute,
+  StatusRoute: StatusRoute,
   StudentsRoute: StudentsRoute,
   ToolsRoute: ToolsRoute,
 }

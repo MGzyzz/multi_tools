@@ -1193,7 +1193,7 @@ function LandingPage() {
           </div>
           <div className="foot-bot">
             <span>{t("footer.rights")}</span>
-            <span className="fstatus">{t("footer.status")}</span>
+            <a href="/status" className="fstatus">{t("footer.status")}</a>
           </div>
         </div>
       </footer>
