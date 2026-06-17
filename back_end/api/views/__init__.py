@@ -51,6 +51,7 @@ from .studentAPI import (
     getStudentInformation,
 )
 from .subjectAPI import GetSubjectGroupListAPI
+from .systemStatusAPI import SystemStatusAPI, SystemStatusHistoryAPI
 from .telegramSettingsAPI import (
     GroupLeadershipAPI,
     TeacherBroadcastAPI,
@@ -114,4 +115,6 @@ __all__ = [
     "TeacherTelegramLinkCallbackAPI",
     "TeacherTelegramLinkTokenAPI",
     "TeacherTelegramStatusAPI",
+    "SystemStatusAPI",
+    "SystemStatusHistoryAPI",
 ]

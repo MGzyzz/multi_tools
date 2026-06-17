@@ -76,7 +76,7 @@ function RootComponent() {
   );
 }
 
-const BARE_ROUTES = new Set(["/", "/docs", "/login", "/signup", "/error"]);
+const BARE_ROUTES = new Set(["/", "/docs", "/login", "/signup", "/error", "/status"]);
 const isBareRoute = (pathname: string) => BARE_ROUTES.has(pathname);
 
 function BootstrapBoundary() {

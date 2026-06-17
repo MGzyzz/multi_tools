@@ -495,3 +495,12 @@ def _dispatch_single_webhook(self, delivery_id: int) -> None:
             delivery_id,
             exc,
         )
+
+
+@shared_task(name="collect_status_snapshot")
+def collect_status_snapshot():
+    from api.views.systemStatusAPI import _persist_snapshot, _prune_snapshots, gather_status
+
+    result = gather_status()
+    _persist_snapshot(result)
+    _prune_snapshots()

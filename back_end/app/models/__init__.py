@@ -8,6 +8,7 @@ from .notificationModels import NotificationModels
 from .notificationPreferenceModels import NotificationPreference
 from .riskIncidentModels import RiskIncident, TeacherRiskIncidentAction
 from .scheduleModels import Schedule
+from .serviceStatusSnapshotModels import ServiceStatusSnapshot
 from .studentModels import Student, StudentFaceImage
 from .subjectStudyModels import Subject_study
 from .teacherNotificationSettingsModels import TeacherNotificationSettings
@@ -27,6 +28,7 @@ __all__ = [
     "NotificationPreference",
     "RiskIncident",
     "Schedule",
+    "ServiceStatusSnapshot",
     "Student",
     "StudentFaceImage",
     "Subject_study",

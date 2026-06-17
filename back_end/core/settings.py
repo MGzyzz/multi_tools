@@ -281,6 +281,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "auto_mark_absent",
         "schedule": 900.0,  # каждые 15 минут
     },
+    "collect-status-snapshot": {
+        "task": "collect_status_snapshot",
+        "schedule": 60.0,
+    },
 }
 
 CHANNEL_LAYER_BACKEND = os.getenv("CHANNEL_LAYER_BACKEND", "inmemory").lower()

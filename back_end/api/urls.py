@@ -44,6 +44,8 @@ from .views import (
     StudentNotificationPreferenceAPI,
     StudentRiskIncidentListAPI,
     StudentSyncWebhookAPI,
+    SystemStatusAPI,
+    SystemStatusHistoryAPI,
     TeacherBroadcastAPI,
     TeacherNotificationSettingsAPI,
     TeacherTelegramLinkCallbackAPI,
@@ -190,6 +192,9 @@ urlpatterns = [
         AnalyticsGroupStudentsAPI.as_view(),
         name="analytics_group_students",
     ),
+    # === SYSTEM STATUS ===
+    path("system/status/", SystemStatusAPI.as_view(), name="system_status"),
+    path("system/status/history/", SystemStatusHistoryAPI.as_view(), name="system_status_history"),
     # === TELEGRAM & NOTIFICATION SETTINGS ===
     path(
         "teacher/notification-settings/",

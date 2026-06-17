@@ -400,7 +400,9 @@ html.dark .lp .istep .in { background: color-mix(in oklab, var(--lp-primary) 22%
 .lp .foot-col a { display: block; font-size: 13px; padding: 4px 0; color: var(--lp-fg); }
 .lp .foot-col a:hover { color: var(--lp-primary); }
 .lp .foot-bot { display: flex; align-items: center; justify-content: space-between; padding-top: 24px; font-size: 12px; color: var(--lp-muted-fg); flex-wrap: wrap; gap: 16px; }
-.lp .foot-bot .fstatus { display: inline-flex; align-items: center; gap: 8px; }
+.lp .foot-bot .fstatus { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; text-underline-offset: 4px; }
+.lp .foot-bot .fstatus:hover,
+.lp .foot-bot .fstatus:focus-visible { color: var(--lp-primary); text-decoration: underline; }
 .lp .foot-bot .fstatus::before { content: ""; width: 8px; height: 8px; border-radius: 999px; background: var(--lp-success); box-shadow: 0 0 0 4px color-mix(in oklab, var(--lp-success) 25%, transparent); }
 
 @media (max-width: 760px) { .lp .foot-top { grid-template-columns: 1fr 1fr; } }
